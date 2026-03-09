@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — ecoSupervisor{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-intro">
+  <h2 class="section-title">Dashboard</h2>
+  <p class="section-sub">Resumen general del sistema</p>
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-info">
+      <p class="stat-label">TOTAL REPORTES</p>
+      <h2 class="stat-value">{{ stats.total }}</h2>
+      <p class="stat-desc">Todos los registros</p>
+    </div>
+    <div class="stat-icon">📄</div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-info">
+      <p class="stat-label">CULMINADOS</p>
+      <h2 class="stat-value">{{ stats.culminados }}</h2>
+      <p class="stat-desc">✓ Completados</p>
+    </div>
+    <div class="stat-icon">✅</div>
+  </div>
+  <div class="stat-card stat-yellow">
+    <div class="stat-info">
+      <p class="stat-label">EN PROCESO</p>
+      <h2 class="stat-value">{{ stats.en_proceso }}</h2>
+      <p class="stat-desc">⏱ En progreso</p>
+    </div>
+    <div class="stat-icon">🕐</div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-info">
+      <p class="stat-label">PENDIENTES</p>
+      <h2 class="stat-value">{{ stats.pendientes }}</h2>
+      <p class="stat-desc">⚠ Requieren atención</p>
+    </div>
+    <div class="stat-icon">🔔</div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <h3 class="card-title">⚡ Acciones Rápidas</h3>
+    <div class="quick-actions">
+      <a href="{{ url_for('admin.desvios') }}" class="quick-btn" onclick="openModalFromDash()">
+        <span class="qa-icon">➕</span>
+        <div>
+          <p class="qa-title">Crear Nuevo Reporte</p>
+          <p class="qa-sub">Registrar desvío ambiental</p>
+        </div>
+      </a>
+      <a href="{{ url_for('admin.desvios') }}" class="quick-btn">
+        <span class="qa-icon">📋</span>
+        <div>
+          <p class="qa-title">Ver Todos los Reportes</p>
+          <p class="qa-sub">Gestionar desvíos existentes</p>
+        </div>
+      </a>
+      <a href="{{ url_for('admin.historial') }}" class="quick-btn">
+        <span class="qa-icon">🗂️</span>
+        <div>
+          <p class="qa-title">Ver Historial</p>
+          <p class="qa-sub">Registros archivados</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title">🕐 Actividad Reciente</h3>
+    <div class="activity-list">
+      {% if notifs %}
+        {% for n in notifs[:6] %}
+        <div class="activity-item {% if not n.Leida %}unread{% endif %}">
+          <span class="activity-dot dot-{{ n.Tipo }}"></span>
+          <div class="activity-text">
+            <p>{{ n.Mensaje }}</p>
+            <small>{{ n.FechaCreacion }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <span style="font-size:2rem">📋</span>
+          <p>No hay actividad reciente</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

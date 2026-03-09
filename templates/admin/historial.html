@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Historial — ecoSupervisor{% endblock %}
+{% block page_title %}Historial{% endblock %}
+
+{% block content %}
+<div class="page-header-section">
+  <div class="page-header-icon" style="background:#6366f1">
+    <span>📋</span>
+  </div>
+  <div>
+    <h2 class="section-title">Historial <span class="text-green">Archivado</span></h2>
+    <p class="section-sub">Registros culminados y archivados</p>
+  </div>
+</div>
+
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon">🗂️</span>
+      <div>
+        <h3>Historial de Reportes</h3>
+        <p>Total: {{ registros|length }} archivados</p>
+      </div>
+    </div>
+  </div>
+
+  {% if registros %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>📅 FECHA</th>
+          <th>📄 CÓDIGO</th>
+          <th>📍 UBICACIÓN</th>
+          <th>🏢 ÁREA</th>
+          <th>⚠️ RIESGO</th>
+          <th>👤 CREADOR</th>
+          <th>🗂️ ARCHIVADO</th>
+          <th>ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in registros %}
+        <tr>
+          <td>{{ r.FechaInicio.strftime('%Y-%m-%d') if r.FechaInicio else '' }}</td>
+          <td><span class="codigo-badge">{{ r.Codigo }}</span></td>
+          <td>{{ r.Ubicacion }}</td>
+          <td>{{ r.AreaReportante }}</td>
+          <td><span class="riesgo-badge riesgo-{{ r.Riesgo|lower }}">{{ r.Riesgo }}</span></td>
+          <td>{{ r.Creador }}</td>
+          <td><small>{{ r.FechaArchivado.strftime('%Y-%m-%d') if r.FechaArchivado else '—' }}</small></td>
+          <td>
+            <button class="btn-icon btn-blue" onclick="verDetalleHistorial('{{ r.IdRegistro }}')" title="Ver">👁️</button>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:3rem">
+    <span style="font-size:3rem">🗂️</span>
+    <p>No hay registros archivados aún</p>
+    <small>Los reportes culminados aparecerán aquí cuando sean archivados</small>
+  </div>
+  {% endif %}
+</div>
+
+<!-- Modal detalle historial -->
+<div class="modal-overlay" id="modalDetalleHist">
+  <div class="modal-box modal-large">
+    <div class="modal-header" style="background:#2d3748">
+      <h3 style="color:white">📄 Detalle del Reporte (Historial)</h3>
+      <button class="modal-close" style="color:white" onclick="document.getElementById('modalDetalleHist').style.display='none'">✕</button>
+    </div>
+    <div class="modal-body" id="detalleHistContent">
+      <div class="loading-state">Cargando...</div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const DETALLE_URL_BASE = "{{ url_for('admin.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+function verDetalleHistorial(rid) {
+  fetch(DETALLE_URL_BASE + rid)
+    .then(r => r.json())
+    .then(data => {
+      document.getElementById('detalleHistContent').innerHTML = buildDetalleHTML(data);
+      document.getElementById('modalDetalleHist').style.display = 'flex';
+    });
+}
+</script>
+<script src="{{ url_for('static', filename='js/desvios.js') }}"></script>
+{% endblock %}

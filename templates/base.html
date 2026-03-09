@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}ecoSupervisor{% endblock %}</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+
+{% if session.user_id %}
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon">🌍</div>
+      <div class="brand-text">
+        <span class="brand-eco">Eco</span><span class="brand-sup">Supervisor</span>
+        <small>DNI: {{ session.dni }}</small>
+        <span class="rol-badge rol-{{ session.rol|lower|replace(' ','') }}">{{ session.rol|upper }}</span>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      {% if session.rol == 'Administrador' %}
+        <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
+          <span class="nav-icon">🏠</span><span>Dashboard</span>
+        </a>
+        <a href="{{ url_for('admin.desvios') }}" class="nav-item {% if request.endpoint == 'admin.desvios' %}active{% endif %}">
+          <span class="nav-icon">⚠️</span><span>Desvíos Ambientales</span>
+          {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
+        </a>
+        <a href="{{ url_for('admin.historial') }}" class="nav-item {% if request.endpoint == 'admin.historial' %}active{% endif %}">
+          <span class="nav-icon">📋</span><span>Historial</span>
+        </a>
+        <a href="#" class="nav-item disabled" title="Próximamente">
+          <span class="nav-icon">📊</span><span>Estadísticas</span>
+          <span class="nav-soon">Pronto</span>
+        </a>
+      {% else %}
+        <a href="{{ url_for('supervisor.desvios') }}" class="nav-item {% if request.endpoint == 'supervisor.desvios' %}active{% endif %}">
+          <span class="nav-icon">⚠️</span><span>Desvíos Ambientales</span>
+          {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
+        </a>
+        <a href="{{ url_for('supervisor.historial') }}" class="nav-item {% if request.endpoint == 'supervisor.historial' %}active{% endif %}">
+          <span class="nav-icon">📋</span><span>Mi Historial</span>
+        </a>
+      {% endif %}
+    </nav>
+
+    <div class="sidebar-footer">
+      <button class="nav-item" onclick="toggleDark()" id="darkToggle">
+        <span class="nav-icon">🌙</span><span>Modo Oscuro</span>
+      </button>
+      <a href="{{ url_for('auth.logout') }}" class="nav-item logout">
+        <span class="nav-icon">🚪</span><span>Cerrar Sesión</span>
+      </a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="main-content">
+    <header class="top-bar">
+      <div class="top-bar-title">
+        <h1>{% block page_title %}{% endblock %}</h1>
+        <p>Bienvenido, {{ session.dni }}</p>
+      </div>
+      <div class="top-bar-actions">
+        <div class="notif-wrapper">
+          <button class="notif-btn" onclick="toggleNotifPanel()" id="notifBtn">
+            🔔
+            {% if notif_count and notif_count > 0 %}
+            <span class="notif-badge" id="notifCount">{{ notif_count }}</span>
+            {% endif %}
+          </button>
+          <div class="notif-panel" id="notifPanel">
+            <div class="notif-header">
+              <span>Notificaciones</span>
+              <button onclick="marcarTodas()" class="btn-text">Marcar todas</button>
+            </div>
+            <div class="notif-list" id="notifList">
+              <div class="notif-empty">Cargando...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="page-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }}">
+            <span>{% if cat == 'success' %}✅{% elif cat == 'error' %}❌{% else %}ℹ️{% endif %} {{ msg }}</span>
+            <button onclick="this.parentElement.remove()">✕</button>
+          </div>
+        {% endfor %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </main>
+</div>
+{% else %}
+{% block auth_content %}{% endblock %}
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>
