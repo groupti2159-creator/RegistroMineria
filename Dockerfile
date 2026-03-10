@@ -23,8 +23,8 @@ COPY . .
 # Crear directorio de uploads
 RUN mkdir -p static/uploads/evidencias static/uploads/levantamientos
 
-# Exponer puerto
-EXPOSE $PORT
+# Railway inyecta PORT automáticamente, usar 8080 como fallback
+ENV PORT=8080
 
-# Comando de inicio
-CMD gunicorn app:app --bind 0.0.0.0:$PORT
+# Comando de inicio simple
+CMD python app.py
