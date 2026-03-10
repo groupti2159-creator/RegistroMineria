@@ -12,6 +12,7 @@ app.config['MYSQL_HOST']        = os.getenv('MYSQL_HOST', 'localhost')
 app.config['MYSQL_USER']        = os.getenv('MYSQL_USER', 'root')
 app.config['MYSQL_PASSWORD']    = os.getenv('MYSQL_PASSWORD', 'prototipo')
 app.config['MYSQL_DB']          = os.getenv('MYSQL_DB', 'desvios_ambientales')
+app.config['MYSQL_PORT']        = int(os.getenv('MYSQL_PORT', 3306))
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['UPLOAD_FOLDER']     = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH']= 16 * 1024 * 1024
@@ -29,4 +30,6 @@ app.register_blueprint(supervisor_bp,  url_prefix='/supervisor')
 app.register_blueprint(shared_bp,      url_prefix='/api')
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    debug = os.getenv('FLASK_ENV', 'development') == 'development'
+    app.run(debug=debug, host='0.0.0.0', port=port)

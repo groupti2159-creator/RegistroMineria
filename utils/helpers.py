@@ -1,6 +1,7 @@
 import uuid, os, hashlib
 from werkzeug.utils import secure_filename
 from contextlib import contextmanager
+from utils.case_insensitive_dict import make_case_insensitive, make_list_case_insensitive
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -43,6 +44,7 @@ def sp_exec(cur, sp_name, params=()):
     """
     Llama a un stored procedure y consume TODOS los result sets.
     Retorna lista de filas del primer result set con datos.
+    Los diccionarios son case-insensitive para compatibilidad Windows/Linux.
     """
     # Limpiar cualquier result set pendiente antes de ejecutar
     consume_results(cur)
@@ -56,7 +58,7 @@ def sp_exec(cur, sp_name, params=()):
         try:
             rows = cur.fetchall()
             if first and rows:
-                results = list(rows)
+                results = make_list_case_insensitive(list(rows))
                 first = False
         except Exception:
             pass

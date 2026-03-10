@@ -40,14 +40,14 @@
       <tbody>
         {% for r in registros %}
         <tr>
-          <td>{{ r.FechaInicio.strftime('%Y-%m-%d') if r.FechaInicio else '' }}</td>
-          <td><span class="codigo-badge">{{ r.Codigo }}</span></td>
-          <td>{{ r.Ubicacion }}</td>
-          <td>{{ r.AreaReportante }}</td>
-          <td><span class="riesgo-badge riesgo-{{ r.Riesgo|lower }}">{{ r.Riesgo }}</span></td>
-          <td><small>{{ r.FechaArchivado.strftime('%Y-%m-%d') if r.FechaArchivado else '—' }}</small></td>
+          <td>{{ r.fechainicio.strftime('%Y-%m-%d') if r.fechainicio else '' }}</td>
+          <td><span class="codigo-badge">{{ r.codigo }}</span></td>
+          <td>{{ r.ubicacion }}</td>
+          <td>{{ r.areareportante }}</td>
+          <td><span class="riesgo-badge riesgo-{{ r.riesgo|lower }}">{{ r.riesgo }}</span></td>
+          <td><small>{{ r.fechaarchivado.strftime('%Y-%m-%d') if r.fechaarchivado else '—' }}</small></td>
           <td>
-            <button class="btn-icon btn-blue" onclick="verDetalleHist('{{ r.IdRegistro }}')" title="Ver">👁️</button>
+            <button class="btn-icon btn-blue" onclick="verDetalleHist('{{ r.idregistro }}')" title="Ver">👁️</button>
           </td>
         </tr>
         {% endfor %}

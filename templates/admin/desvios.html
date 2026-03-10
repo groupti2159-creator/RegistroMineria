@@ -61,7 +61,7 @@
               <select name="area_reportante" class="form-select" required>
                 <option value="">Seleccionar área...</option>
                 {% for a in areas_rep %}
-                <option value="{{ a.idAreaReportante }}">{{ a.AreaReportante }}</option>
+                <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -82,7 +82,7 @@
             <select name="ubicacion" class="form-select" required>
               <option value="">Seleccionar ubicación...</option>
               {% for u in ubicaciones %}
-              <option value="{{ u.idUbicacion }}">{{ u.Ubicacion }}</option>
+              <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
               {% endfor %}
             </select>
           </div>
@@ -101,7 +101,7 @@
               <select name="riesgo" class="form-select" required>
                 <option value="">Seleccionar riesgo...</option>
                 {% for r in riesgos %}
-                <option value="{{ r.IdRiesgo }}">{{ r.Riesgo }}</option>
+                <option value="{{ r.idriesgo }}">{{ r.riesgo }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -110,7 +110,7 @@
               <select name="tipo" class="form-select" required>
                 <option value="">Seleccionar tipo...</option>
                 {% for t in tipos %}
-                <option value="{{ t.IdDescripcionTipo }}">{{ t.DescripcionTipo }}</option>
+                <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -130,7 +130,7 @@
               <select name="area_responsable" class="form-select" required>
                 <option value="">Seleccionar área...</option>
                 {% for a in areas_res %}
-                <option value="{{ a.idAreaResponsable }}">{{ a.AreaResponsable }}</option>
+                <option value="{{ a.idarearesponsable }}">{{ a.arearesponsable }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -213,7 +213,7 @@
               <label class="form-label">🏢 ÁREA REPORTANTE *</label>
               <select name="area_reportante" id="edit_area_rep" class="form-select" required>
                 {% for a in areas_rep %}
-                <option value="{{ a.idAreaReportante }}">{{ a.AreaReportante }}</option>
+                <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -230,7 +230,7 @@
             <label class="form-label">📍 UBICACIÓN *</label>
             <select name="ubicacion" id="edit_ubicacion" class="form-select" required>
               {% for u in ubicaciones %}
-              <option value="{{ u.idUbicacion }}">{{ u.Ubicacion }}</option>
+              <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
               {% endfor %}
             </select>
           </div>
@@ -246,7 +246,7 @@
               <label class="form-label">🔴 NIVEL DE RIESGO *</label>
               <select name="riesgo" id="edit_riesgo" class="form-select" required>
                 {% for r in riesgos %}
-                <option value="{{ r.IdRiesgo }}">{{ r.Riesgo }}</option>
+                <option value="{{ r.idriesgo }}">{{ r.riesgo }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -254,7 +254,7 @@
               <label class="form-label">⚠️ DESCRIPCIÓN TIPO *</label>
               <select name="tipo" id="edit_tipo" class="form-select" required>
                 {% for t in tipos %}
-                <option value="{{ t.IdDescripcionTipo }}">{{ t.DescripcionTipo }}</option>
+                <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -271,7 +271,7 @@
               <label class="form-label">🏢 ÁREA RESPONSABLE *</label>
               <select name="area_responsable" id="edit_area_res" class="form-select" required>
                 {% for a in areas_res %}
-                <option value="{{ a.idAreaResponsable }}">{{ a.AreaResponsable }}</option>
+                <option value="{{ a.idarearesponsable }}">{{ a.arearesponsable }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -288,8 +288,8 @@
             <select name="estado" id="edit_estado" class="form-select" style="pointer-events:none;background-color:var(--bg);opacity:0.7">
               {% for e in estados %}
               {# Solo mostrar los 3 estados principales: Pendiente, En Proceso, Culminado #}
-              {% if e.idEstado in ['EST001', 'EST003', 'EST006'] %}
-              <option value="{{ e.idEstado }}">{{ e.Estado }}</option>
+              {% if e.idestado in ['EST001', 'EST003', 'EST006'] %}
+              <option value="{{ e.idestado }}">{{ e.estado }}</option>
               {% endif %}
               {% endfor %}
             </select>

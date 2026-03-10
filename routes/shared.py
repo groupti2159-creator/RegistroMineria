@@ -10,11 +10,11 @@ def get_notificaciones():
         return jsonify({'notifs': [], 'count': 0})
     try:
         cur = mysql.connection.cursor()
-        notifs = sp_exec(cur, 'SP_Notificaciones', (session['usuario_rol'],))
+        notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
         cur.close()
         
         cur = mysql.connection.cursor()
-        cnt = sp_exec(cur, 'SP_ContarNotificaciones', (session['usuario_rol'],))
+        cnt = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
         cur.close()
 
         def serialize(obj):

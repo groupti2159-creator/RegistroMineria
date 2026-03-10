@@ -76,11 +76,11 @@
     <div class="activity-list">
       {% if notifs %}
         {% for n in notifs[:6] %}
-        <div class="activity-item {% if not n.Leida %}unread{% endif %}">
-          <span class="activity-dot dot-{{ n.Tipo }}"></span>
+        <div class="activity-item {% if not n.leida %}unread{% endif %}">
+          <span class="activity-dot dot-{{ n.tipo }}"></span>
           <div class="activity-text">
-            <p>{{ n.Mensaje }}</p>
-            <small>{{ n.FechaCreacion }}</small>
+            <p>{{ n.mensaje }}</p>
+            <small>{{ n.fechacreacion }}</small>
           </div>
         </div>
         {% endfor %}

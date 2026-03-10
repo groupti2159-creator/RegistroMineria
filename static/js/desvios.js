@@ -8,17 +8,17 @@ function buildDetalleHTML(data) {
     'Pendiente':'#92400e','En Proceso':'#1e40af','Enviado':'#6b21a8',
     'En Revisión':'#4c1d95','Culminado':'#166534','Rechazado':'#991b1b','Cerrado':'#475569'
   };
-  const color = estadoColor[r.Estado] || '#475569';
+  const color = estadoColor[r.estado] || '#475569';
 
   const renderImgs = (imgs, showValidar, registroId) => {
     if (!imgs.length) return '<p style="color:#94a3b8;font-size:.78rem">Sin imágenes</p>';
     return `<div class="img-gallery">${imgs.map(i => {
-      const statusClass = i.EstadoImagen === 'Aprobada' ? 'aprobada' : i.EstadoImagen === 'Rechazada' ? 'rechazada' : 'pendiente';
-      const src = '/static/' + i.RutaImagen;
+      const statusClass = i.estadoimagen === 'Aprobada' ? 'aprobada' : i.estadoimagen === 'Rechazada' ? 'rechazada' : 'pendiente';
+      const src = '/static/' + i.rutaimagen;
       return `<div class="img-thumb-wrapper">
-        <img class="img-thumb" src="${src}" title="${i.NombreArchivo||''}">
-        <span class="img-status-dot ${statusClass}" title="${i.EstadoImagen}"></span>
-        ${i.MotivoRechazo ? `<small style="display:block;color:#ef4444;font-size:.65rem;max-width:80px">${i.MotivoRechazo}</small>` : ''}
+        <img class="img-thumb" src="${src}" title="${i.nombrearchivo||''}">
+        <span class="img-status-dot ${statusClass}" title="${i.estadoimagen}"></span>
+        ${i.motivorechazo ? `<small style="display:block;color:#ef4444;font-size:.65rem;max-width:80px">${i.motivorechazo}</small>` : ''}
       </div>`;
     }).join('')}</div>`;
   };
@@ -32,19 +32,19 @@ function buildDetalleHTML(data) {
         <div class="detalle-section-title">🔵 Información General</div>
         <div class="detalle-body">
           <div class="detalle-row">
-            <div class="detalle-field"><label>Fecha</label><p>${r.FechaInicio||'—'}</p></div>
-            <div class="detalle-field"><label>Correlativo</label><p><code>${r.Codigo||'—'}</code></p></div>
+            <div class="detalle-field"><label>Fecha</label><p>${r.fechainicio||'—'}</p></div>
+            <div class="detalle-field"><label>Correlativo</label><p><code>${r.codigo||'—'}</code></p></div>
           </div>
           <div class="detalle-row">
-            <div class="detalle-field"><label>Fecha Ejecución</label><p>${r.FechaEjecucion||'—'}</p></div>
-            <div class="detalle-field"><label>Riesgo</label><p style="color:#dc2626;font-weight:700">${r.Riesgo||'—'}</p></div>
+            <div class="detalle-field"><label>Fecha Ejecución</label><p>${r.fechaejecucion||'—'}</p></div>
+            <div class="detalle-field"><label>Riesgo</label><p style="color:#dc2626;font-weight:700">${r.riesgo||'—'}</p></div>
           </div>
         </div>
       </div>
 
       <div class="detalle-section">
         <div class="detalle-section-title">📍 Ubicación</div>
-        <div class="detalle-body"><p>${r.Ubicacion||'—'}</p></div>
+        <div class="detalle-body"><p>${r.ubicacion||'—'}</p></div>
       </div>
 
       <div class="detalle-section">
@@ -52,18 +52,18 @@ function buildDetalleHTML(data) {
         <div class="detalle-body">
           <div class="detalle-field" style="margin-bottom:.6rem">
             <label>Problema Detectado</label>
-            <p>${r.Descripcion||'—'}</p>
+            <p>${r.descripcion||'—'}</p>
           </div>
           <div class="detalle-field">
             <label>Peligro Identificado</label>
-            <p>${r.DescripcionTipo||'—'}</p>
+            <p>${r.descripciontipo||'—'}</p>
           </div>
         </div>
       </div>
 
       <div class="detalle-section">
         <div class="detalle-section-title">✅ Acción Realizada</div>
-        <div class="detalle-body"><p>${r.Accion||'—'}</p></div>
+        <div class="detalle-body"><p>${r.accion||'—'}</p></div>
       </div>
     </div>
 
@@ -71,14 +71,14 @@ function buildDetalleHTML(data) {
       <div class="detalle-section">
         <div class="detalle-section-title">📊 Estado del Reporte</div>
         <div class="detalle-body">
-          <div class="estado-display" style="color:${color}">${r.Estado||'—'}</div>
+          <div class="estado-display" style="color:${color}">${r.estado||'—'}</div>
           <p style="font-size:.7rem;text-align:center;color:#94a3b8">Estado actual</p>
         </div>
       </div>
 
       <div class="detalle-section">
         <div class="detalle-section-title">🏢 Área Reportante</div>
-        <div class="detalle-body"><p style="font-weight:600">${r.AreaReportante||'—'}</p></div>
+        <div class="detalle-body"><p style="font-weight:600">${r.areareportante||'—'}</p></div>
       </div>
 
       <div class="detalle-section">
@@ -86,11 +86,11 @@ function buildDetalleHTML(data) {
         <div class="detalle-body">
           <div class="detalle-field" style="margin-bottom:.4rem">
             <label>Área Responsable</label>
-            <p style="font-weight:600">${r.AreaResponsable||'—'}</p>
+            <p style="font-weight:600">${r.arearesponsable||'—'}</p>
           </div>
           <div class="detalle-field">
             <label>Personal Responsable</label>
-            <p>${r.PersonalResponsable||'—'}</p>
+            <p>${r.personalresponsable||'—'}</p>
           </div>
         </div>
       </div>
@@ -99,11 +99,11 @@ function buildDetalleHTML(data) {
         <div class="detalle-section-title">🖼️ Evidencias</div>
         <div class="detalle-body">
           <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin-bottom:.4rem">🖼 Evidencias (${ev.length})</p>
-          ${renderImgs(ev, false, r.IdRegistro)}
+          ${renderImgs(ev, false, r.idregistro)}
           <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin:.6rem 0 .4rem">✏️ Levantamientos (${lv.length})</p>
-          ${renderImgs(lv, false, r.IdRegistro)}
-          ${canValidate && lv.filter(i => i.EstadoImagen === 'Pendiente').length > 0 ? 
-            `<button onclick="abrirValidarConjunto('${r.IdRegistro}', ${JSON.stringify(lv).replace(/"/g, '&quot;')})" 
+          ${renderImgs(lv, false, r.idregistro)}
+          ${canValidate && lv.filter(i => i.estadoimagen === 'Pendiente').length > 0 ? 
+            `<button onclick="abrirValidarConjunto('${r.idregistro}', ${JSON.stringify(lv).replace(/"/g, '&quot;')})" 
                      style="width:100%;margin-top:.8rem;padding:.6rem;background:#059669;color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem">
               ✅ Validar Conjunto de Imágenes
             </button>` : ''}
@@ -111,7 +111,7 @@ function buildDetalleHTML(data) {
       </div>
 
       <p style="font-size:.7rem;color:#94a3b8;text-align:center;margin-top:.5rem">
-        Reporte generado el ${r.FechaCreacion||'—'}
+        Reporte generado el ${r.fechacreacion||'—'}
       </p>
     </div>
   </div>`;
@@ -139,17 +139,17 @@ function editarRegistro(rid) {
     form.action = EDITAR_URL_BASE + rid;
 
     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
-    setVal('edit_fecha',       r.FechaInicio ? r.FechaInicio.substring(0,10) : '');
-    setVal('edit_fecha_ejec',  r.FechaEjecucion ? r.FechaEjecucion.substring(0,10) : '');
-    setVal('edit_descripcion', r.Descripcion);
-    setVal('edit_accion',      r.Accion);
-    setVal('edit_personal',    r.PersonalResponsable);
-    setVal('edit_area_rep',    r.idAreaReportante);
-    setVal('edit_area_res',    r.idAreaResponsable);
-    setVal('edit_ubicacion',   r.idUbicacion);
-    setVal('edit_riesgo',      r.IdRiesgo);
-    setVal('edit_tipo',        r.IdDescripcionTipo);
-    setVal('edit_estado',      r.idEstado);
+    setVal('edit_fecha',       r.fechainicio ? r.fechainicio.substring(0,10) : '');
+    setVal('edit_fecha_ejec',  r.fechaejecucion ? r.fechaejecucion.substring(0,10) : '');
+    setVal('edit_descripcion', r.descripcion);
+    setVal('edit_accion',      r.accion);
+    setVal('edit_personal',    r.personalresponsable);
+    setVal('edit_area_rep',    r.idareareportante);
+    setVal('edit_area_res',    r.idarearesponsable);
+    setVal('edit_ubicacion',   r.idubicacion);
+    setVal('edit_riesgo',      r.idriesgo);
+    setVal('edit_tipo',        r.iddescripciontipo);
+    setVal('edit_estado',      r.idestado);
 
     // Cargar imágenes existentes
     renderEditImagenes(data.evidencias || [], data.levantamientos || []);
@@ -195,10 +195,10 @@ function renderEditImagenes(evidencias, levantamientos) {
     html += '<div class="edit-images-grid">';
     evidencias.forEach(img => {
       html += `
-        <div class="edit-image-item" data-img-id="${img.IdImagen}">
-          <img src="/static/${img.RutaImagen}" alt="${img.NombreArchivo || ''}">
-          <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${img.IdImagen}')" title="Eliminar imagen">✕</button>
-          <div class="edit-image-name">${img.NombreArchivo || 'Imagen'}</div>
+        <div class="edit-image-item" data-img-id="${img.idimagen}">
+          <img src="/static/${img.rutaimagen}" alt="${img.nombrearchivo || ''}">
+          <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${img.idimagen}')" title="Eliminar imagen">✕</button>
+          <div class="edit-image-name">${img.nombrearchivo || 'Imagen'}</div>
         </div>
       `;
     });
@@ -211,10 +211,10 @@ function renderEditImagenes(evidencias, levantamientos) {
     html += '<div class="edit-images-grid">';
     levantamientos.forEach(img => {
       html += `
-        <div class="edit-image-item" data-img-id="${img.IdImagen}">
-          <img src="/static/${img.RutaImagen}" alt="${img.NombreArchivo || ''}">
-          <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${img.IdImagen}')" title="Eliminar imagen">✕</button>
-          <div class="edit-image-name">${img.NombreArchivo || 'Imagen'}</div>
+        <div class="edit-image-item" data-img-id="${img.idimagen}">
+          <img src="/static/${img.rutaimagen}" alt="${img.nombrearchivo || ''}">
+          <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${img.idimagen}')" title="Eliminar imagen">✕</button>
+          <div class="edit-image-name">${img.nombrearchivo || 'Imagen'}</div>
         </div>
       `;
     });
@@ -364,7 +364,7 @@ let imagenesOriginales = [];
 
 function abrirValidarConjunto(registroId, levantamientos) {
   // Filtrar solo imágenes pendientes
-  imagenesOriginales = levantamientos.filter(img => img.EstadoImagen === 'Pendiente');
+  imagenesOriginales = levantamientos.filter(img => img.estadoimagen === 'Pendiente');
   imagenesValidar = [...imagenesOriginales]; // Copia para manipular
   
   if (imagenesValidar.length === 0) {
@@ -386,23 +386,23 @@ function renderValidarGallery() {
   }
   
   gallery.innerHTML = imagenesValidar.map((img, index) => {
-    const src = '/static/' + img.RutaImagen;
+    const src = '/static/' + img.rutaimagen;
     return `
       <div class="validar-img-item" data-index="${index}">
-        <img src="${src}" alt="${img.NombreArchivo || ''}">
+        <img src="${src}" alt="${img.nombrearchivo || ''}">
         <button type="button" class="validar-img-delete" onclick="eliminarImagenValidar(${index})" title="Eliminar esta imagen">
           ✕
         </button>
         <div class="validar-img-info">
-          ${img.NombreArchivo || 'Imagen ' + (index + 1)}
+          ${img.nombrearchivo || 'Imagen ' + (index + 1)}
         </div>
       </div>
     `;
   }).join('');
   
   // Actualizar campos hidden
-  const idsAprobar = imagenesValidar.map(img => img.IdImagen).join(',');
-  const idsRechazar = imagenesOriginales.map(img => img.IdImagen).join(',');
+  const idsAprobar = imagenesValidar.map(img => img.idimagen).join(',');
+  const idsRechazar = imagenesOriginales.map(img => img.idimagen).join(',');
   document.getElementById('validarImagenesIds').value = idsAprobar;
   document.getElementById('validarImagenesIdsRechazar').value = idsRechazar;
 }

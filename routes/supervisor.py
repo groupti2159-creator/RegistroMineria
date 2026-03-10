@@ -16,7 +16,7 @@ def sup_required(f):
 def get_notif_count():
     try:
         cur  = mysql.connection.cursor()
-        rows = sp_exec(cur, 'SP_ContarNotificaciones', (session['usuario_rol'],))
+        rows = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
         cur.close()
         return rows[0]['total'] if rows else 0
     except:
@@ -27,11 +27,11 @@ def get_notif_count():
 def desvios():
     estado_filter = request.args.get('estado','')
     cur = mysql.connection.cursor()
-    registros = sp_exec(cur, 'SP_ListarRegistrosSupervisor', (estado_filter or None,))
+    registros = sp_exec(cur, 'sp_listarregistrossupervisor', (estado_filter or None,))
     cur.close()
     
     cur = mysql.connection.cursor()
-    notifs = sp_exec(cur, 'SP_Notificaciones', (session['usuario_rol'],))
+    notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
     cur.close()
     
     return render_template('supervisor/desvios.html',
@@ -42,11 +42,11 @@ def desvios():
 @sup_required
 def detalle_registro(rid):
     cur = mysql.connection.cursor()
-    registro = sp_one(cur, 'SP_DetalleRegistro', (rid,))
+    registro = sp_one(cur, 'sp_detalleregistro', (rid,))
     cur.close()
     
     cur = mysql.connection.cursor()
-    imagenes = sp_exec(cur, 'SP_ImagenesRegistro', (rid,))
+    imagenes = sp_exec(cur, 'sp_imagenesregistro', (rid,))
     cur.close()
 
     def serialize(obj):
@@ -62,13 +62,25 @@ def detalle_registro(rid):
     # Filtrar solo imágenes que NO estén rechazadas (EIM003)
     imgs_serial = []
     for i in imagenes:
-        if i.get('idEstadoImagen') != 'EIM003':  # Excluir rechazadas
+        # Usar get() case-insensitive
+        estado_img = i.get('idEstadoImagen') or i.get('idestadoimagen')
+        if estado_img != 'EIM003':  # Excluir rechazadas
             imgs_serial.append(serialize(i))
 
+    # Separar por tipo usando get() case-insensitive
+    evidencias = []
+    levantamientos = []
+    for img in imgs_serial:
+        tipo_img = img.get('idTipoImagen') or img.get('idtipoimagen')
+        if tipo_img == 'TIM001':
+            evidencias.append(img)
+        elif tipo_img == 'TIM002':
+            levantamientos.append(img)
+
     return jsonify({
-        'registro':       serialize(registro),
-        'evidencias':     [i for i in imgs_serial if i.get('idTipoImagen')=='TIM001'],
-        'levantamientos': [i for i in imgs_serial if i.get('idTipoImagen')=='TIM002']
+        'registro': serialize(registro),
+        'evidencias': evidencias,
+        'levantamientos': levantamientos
     })
 
 @supervisor_bp.route('/desvios/subir/<rid>', methods=['POST'])
@@ -89,7 +101,7 @@ def subir_levantamiento(rid):
         #     return redirect(url_for('supervisor.desvios'))
         
         cur = mysql.connection.cursor()
-        cur.execute("SELECT COUNT(*) AS cnt FROM Tbl_ImagenRegistro WHERE IdRegistro=%s AND idTipoImagen='TIM002' AND idEstadoImagen != 'EIM003'", (rid,))
+        cur.execute("SELECT COUNT(*) AS cnt FROM tbl_imagenregistro WHERE idregistro=%s AND idtipoimagen='TIM002' AND idestadoimagen != 'EIM003'", (rid,))
         cnt_row = cur.fetchone()
         existing = cnt_row['cnt'] if cnt_row else 0
         cur.close()
@@ -103,27 +115,27 @@ def subir_levantamiento(rid):
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'SP_GuardarImagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
                     saved += 1
 
         if saved > 0:
-            # El stored procedure SP_GuardarImagen ya cambia el estado a EN PROCESO (EST003)
+            # El stored procedure sp_guardarimagen ya cambia el estado a EN PROCESO (EST003)
             cur = mysql.connection.cursor()
-            cur.execute("SELECT ur.IdUsuarioRol FROM Tbl_UsuarioRol ur JOIN Tbl_Roles r ON r.idRoles=ur.idRoles WHERE r.NombreRol='Administrador'")
+            cur.execute("SELECT ur.idusuariorol FROM tbl_usuariorol ur JOIN tbl_roles r ON r.idroles=ur.idroles WHERE r.nombrerol='Administrador'")
             admins = cur.fetchall()
             cur.close()
             
             cur = mysql.connection.cursor()
-            cur.execute("SELECT Codigo FROM Tbl_Registro WHERE IdRegistro=%s", (rid,))
+            cur.execute("SELECT codigo FROM tbl_registro WHERE idregistro=%s", (rid,))
             reg = cur.fetchone()
             cur.close()
             
-            codigo = reg['Codigo'] if reg else rid
+            codigo = reg['codigo'] if reg else rid
             for a in admins:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'SP_CrearNotificacion', (gen_id(), a['IdUsuarioRol'],
+                sp_exec(cur, 'sp_crearnotificacion', (gen_id(), a['idusuariorol'],
                     f'Supervisor subió imágenes en reporte {codigo}. Pendiente de validación.', 'info', rid))
                 mysql.connection.commit()
                 cur.close()
@@ -137,7 +149,7 @@ def subir_levantamiento(rid):
 @sup_required
 def historial():
     cur       = mysql.connection.cursor()
-    registros = sp_exec(cur, 'SP_HistorialSupervisor', (session['usuario_rol'],))
+    registros = sp_exec(cur, 'sp_historialsupervisor', (session['usuario_rol'],))
     cur.close()
     return render_template('supervisor/historial.html', registros=registros, notif_count=get_notif_count())
 
@@ -145,7 +157,7 @@ def historial():
 @sup_required
 def leer_notificacion(nid):
     cur = mysql.connection.cursor()
-    sp_exec(cur, 'SP_LeerNotificacion', (nid,))
+    sp_exec(cur, 'sp_leernotificacion', (nid,))
     mysql.connection.commit()
     cur.close()
     return jsonify({'ok': True})
@@ -154,7 +166,7 @@ def leer_notificacion(nid):
 @sup_required
 def leer_todas():
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE Tbl_Notificacion SET Leida=1 WHERE IdUsuarioRol=%s", (session['usuario_rol'],))
+    cur.execute("UPDATE tbl_notificacion SET leida=1 WHERE idusuariorol=%s", (session['usuario_rol'],))
     mysql.connection.commit()
     cur.close()
     return jsonify({'ok': True})

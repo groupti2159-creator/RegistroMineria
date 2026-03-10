@@ -18,7 +18,7 @@ def admin_required(f):
 def get_notif_count():
     try:
         cur = mysql.connection.cursor()
-        rows = sp_exec(cur, 'SP_ContarNotificaciones', (session['usuario_rol'],))
+        rows = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
         cur.close()
         return rows[0]['total'] if rows else 0
     except:
@@ -27,22 +27,22 @@ def get_notif_count():
 def get_maestros():
     cur = mysql.connection.cursor()
     
-    cur.execute("SELECT * FROM Tbl_AreaReportante ORDER BY AreaReportante")
+    cur.execute("SELECT * FROM tbl_areareportante ORDER BY areareportante")
     areas_rep = cur.fetchall()
     
-    cur.execute("SELECT * FROM Tbl_AreaResponsable ORDER BY AreaResponsable")
+    cur.execute("SELECT * FROM tbl_arearesponsable ORDER BY arearesponsable")
     areas_res = cur.fetchall()
     
-    cur.execute("SELECT * FROM Tbl_Ubicacion ORDER BY Ubicacion")
+    cur.execute("SELECT * FROM tbl_ubicacion ORDER BY ubicacion")
     ubicaciones = cur.fetchall()
     
-    cur.execute("SELECT * FROM Tbl_Riesgo")
+    cur.execute("SELECT * FROM tbl_riesgo")
     riesgos = cur.fetchall()
     
-    cur.execute("SELECT * FROM Tbl_DescripcionTipo ORDER BY DescripcionTipo")
+    cur.execute("SELECT * FROM tbl_descripciontipo ORDER BY descripciontipo")
     tipos = cur.fetchall()
     
-    cur.execute("SELECT * FROM Tbl_Estado ORDER BY Orden")
+    cur.execute("SELECT * FROM tbl_estado ORDER BY orden")
     estados = cur.fetchall()
     
     cur.close()
@@ -52,11 +52,11 @@ def get_maestros():
 @admin_required
 def dashboard():
     cur = mysql.connection.cursor()
-    stats = sp_one(cur, 'SP_DashboardStats')
+    stats = sp_one(cur, 'sp_dashboardstats')
     cur.close()
     
     cur = mysql.connection.cursor()
-    notifs = sp_exec(cur, 'SP_Notificaciones', (session['usuario_rol'],))
+    notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
     cur.close()
     
     return render_template('admin/dashboard.html',
@@ -68,7 +68,7 @@ def dashboard():
 def desvios():
     estado_filter = request.args.get('estado','')
     cur       = mysql.connection.cursor()
-    registros = sp_exec(cur, 'SP_ListarRegistros', (estado_filter or None,))
+    registros = sp_exec(cur, 'sp_listarregistros', (estado_filter or None,))
     cur.close()
     areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
     return render_template('admin/desvios.html',
@@ -81,14 +81,14 @@ def desvios():
 def crear_registro():
     try:
         cur = mysql.connection.cursor()
-        corr = sp_one(cur, 'SP_SiguienteCorrelativo')
+        corr = sp_one(cur, 'sp_siguientecorrelativo')
         cur.close()
         
         codigo = corr['correlativo'] if corr else '001-01'
         rid = gen_id()
 
         cur = mysql.connection.cursor()
-        sp_exec(cur, 'SP_CrearRegistro', (
+        sp_exec(cur, 'sp_crearregistro', (
             rid, codigo,
             request.form['fecha_inicio'],
             request.form.get('fecha_ejecucion') or None,
@@ -108,7 +108,7 @@ def crear_registro():
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'evidencias')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'SP_GuardarImagen', (gen_id(), rid, session['usuario_rol'], 'TIM001','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM001','EIM001', ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
 
@@ -117,18 +117,18 @@ def crear_registro():
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'SP_GuardarImagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
 
         cur = mysql.connection.cursor()
-        cur.execute("SELECT ur.IdUsuarioRol FROM Tbl_UsuarioRol ur JOIN Tbl_Roles r ON r.idRoles=ur.idRoles WHERE r.NombreRol IN ('Supervisor','Trabajador')")
+        cur.execute("SELECT ur.idusuariorol FROM tbl_usuariorol ur JOIN tbl_roles r ON r.idroles=ur.idroles WHERE r.nombrerol IN ('Supervisor','Trabajador')")
         sups = cur.fetchall()
         cur.close()
         
         for s in sups:
             cur = mysql.connection.cursor()
-            sp_exec(cur, 'SP_CrearNotificacion', (gen_id(), s['IdUsuarioRol'], f'Nuevo reporte {codigo} creado', 'info', rid))
+            sp_exec(cur, 'sp_crearnotificacion', (gen_id(), s['idusuariorol'], f'Nuevo reporte {codigo} creado', 'info', rid))
             mysql.connection.commit()
             cur.close()
 
@@ -142,7 +142,7 @@ def crear_registro():
 def editar_registro(rid):
     try:
         cur = mysql.connection.cursor()
-        sp_exec(cur, 'SP_ActualizarRegistro', (
+        sp_exec(cur, 'sp_actualizarregistro', (
             rid,
             request.form['fecha_inicio'],
             request.form.get('fecha_ejecucion') or None,
@@ -162,7 +162,7 @@ def editar_registro(rid):
             ids_eliminar = [id.strip() for id in imagenes_eliminar.split(',') if id.strip()]
             for imagen_id in ids_eliminar:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'SP_EliminarImagen', (imagen_id,))
+                sp_exec(cur, 'sp_eliminarimagen', (imagen_id,))
                 mysql.connection.commit()
                 cur.close()
         
@@ -172,7 +172,7 @@ def editar_registro(rid):
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'evidencias')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'SP_GuardarImagen', (gen_id(), rid, session['usuario_rol'], 'TIM001','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM001','EIM001', ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
         
@@ -182,7 +182,7 @@ def editar_registro(rid):
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'SP_GuardarImagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
         
@@ -196,7 +196,7 @@ def editar_registro(rid):
 def archivar_registro(rid):
     try:
         cur = mysql.connection.cursor()
-        sp_exec(cur, 'SP_ArchivarRegistro', (rid, session['usuario_rol']))
+        sp_exec(cur, 'sp_archivarregistro', (rid, session['usuario_rol']))
         mysql.connection.commit()
         cur.close()
         flash('Reporte archivado en historial', 'success')
@@ -208,11 +208,11 @@ def archivar_registro(rid):
 @admin_required
 def detalle_registro(rid):
     cur = mysql.connection.cursor()
-    registro = sp_one(cur, 'SP_DetalleRegistro', (rid,))
+    registro = sp_one(cur, 'sp_detalleregistro', (rid,))
     cur.close()
     
     cur = mysql.connection.cursor()
-    imagenes = sp_exec(cur, 'SP_ImagenesRegistro', (rid,))
+    imagenes = sp_exec(cur, 'sp_imagenesregistro', (rid,))
     cur.close()
 
     def serialize(obj):
@@ -228,14 +228,28 @@ def detalle_registro(rid):
     # Filtrar solo imágenes que NO estén rechazadas (EIM003)
     imgs_serial = []
     for i in imagenes:
-        if i.get('idEstadoImagen') != 'EIM003':  # Excluir rechazadas
+        # Usar get() case-insensitive
+        estado_img = i.get('idEstadoImagen') or i.get('idestadoimagen')
+        if estado_img != 'EIM003':  # Excluir rechazadas
             imgs_serial.append(serialize(i))
 
-    return jsonify({
-        'registro':       serialize(registro),
-        'evidencias':     [i for i in imgs_serial if i.get('idTipoImagen')=='TIM001'],
-        'levantamientos': [i for i in imgs_serial if i.get('idTipoImagen')=='TIM002']
-    })
+    # Separar por tipo usando get() case-insensitive
+    evidencias = []
+    levantamientos = []
+    for img in imgs_serial:
+        tipo_img = img.get('idTipoImagen') or img.get('idtipoimagen')
+        if tipo_img == 'TIM001':
+            evidencias.append(img)
+        elif tipo_img == 'TIM002':
+            levantamientos.append(img)
+
+    result = {
+        'registro': serialize(registro),
+        'evidencias': evidencias,
+        'levantamientos': levantamientos
+    }
+    
+    return jsonify(result)
 
 @admin_bp.route('/desvios/validar/<rid>', methods=['POST'])
 @admin_required
@@ -262,14 +276,14 @@ def validar_levantamiento(rid):
                 for imagen_id in ids_eliminar:
                     cur = mysql.connection.cursor()
                     # Eliminar físicamente la imagen
-                    sp_exec(cur, 'SP_EliminarImagen', (imagen_id,))
+                    sp_exec(cur, 'sp_eliminarimagen', (imagen_id,))
                     mysql.connection.commit()
                     cur.close()
             
             # Segundo: Aprobar las imágenes seleccionadas (esto cambia estado a COMPLETADO)
             for imagen_id in ids_list:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'SP_ValidarImagen', (gen_id(), imagen_id, rid, session['usuario_rol'], 'APROBADA', comentario))
+                sp_exec(cur, 'sp_validarimagen', (gen_id(), imagen_id, rid, session['usuario_rol'], 'APROBADA', comentario))
                 mysql.connection.commit()
                 cur.close()
             
@@ -288,7 +302,7 @@ def validar_levantamiento(rid):
             # Rechazar todas las imágenes originales (esto cambia estado a PENDIENTE)
             for imagen_id in ids_list:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'SP_ValidarImagen', (gen_id(), imagen_id, rid, session['usuario_rol'], 'RECHAZADA', comentario))
+                sp_exec(cur, 'sp_validarimagen', (gen_id(), imagen_id, rid, session['usuario_rol'], 'RECHAZADA', comentario))
                 mysql.connection.commit()
                 cur.close()
             
@@ -300,7 +314,7 @@ def validar_levantamiento(rid):
         if imagenes_ids_rechazar:
             ids_notif = [id.strip() for id in imagenes_ids_rechazar.split(',') if id.strip()]
             cur = mysql.connection.cursor()
-            cur.execute("SELECT DISTINCT IdUsuarioRol FROM Tbl_ImagenRegistro WHERE IdImagen IN (%s)" % ','.join(['%s']*len(ids_notif)), ids_notif)
+            cur.execute("SELECT DISTINCT idusuariorol FROM tbl_imagenregistro WHERE idimagen IN (%s)" % ','.join(['%s']*len(ids_notif)), ids_notif)
             usuarios = cur.fetchall()
             cur.close()
             
@@ -310,7 +324,7 @@ def validar_levantamiento(rid):
                 if comentario: 
                     msg += f': {comentario}'
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'SP_CrearNotificacion', (gen_id(), usuario['IdUsuarioRol'], msg,
+                sp_exec(cur, 'sp_crearnotificacion', (gen_id(), usuario['idusuariorol'], msg,
                         'success' if decision=='APROBADA' else 'warning', rid))
                 mysql.connection.commit()
                 cur.close()
@@ -323,7 +337,7 @@ def validar_levantamiento(rid):
 @admin_required
 def historial():
     cur       = mysql.connection.cursor()
-    registros = sp_exec(cur, 'SP_HistorialAdmin')
+    registros = sp_exec(cur, 'sp_historialadmin')
     cur.close()
     return render_template('admin/historial.html', registros=registros, notif_count=get_notif_count())
 
@@ -341,7 +355,7 @@ def exportar_excel():
         
         # Obtener registros
         cur  = mysql.connection.cursor()
-        rows = sp_exec(cur, 'SP_ExportarRegistros')
+        rows = sp_exec(cur, 'sp_exportarregistros')
         cur.close()
 
         wb = openpyxl.Workbook()
@@ -374,7 +388,7 @@ def exportar_excel():
         for row in rows:
             # Obtener imágenes del registro
             cur = mysql.connection.cursor()
-            imagenes = sp_exec(cur, 'SP_ImagenesRegistro', (row.get('IdRegistro',''),))
+            imagenes = sp_exec(cur, 'sp_imagenesregistro', (row.get('IdRegistro',''),))
             cur.close()
             
             # Filtrar imágenes no rechazadas
@@ -536,7 +550,7 @@ def exportar_excel():
 @admin_required
 def leer_notificacion(nid):
     cur = mysql.connection.cursor()
-    sp_exec(cur, 'SP_LeerNotificacion', (nid,))
+    sp_exec(cur, 'sp_leernotificacion', (nid,))
     mysql.connection.commit()
     cur.close()
     return jsonify({'ok': True})
@@ -545,7 +559,7 @@ def leer_notificacion(nid):
 @admin_required
 def leer_todas():
     cur = mysql.connection.cursor()
-    cur.execute("UPDATE Tbl_Notificacion SET Leida=1 WHERE IdUsuarioRol=%s", (session['usuario_rol'],))
+    cur.execute("UPDATE tbl_notificacion SET leida=1 WHERE idusuariorol=%s", (session['usuario_rol'],))
     mysql.connection.commit()
     cur.close()
     return jsonify({'ok': True})

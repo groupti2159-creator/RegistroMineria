@@ -34,9 +34,9 @@ function loadNotifs() {
         list.innerHTML = '<div class="notif-empty">Sin notificaciones nuevas</div>';
       } else {
         list.innerHTML = data.notifs.map(n => `
-          <div class="notif-item ${n.Leida ? '' : 'unread'}" onclick="marcarNotif('${n.IdNotificacion}', this)">
-            <p>${n.Mensaje}</p>
-            <small>${n.FechaCreacion}</small>
+          <div class="notif-item ${n.leida ? '' : 'unread'}" onclick="marcarNotif('${n.idnotificacion}', this)">
+            <p>${n.mensaje}</p>
+            <small>${n.fechacreacion}</small>
           </div>`).join('');
       }
       if (badge) {

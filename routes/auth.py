@@ -39,20 +39,20 @@ def login():
             try:
                 cur = mysql.connection.cursor()
                 consume_results(cur)
-                cur.callproc('SP_Login', (dni, pwd))
+                cur.callproc('sp_login', (dni, pwd))
                 user = sp_fetchone(cur)
-
+                
                 if user:
-                    session['user_id']     = user.get('idUsuario')
-                    session['usuario_rol'] = user.get('IdUsuarioRol')
-                    session['dni']         = user.get('DNI')
-                    session['nombre']      = user.get('NombreCompleto')
-                    session['rol']         = user.get('NombreRol')
-                    session['rol_id']      = user.get('idRoles')
+                    session['user_id']     = user.get('idusuario')
+                    session['usuario_rol'] = user.get('idusuariorol')
+                    session['dni']         = user.get('dni')
+                    session['nombre']      = user.get('nombrecompleto')
+                    session['rol']         = user.get('nombrerol')
+                    session['rol_id']      = user.get('idroles')
                     
                     cur.close()
                     
-                    if user.get('NombreRol') == 'Administrador':
+                    if user.get('nombrerol') == 'Administrador':
                         return redirect(url_for('admin.dashboard'))
                     return redirect(url_for('supervisor.desvios'))
                 else:
