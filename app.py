@@ -8,11 +8,13 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv('SECRET_KEY', 'ecosupervisor_2026')
 
-app.config['MYSQL_HOST']        = os.getenv('MYSQL_HOST', 'localhost')
-app.config['MYSQL_USER']        = os.getenv('MYSQL_USER', 'root')
-app.config['MYSQL_PASSWORD']    = os.getenv('MYSQL_PASSWORD', 'xjIkFDMLeGlztTsaAlDIjEQpVKiObtPj')
-app.config['MYSQL_DB']          = os.getenv('MYSQL_DB', 'desvios_ambientales')
-app.config['MYSQL_PORT']        = int(os.getenv('MYSQL_PORT', 3306))
+# Configuración de MySQL - Compatible con Railway
+# Railway puede proporcionar MYSQLHOST, MYSQLUSER, etc. o MYSQL_HOST, MYSQL_USER, etc.
+app.config['MYSQL_HOST']        = os.getenv('MYSQLHOST') or os.getenv('MYSQL_HOST', 'localhost')
+app.config['MYSQL_USER']        = os.getenv('MYSQLUSER') or os.getenv('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD']    = os.getenv('MYSQLPASSWORD') or os.getenv('MYSQL_PASSWORD', '')
+app.config['MYSQL_DB']          = os.getenv('MYSQLDATABASE') or os.getenv('MYSQL_DB', 'desvios_ambientales')
+app.config['MYSQL_PORT']        = int(os.getenv('MYSQLPORT') or os.getenv('MYSQL_PORT', 3306))
 app.config['MYSQL_CURSORCLASS'] = 'DictCursor'
 app.config['UPLOAD_FOLDER']     = os.path.join('static', 'uploads')
 app.config['MAX_CONTENT_LENGTH']= 16 * 1024 * 1024
