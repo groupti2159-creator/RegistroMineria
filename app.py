@@ -1,6 +1,7 @@
 from flask import Flask
 from extensions import mysql
 from config import Config
+import os
 
 app = Flask(__name__)
 
