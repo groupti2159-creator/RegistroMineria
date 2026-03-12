@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header-section">
   <div class="page-header-icon">
-    <span>📢</span>
+    <i data-feather="alert-triangle"></i>
   </div>
   <div>
     <h2 class="section-title">Desvíos <span class="text-green">Ambientales</span></h2>
@@ -14,12 +14,20 @@
 </div>
 
 <div class="info-banner">
-  ℹ️ Modo {{ session.rol }}: Puedes ver reportes y subir imágenes de levantamiento en reportes <strong>PENDIENTES</strong>.
+  <i data-feather="info"></i> Modo {{ session.rol }}: Puedes ver reportes y subir imágenes de levantamiento en reportes <strong>PENDIENTES</strong>.
 </div>
 
 <div class="filter-bar">
-  <a href="?estado=" class="filter-pill {% if not estado_filter %}active{% endif %}">🔽 Todos los estados</a>
-  <span class="filter-count">{{ registros|length }} reportes</span>
+  <div class="filter-select-wrapper">
+    <i data-feather="filter"></i>
+    <select class="filter-select" onchange="window.location.href='?estado=' + this.value + '&page=1'">
+      <option value="" {% if not estado_filter %}selected{% endif %}>Filtrar por estado</option>
+      {% for estado in estados_unicos %}
+      <option value="{{ estado }}" {% if estado_filter==estado %}selected{% endif %}>{{ estado }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <span class="filter-count">{{ total }} reportes</span>
 </div>
 
 {% set is_admin = false %}

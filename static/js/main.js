@@ -2,18 +2,168 @@
 function toggleDark() {
   const html = document.documentElement;
   const isDark = html.getAttribute('data-theme') === 'dark';
-  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
-  localStorage.setItem('theme', isDark ? 'light' : 'dark');
-  const btn = document.getElementById('darkToggle');
-  if (btn) btn.querySelector('.nav-icon').textContent = isDark ? '🌙' : '☀️';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem('theme', newTheme);
+  
+  // Update toggle button text and icon
+  const toggleBtn = document.getElementById('darkToggle');
+  if (toggleBtn) {
+    const textSpan = toggleBtn.querySelector('span:not(.nav-icon)');
+    const iconSpan = toggleBtn.querySelector('.nav-icon');
+    if (newTheme === 'dark') {
+      if (textSpan) textSpan.textContent = 'Modo Claro';
+      if (iconSpan) iconSpan.innerHTML = '<i data-feather="sun"></i>';
+    } else {
+      if (textSpan) textSpan.textContent = 'Modo Oscuro';
+      if (iconSpan) iconSpan.innerHTML = '<i data-feather="moon"></i>';
+    }
+    // Reinitialize feather icons
+    if (typeof feather !== 'undefined') {
+      feather.replace({ 'stroke-width': 1.2 });
+    }
+  }
 }
 
 (function initTheme() {
   const saved = localStorage.getItem('theme') || 'light';
   document.documentElement.setAttribute('data-theme', saved);
-  const btn = document.getElementById('darkToggle');
-  if (btn && saved === 'dark') btn.querySelector('.nav-icon').textContent = '☀️';
+  
+  // Update toggle button on page load
+  const toggleBtn = document.getElementById('darkToggle');
+  if (toggleBtn && saved === 'dark') {
+    const textSpan = toggleBtn.querySelector('span:not(.nav-icon)');
+    const iconSpan = toggleBtn.querySelector('.nav-icon');
+    if (textSpan) textSpan.textContent = 'Modo Claro';
+    if (iconSpan) iconSpan.innerHTML = '<i data-feather="sun"></i>';
+  }
 })();
+
+// ── MOBILE MENU ──
+function toggleMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  
+  if (sidebar && overlay) {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  }
+}
+
+function closeMobileMenu() {
+  const sidebar = document.querySelector('.sidebar');
+  const overlay = document.getElementById('sidebarOverlay');
+  
+  if (sidebar && overlay) {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  }
+}
+
+// ── SIDEBAR SUBMENU ──
+function toggleSubmenu(button) {
+  const submenu = button.nextElementSibling;
+  const isOpen = submenu.classList.contains('open');
+  
+  // Cerrar todos los otros submenus
+  document.querySelectorAll('.nav-submenu.open').forEach(menu => {
+    if (menu !== submenu) {
+      menu.classList.remove('open');
+      menu.previousElementSibling.classList.remove('open');
+    }
+  });
+  
+  // Toggle el submenu actual
+  if (isOpen) {
+    submenu.classList.remove('open');
+    button.classList.remove('open');
+  } else {
+    submenu.classList.add('open');
+    button.classList.add('open');
+  }
+  
+  // Reinicializar iconos
+  if (typeof feather !== 'undefined') {
+    feather.replace({ 'stroke-width': 1.2 });
+  }
+}
+
+// ── RIPPLE EFFECT ──
+function createRipple(event) {
+  const button = event.currentTarget;
+  
+  // Remover ripples anteriores
+  const existingRipple = button.querySelector('.ripple');
+  if (existingRipple) {
+    existingRipple.remove();
+  }
+  
+  const circle = document.createElement('span');
+  const diameter = Math.max(button.clientWidth, button.clientHeight);
+  const radius = diameter / 2;
+  
+  const rect = button.getBoundingClientRect();
+  circle.style.width = circle.style.height = `${diameter}px`;
+  circle.style.left = `${event.clientX - rect.left - radius}px`;
+  circle.style.top = `${event.clientY - rect.top - radius}px`;
+  circle.classList.add('ripple');
+  
+  button.appendChild(circle);
+  
+  setTimeout(() => {
+    circle.remove();
+  }, 600);
+}
+
+// Cerrar menú al hacer clic en un enlace (móvil)
+document.addEventListener('DOMContentLoaded', function() {
+  const navItems = document.querySelectorAll('.nav-item, .nav-subitem');
+  navItems.forEach(item => {
+    // Agregar efecto ripple
+    item.addEventListener('click', createRipple);
+    
+    // Cerrar menú móvil
+    item.addEventListener('click', function() {
+      if (window.innerWidth <= 768 && !item.classList.contains('nav-toggle')) {
+        closeMobileMenu();
+      }
+    });
+  });
+  
+  // Cerrar menú al cambiar tamaño de ventana
+  window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+      closeMobileMenu();
+    }
+  });
+});
+
+// ── INICIALIZAR ICONOS FEATHER ──
+function initFeatherIcons() {
+  if (typeof feather !== 'undefined') {
+    feather.replace({ 'stroke-width': 1.2 });
+  }
+}
+
+// Inicializar iconos cuando el DOM esté listo
+document.addEventListener('DOMContentLoaded', initFeatherIcons);
+
+// Reinicializar iconos cuando se abren modales
+function observeModals() {
+  const modals = document.querySelectorAll('.modal-overlay');
+  modals.forEach(modal => {
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.attributeName === 'style' && modal.style.display === 'flex') {
+          setTimeout(initFeatherIcons, 50);
+        }
+      });
+    });
+    observer.observe(modal, { attributes: true });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', observeModals);
 
 // ── NOTIFICATIONS ──
 function toggleNotifPanel() {

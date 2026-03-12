@@ -26,17 +26,67 @@ def get_notif_count():
 @sup_required
 def desvios():
     estado_filter = request.args.get('estado','')
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    # Obtener TODOS los registros sin filtro para extraer estados únicos
+    cur = mysql.connection.cursor()
+    todos_registros = sp_exec(cur, 'sp_listarregistrossupervisor', (None,))
+    cur.close()
+    
+    # Obtener estados únicos de TODOS los registros
+    estados_unicos = sorted(list(set([r.get('estado', '') for r in todos_registros if r.get('estado')])))
+    
+    # Ahora obtener registros con filtro si aplica
     cur = mysql.connection.cursor()
     registros = sp_exec(cur, 'sp_listarregistrossupervisor', (estado_filter or None,))
     cur.close()
+    
+    # Definir orden de prioridad de estados
+    orden_estados = {
+        'Pendiente': 1,
+        'En Proceso': 2,
+        'Enviado': 3,
+        'En Revisión': 4,
+        'Culminado': 5,
+        'Rechazado': 6,
+        'Cerrado': 7
+    }
+    
+    # Ordenar registros por prioridad de estado
+    registros_ordenados = sorted(
+        registros, 
+        key=lambda x: orden_estados.get(x.get('estado', ''), 999)
+    )
+    
+    # Calcular paginación
+    total = len(registros_ordenados)
+    total_pages = (total + per_page - 1) // per_page  # Redondeo hacia arriba
+    
+    # Validar página
+    if page < 1:
+        page = 1
+    if page > total_pages and total_pages > 0:
+        page = total_pages
+    
+    # Obtener registros de la página actual
+    start = (page - 1) * per_page
+    end = start + per_page
+    registros_pagina = registros_ordenados[start:end]
     
     cur = mysql.connection.cursor()
     notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
     cur.close()
     
     return render_template('supervisor/desvios.html',
-        registros=registros, notifs=notifs,
-        estado_filter=estado_filter, notif_count=get_notif_count())
+        registros=registros_pagina, notifs=notifs,
+        estado_filter=estado_filter, 
+        notif_count=get_notif_count(),
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        per_page=per_page,
+        estados_unicos=estados_unicos)
 
 @supervisor_bp.route('/desvios/detalle/<rid>')
 @sup_required
@@ -144,14 +194,6 @@ def subir_levantamiento(rid):
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
     return redirect(url_for('supervisor.desvios'))
-
-@supervisor_bp.route('/historial')
-@sup_required
-def historial():
-    cur       = mysql.connection.cursor()
-    registros = sp_exec(cur, 'sp_historialsupervisor', (session['usuario_rol'],))
-    cur.close()
-    return render_template('supervisor/historial.html', registros=registros, notif_count=get_notif_count())
 
 @supervisor_bp.route('/notificaciones/leer/<nid>', methods=['POST'])
 @sup_required

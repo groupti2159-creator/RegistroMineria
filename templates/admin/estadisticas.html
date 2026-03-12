@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+
+{% block title %}Estadísticas - ecoSupervisor{% endblock %}
+{% block page_title %}Estadísticas{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-title">
+    <i data-feather="bar-chart-2"></i>
+    Estadísticas por Área Responsable
+  </div>
+  
+  <div class="card-body">
+    {% if stats_areas %}
+      <!-- Gráfico de barras -->
+      <div class="chart-card" style="margin-bottom: 2rem;">
+        <h3 class="chart-title">
+          <i data-feather="bar-chart"></i>
+          Reportes por Área Responsable
+        </h3>
+        <div class="chart-container" style="height: 400px;">
+          <canvas id="areasChart"></canvas>
+        </div>
+      </div>
+      
+      <!-- Tabla de datos -->
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Área Responsable</th>
+              <th>Total</th>
+              <th>Culminados</th>
+              <th>Pendientes</th>
+              <th>En Proceso</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for area in stats_areas %}
+            <tr>
+              <td>{{ area.area_responsable }}</td>
+              <td><strong>{{ area.total }}</strong></td>
+              <td><span class="estado-badge estado-culminado">{{ area.culminado }}</span></td>
+              <td><span class="estado-badge estado-pendiente">{{ area.pendiente }}</span></td>
+              <td><span class="estado-badge estado-en-proceso">{{ area.proceso }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="module-placeholder">
+        <div class="module-placeholder-icon">
+          <i data-feather="bar-chart-2"></i>
+        </div>
+        <h2>No hay datos disponibles</h2>
+        <p>Aún no se han registrado desvíos ambientales</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if stats_areas %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+// Configuración global
+Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+
+// Datos del gráfico
+const areas = {{ stats_areas | map(attribute='area_responsable') | list | tojson }};
+const totales = {{ stats_areas | map(attribute='total') | list | tojson }};
+
+// Colores vibrantes para cada barra
+const colores = [
+  '#3b82f6', // Azul
+  '#10b981', // Verde
+  '#f59e0b', // Naranja
+  '#ef4444', // Rojo
+  '#8b5cf6', // Púrpura
+  '#ec4899', // Rosa
+  '#06b6d4', // Cyan
+  '#84cc16', // Lima
+  '#f97316', // Naranja oscuro
+  '#6366f1'  // Índigo
+];
+
+// Crear gráfico
+const ctx = document.getElementById('areasChart').getContext('2d');
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: areas,
+    datasets: [{
+      label: 'Total de Reportes',
+      data: totales,
+      backgroundColor: colores.slice(0, areas.length),
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: false
+      },
+      tooltip: {
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        padding: 12,
+        titleFont: {
+          size: 14,
+          weight: 'bold'
+        },
+        bodyFont: {
+          size: 13
+        },
+        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderWidth: 1,
+        displayColors: false,
+        callbacks: {
+          label: function(context) {
+            return 'Total: ' + context.parsed.y + ' reportes';
+          }
+        }
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+          font: {
+            size: 12
+          }
+        },
+        grid: {
+          color: 'rgba(0, 0, 0, 0.05)',
+          drawBorder: false
+        }
+      },
+      x: {
+        ticks: {
+          font: {
+            size: 12
+          },
+          maxRotation: 45,
+          minRotation: 45
+        },
+        grid: {
+          display: false
+        }
+      }
+    },
+    animation: {
+      duration: 1000,
+      easing: 'easeInOutQuart'
+    }
+  }
+});
+</script>
+{% endif %}
+{% endblock %}

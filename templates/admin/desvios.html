@@ -5,7 +5,7 @@
 {% block content %}
 <div class="page-header-section">
   <div class="page-header-icon">
-    <span>📢</span>
+    <i data-feather="alert-triangle"></i>
   </div>
   <div>
     <h2 class="section-title">Desvíos <span class="text-green">Ambientales</span></h2>
@@ -15,16 +15,24 @@
 
 <div class="action-bar">
   <button class="btn btn-primary" onclick="document.getElementById('modalCrear').style.display='flex'">
-    ➕ <strong>Nuevo Reporte Ambiental</strong>
+    <i data-feather="plus-circle"></i> <strong>Nuevo Reporte Ambiental</strong>
   </button>
   <a href="{{ url_for('admin.exportar_excel') }}" class="btn btn-export">
-    📊 Exportar <strong>.xlsx</strong>
+    <i data-feather="download"></i> Exportar <strong>.xlsx</strong>
   </a>
 </div>
 
 <div class="filter-bar">
-  <a href="?estado=" class="filter-pill {% if not estado_filter %}active{% endif %}">🔽 Todos los estados</a>
-  <span class="filter-count">{{ registros|length }} reportes</span>
+  <div class="filter-select-wrapper">
+    <i data-feather="filter"></i>
+    <select class="filter-select" onchange="window.location.href='?estado=' + this.value + '&page=1'">
+      <option value="" {% if not estado_filter %}selected{% endif %}>Filtrar por estado</option>
+      {% for estado in estados_unicos %}
+      <option value="{{ estado }}" {% if estado_filter==estado %}selected{% endif %}>{{ estado }}</option>
+      {% endfor %}
+    </select>
+  </div>
+  <span class="filter-count">{{ total }} reportes</span>
 </div>
 
 <!-- TABLA -->
@@ -36,28 +44,30 @@
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-title-group">
-        <span class="modal-icon-btn">🔵</span>
+        <span class="modal-icon-btn"><i data-feather="file-plus"></i></span>
         <div>
-          <h3>📋 Registrar Nuevo Reporte</h3>
+          <h3><i data-feather="clipboard"></i> Registrar Nuevo Reporte</h3>
           <p>Completa todos los campos obligatorios (*)</p>
         </div>
       </div>
-      <button class="modal-close" onclick="document.getElementById('modalCrear').style.display='none'">✕</button>
+      <button class="modal-close" onclick="document.getElementById('modalCrear').style.display='none'">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <form method="POST" action="{{ url_for('admin.crear_registro') }}" enctype="multipart/form-data">
       <div class="modal-body">
-        <p class="required-note">• Los campos marcados con * son obligatorios</p>
+        <p class="required-note"><i data-feather="alert-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i> Los campos marcados con * son obligatorios</p>
 
         <div class="form-section">
-          <h4 class="form-section-title">🔵 Información Básica</h4>
+          <h4 class="form-section-title"><i data-feather="info"></i> Información Básica</h4>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">📅 FECHA *</label>
+              <label class="form-label">FECHA *</label>
               <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-input" readonly required>
-              <small class="form-hint">📌 Fecha automática (zona horaria Perú)</small>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha automática (zona horaria Perú)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">🏢 ÁREA REPORTANTE *</label>
+              <label class="form-label">ÁREA REPORTANTE *</label>
               <select name="area_reportante" class="form-select" required>
                 <option value="">Seleccionar área...</option>
                 {% for a in areas_rep %}
@@ -68,36 +78,40 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">🗓️ FECHA EJECUCIÓN *</label>
+              <label class="form-label">FECHA EJECUCIÓN *</label>
               <input type="date" name="fecha_ejecucion" class="form-input" readonly required>
-              <small class="form-hint">📌 Fecha automática (zona horaria Perú)</small>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha automática (zona horaria Perú)</small>
             </div>
           </div>
         </div>
 
         <div class="form-section">
-          <h4 class="form-section-title">📍 Ubicación y Descripción</h4>
-          <div class="form-group">
-            <label class="form-label">📍 UBICACIÓN *</label>
-            <select name="ubicacion" class="form-select" required>
-              <option value="">Seleccionar ubicación...</option>
-              {% for u in ubicaciones %}
-              <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
-              {% endfor %}
-            </select>
+          <h4 class="form-section-title"><i data-feather="map-pin"></i> Ubicación y Descripción</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">UBICACIÓN *</label>
+              <select name="ubicacion" class="form-select" required>
+                <option value="">Seleccionar ubicación...</option>
+                {% for u in ubicaciones %}
+                <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
+                {% endfor %}
+              </select>
+            </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">📝 DESCRIPCIÓN *</label>
-            <textarea name="descripcion" class="form-textarea" placeholder="Describe el problema o situación encontrada" minlength="10" required></textarea>
-            <small class="form-hint">ℹ Mínimo 10 caracteres</small>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">DESCRIPCIÓN *</label>
+              <textarea name="descripcion" class="form-textarea" placeholder="Describe el problema o situación encontrada" minlength="10" required></textarea>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
+            </div>
           </div>
         </div>
 
         <div class="form-section">
-          <h4 class="form-section-title">🟡 Evaluación y Acción</h4>
+          <h4 class="form-section-title"><i data-feather="alert-triangle"></i> Evaluación y Acción</h4>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">🔴 NIVEL DE RIESGO *</label>
+              <label class="form-label">NIVEL DE RIESGO *</label>
               <select name="riesgo" class="form-select" required>
                 <option value="">Seleccionar riesgo...</option>
                 {% for r in riesgos %}
@@ -106,7 +120,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">⚠️ DESCRIPCIÓN TIPO *</label>
+              <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" class="form-select" required>
                 <option value="">Seleccionar tipo...</option>
                 {% for t in tipos %}
@@ -115,18 +129,20 @@
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">✏️ ACCIÓN REALIZADA *</label>
-            <textarea name="accion" class="form-textarea" placeholder="Describe la acción tomada o a tomar" minlength="10"></textarea>
-            <small class="form-hint">ℹ Mínimo 10 caracteres</small>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">ACCIÓN REALIZADA *</label>
+              <textarea name="accion" class="form-textarea" placeholder="Describe la acción tomada o a tomar" minlength="10"></textarea>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
+            </div>
           </div>
         </div>
 
         <div class="form-section">
-          <h4 class="form-section-title">👥 Responsables</h4>
+          <h4 class="form-section-title"><i data-feather="users"></i> Responsables</h4>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">🏢 ÁREA RESPONSABLE *</label>
+              <label class="form-label">ÁREA RESPONSABLE *</label>
               <select name="area_responsable" class="form-select" required>
                 <option value="">Seleccionar área...</option>
                 {% for a in areas_res %}
@@ -135,43 +151,45 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">👤 PERSONAL RESPONSABLE *</label>
+              <label class="form-label">PERSONAL RESPONSABLE *</label>
               <input type="text" name="personal_responsable" class="form-input" placeholder="Nombre del responsable">
             </div>
           </div>
         </div>
 
         <div class="form-section">
-          <h4 class="form-section-title">🖼️ Estado e Imágenes</h4>
-          <div class="form-group">
-            <label class="form-label">📊 ESTADO *</label>
-            <select name="estado" class="form-select" disabled>
-              <option value="EST001">⏳ PENDIENTE</option>
-            </select>
-            <small class="form-hint">Los nuevos registros siempre inician en PENDIENTE</small>
+          <h4 class="form-section-title"><i data-feather="image"></i> Estado e Imágenes</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ESTADO *</label>
+              <select name="estado" class="form-select" disabled>
+                <option value="EST001">PENDIENTE</option>
+              </select>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Los nuevos registros siempre inician en PENDIENTE</small>
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">🖼️ IMÁGENES DE EVIDENCIA</label>
+              <label class="form-label">IMÁGENES DE EVIDENCIA</label>
               <div class="file-upload-area">
                 <input type="file" name="evidencias" multiple accept="image/*" class="file-input" id="fileEvidencias">
                 <label for="fileEvidencias" class="file-label">
-                  <span class="btn btn-outline-green">Elegir archivos</span>
+                  <span class="btn btn-outline-green"><i data-feather="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i> Elegir archivos</span>
                   <span class="file-name" id="nameEvidencias">Sin archivos seleccionados</span>
                 </label>
-                <small class="form-hint">ℹ Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
+                <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
               </div>
               <div id="previewEvidencias" class="image-preview-container" style="display:none"></div>
             </div>
             <div class="form-group">
-              <label class="form-label">✏️ IMÁGENES DE LEVANTAMIENTO</label>
+              <label class="form-label">IMÁGENES DE LEVANTAMIENTO</label>
               <div class="file-upload-area">
                 <input type="file" name="levantamientos" multiple accept="image/*" class="file-input" id="fileLevantamientos">
                 <label for="fileLevantamientos" class="file-label">
-                  <span class="btn btn-outline-green">Elegir archivos</span>
+                  <span class="btn btn-outline-green"><i data-feather="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i> Elegir archivos</span>
                   <span class="file-name" id="nameLevantamientos">Sin archivos seleccionados</span>
                 </label>
-                <small class="form-hint">ℹ Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
+                <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
               </div>
               <div id="previewLevantamientos" class="image-preview-container" style="display:none"></div>
             </div>
@@ -179,8 +197,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary btn-lg">✅ Guardar Reporte</button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalCrear').style.display='none'">✕ Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-lg"><i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Guardar Reporte</button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalCrear').style.display='none'"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
       </div>
     </form>
   </div>
@@ -191,26 +209,28 @@
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-title-group">
-        <span class="modal-icon-btn" style="background:#f59e0b">🟡</span>
+        <span class="modal-icon-btn"><i data-feather="edit-2"></i></span>
         <div>
-          <h3>✏️ Editar Reporte</h3>
+          <h3><i data-feather="edit"></i> Editar Reporte</h3>
           <p>Modifica los campos necesarios</p>
         </div>
       </div>
-      <button class="modal-close" onclick="document.getElementById('modalEditar').style.display='none'">✕</button>
+      <button class="modal-close" onclick="document.getElementById('modalEditar').style.display='none'">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <form method="POST" id="formEditar" enctype="multipart/form-data">
       <div class="modal-body">
         <div class="form-section">
-          <h4 class="form-section-title">🔵 Información Básica</h4>
+          <h4 class="form-section-title"><i data-feather="info"></i> Información Básica</h4>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">📅 FECHA *</label>
+              <label class="form-label">FECHA *</label>
               <input type="date" name="fecha_inicio" id="edit_fecha" class="form-input" readonly required>
-              <small class="form-hint">📌 Fecha de creación (no editable)</small>
+              <small class="form-hint"><i data-feather="lock" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha de creación (no editable)</small>
             </div>
             <div class="form-group">
-              <label class="form-label">🏢 ÁREA REPORTANTE *</label>
+              <label class="form-label">ÁREA REPORTANTE *</label>
               <select name="area_reportante" id="edit_area_rep" class="form-select" required>
                 {% for a in areas_rep %}
                 <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
@@ -218,32 +238,38 @@
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">🗓️ FECHA EJECUCIÓN</label>
-            <input type="date" name="fecha_ejecucion" id="edit_fecha_ejec" class="form-input" readonly>
-            <small class="form-hint">📌 Fecha de ejecución (no editable)</small>
-          </div>
-        </div>
-        <div class="form-section">
-          <h4 class="form-section-title">📍 Ubicación y Descripción</h4>
-          <div class="form-group">
-            <label class="form-label">📍 UBICACIÓN *</label>
-            <select name="ubicacion" id="edit_ubicacion" class="form-select" required>
-              {% for u in ubicaciones %}
-              <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">📝 DESCRIPCIÓN *</label>
-            <textarea name="descripcion" id="edit_descripcion" class="form-textarea" required></textarea>
-          </div>
-        </div>
-        <div class="form-section">
-          <h4 class="form-section-title">🟡 Evaluación y Acción</h4>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">🔴 NIVEL DE RIESGO *</label>
+              <label class="form-label">FECHA EJECUCIÓN</label>
+              <input type="date" name="fecha_ejecucion" id="edit_fecha_ejec" class="form-input" readonly>
+              <small class="form-hint"><i data-feather="lock" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha de ejecución (no editable)</small>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h4 class="form-section-title"><i data-feather="map-pin"></i> Ubicación y Descripción</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">UBICACIÓN *</label>
+              <select name="ubicacion" id="edit_ubicacion" class="form-select" required>
+                {% for u in ubicaciones %}
+                <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">DESCRIPCIÓN *</label>
+              <textarea name="descripcion" id="edit_descripcion" class="form-textarea" required></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="form-section">
+          <h4 class="form-section-title"><i data-feather="alert-triangle"></i> Evaluación y Acción</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">NIVEL DE RIESGO *</label>
               <select name="riesgo" id="edit_riesgo" class="form-select" required>
                 {% for r in riesgos %}
                 <option value="{{ r.idriesgo }}">{{ r.riesgo }}</option>
@@ -251,7 +277,7 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">⚠️ DESCRIPCIÓN TIPO *</label>
+              <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" id="edit_tipo" class="form-select" required>
                 {% for t in tipos %}
                 <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
@@ -259,16 +285,18 @@
               </select>
             </div>
           </div>
-          <div class="form-group">
-            <label class="form-label">✏️ ACCIÓN REALIZADA</label>
-            <textarea name="accion" id="edit_accion" class="form-textarea"></textarea>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">ACCIÓN REALIZADA</label>
+              <textarea name="accion" id="edit_accion" class="form-textarea"></textarea>
+            </div>
           </div>
         </div>
         <div class="form-section">
-          <h4 class="form-section-title">👥 Responsables</h4>
+          <h4 class="form-section-title"><i data-feather="users"></i> Responsables</h4>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">🏢 ÁREA RESPONSABLE *</label>
+              <label class="form-label">ÁREA RESPONSABLE *</label>
               <select name="area_responsable" id="edit_area_res" class="form-select" required>
                 {% for a in areas_res %}
                 <option value="{{ a.idarearesponsable }}">{{ a.arearesponsable }}</option>
@@ -276,37 +304,39 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">👤 PERSONAL RESPONSABLE</label>
+              <label class="form-label">PERSONAL RESPONSABLE</label>
               <input type="text" name="personal_responsable" id="edit_personal" class="form-input">
             </div>
           </div>
         </div>
         <div class="form-section">
-          <h4 class="form-section-title">📊 Estado</h4>
-          <div class="form-group">
-            <label class="form-label">ESTADO</label>
-            <select name="estado" id="edit_estado" class="form-select" style="pointer-events:none;background-color:var(--bg);opacity:0.7">
-              {% for e in estados %}
-              {# Solo mostrar los 3 estados principales: Pendiente, En Proceso, Culminado #}
-              {% if e.idestado in ['EST001', 'EST003', 'EST006'] %}
-              <option value="{{ e.idestado }}">{{ e.estado }}</option>
-              {% endif %}
-              {% endfor %}
-            </select>
-            <small class="form-hint">📌 El estado se actualiza automáticamente según el flujo de trabajo</small>
+          <h4 class="form-section-title"><i data-feather="activity"></i> Estado</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ESTADO</label>
+              <select name="estado" id="edit_estado" class="form-select" style="pointer-events:none;background-color:var(--bg);opacity:0.7">
+                {% for e in estados %}
+                {# Solo mostrar los 3 estados principales: Pendiente, En Proceso, Culminado #}
+                {% if e.idestado in ['EST001', 'EST003', 'EST006'] %}
+                <option value="{{ e.idestado }}">{{ e.estado }}</option>
+                {% endif %}
+                {% endfor %}
+              </select>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> El estado se actualiza automáticamente según el flujo de trabajo</small>
+            </div>
           </div>
         </div>
         
         <div class="form-section">
-          <h4 class="form-section-title">🖼️ Imágenes Cargadas</h4>
+          <h4 class="form-section-title"><i data-feather="image"></i> Imágenes Cargadas</h4>
           <div id="edit_imagenes_section">
             <p style="color:#94a3b8;font-size:.85rem">Cargando imágenes...</p>
           </div>
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-yellow btn-lg">✏️ Actualizar Reporte</button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalEditar').style.display='none'">✕ Cancelar</button>
+        <button type="submit" class="btn btn-yellow btn-lg"><i data-feather="save" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Actualizar Reporte</button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalEditar').style.display='none'"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
       </div>
     </form>
   </div>
@@ -315,9 +345,11 @@
 <!-- ===== MODAL DETALLE ===== -->
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal-box modal-large">
-    <div class="modal-header" style="background:#2d3748">
-      <h3 style="color:white">📄 Detalle del Reporte</h3>
-      <button class="modal-close" style="color:white" onclick="document.getElementById('modalDetalle').style.display='none'">✕</button>
+    <div class="modal-header">
+      <h3><i data-feather="file-text"></i> Detalle del Reporte</h3>
+      <button class="modal-close" onclick="document.getElementById('modalDetalle').style.display='none'">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <div class="modal-body" id="detalleContent">
       <div class="loading-state">Cargando...</div>
@@ -328,8 +360,8 @@
 <!-- ===== MODAL VALIDAR ===== -->
 <div class="modal-overlay" id="modalValidar">
   <div class="modal-box" style="max-width:800px">
-    <div class="modal-header" style="background:#059669">
-      <h3 style="color:white">✅ Validar Imágenes de Levantamiento</h3>
+    <div class="modal-header">
+      <h3><i data-feather="check-circle"></i> Validar Imágenes de Levantamiento</h3>
       <button class="modal-close" style="color:white" onclick="cerrarModalValidar()">✕</button>
     </div>
     <form method="POST" id="formValidar" onsubmit="return validarFormulario()">

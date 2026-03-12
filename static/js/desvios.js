@@ -29,7 +29,7 @@ function buildDetalleHTML(data) {
   <div class="detalle-grid">
     <div>
       <div class="detalle-section">
-        <div class="detalle-section-title">🔵 Información General</div>
+        <div class="detalle-section-title"><i data-feather="info"></i> Información General</div>
         <div class="detalle-body">
           <div class="detalle-row">
             <div class="detalle-field"><label>Fecha</label><p>${r.fechainicio||'—'}</p></div>
@@ -43,12 +43,12 @@ function buildDetalleHTML(data) {
       </div>
 
       <div class="detalle-section">
-        <div class="detalle-section-title">📍 Ubicación</div>
+        <div class="detalle-section-title"><i data-feather="map-pin"></i> Ubicación</div>
         <div class="detalle-body"><p>${r.ubicacion||'—'}</p></div>
       </div>
 
       <div class="detalle-section">
-        <div class="detalle-section-title">⚠️ Detalle del Incidente</div>
+        <div class="detalle-section-title"><i data-feather="alert-triangle"></i> Detalle del Incidente</div>
         <div class="detalle-body">
           <div class="detalle-field" style="margin-bottom:.6rem">
             <label>Problema Detectado</label>
@@ -62,14 +62,14 @@ function buildDetalleHTML(data) {
       </div>
 
       <div class="detalle-section">
-        <div class="detalle-section-title">✅ Acción Realizada</div>
+        <div class="detalle-section-title"><i data-feather="check-square"></i> Acción Realizada</div>
         <div class="detalle-body"><p>${r.accion||'—'}</p></div>
       </div>
     </div>
 
     <div>
       <div class="detalle-section">
-        <div class="detalle-section-title">📊 Estado del Reporte</div>
+        <div class="detalle-section-title"><i data-feather="activity"></i> Estado del Reporte</div>
         <div class="detalle-body">
           <div class="estado-display" style="color:${color}">${r.estado||'—'}</div>
           <p style="font-size:.7rem;text-align:center;color:#94a3b8">Estado actual</p>
@@ -77,12 +77,12 @@ function buildDetalleHTML(data) {
       </div>
 
       <div class="detalle-section">
-        <div class="detalle-section-title">🏢 Área Reportante</div>
+        <div class="detalle-section-title"><i data-feather="briefcase"></i> Área Reportante</div>
         <div class="detalle-body"><p style="font-weight:600">${r.areareportante||'—'}</p></div>
       </div>
 
       <div class="detalle-section">
-        <div class="detalle-section-title">👥 Responsables</div>
+        <div class="detalle-section-title"><i data-feather="users"></i> Responsables</div>
         <div class="detalle-body">
           <div class="detalle-field" style="margin-bottom:.4rem">
             <label>Área Responsable</label>
@@ -96,16 +96,16 @@ function buildDetalleHTML(data) {
       </div>
 
       <div class="detalle-section">
-        <div class="detalle-section-title">🖼️ Evidencias</div>
+        <div class="detalle-section-title"><i data-feather="image"></i> Evidencias</div>
         <div class="detalle-body">
-          <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin-bottom:.4rem">🖼 Evidencias (${ev.length})</p>
+          <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem"><i data-feather="image" style="width:14px;height:14px"></i> Evidencias (${ev.length})</p>
           ${renderImgs(ev, false, r.idregistro)}
-          <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin:.6rem 0 .4rem">✏️ Levantamientos (${lv.length})</p>
+          <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin:.6rem 0 .4rem;display:flex;align-items:center;gap:.3rem"><i data-feather="file" style="width:14px;height:14px"></i> Levantamientos (${lv.length})</p>
           ${renderImgs(lv, false, r.idregistro)}
           ${canValidate && lv.filter(i => i.estadoimagen === 'Pendiente').length > 0 ? 
             `<button onclick="abrirValidarConjunto('${r.idregistro}', ${JSON.stringify(lv).replace(/"/g, '&quot;')})" 
-                     style="width:100%;margin-top:.8rem;padding:.6rem;background:#059669;color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem">
-              ✅ Validar Conjunto de Imágenes
+                     style="width:100%;margin-top:.8rem;padding:.6rem;background:#059669;color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;gap:.4rem">
+              <i data-feather="check-circle" style="width:16px;height:16px"></i> Validar Conjunto de Imágenes
             </button>` : ''}
         </div>
       </div>
@@ -123,6 +123,12 @@ function verDetalle(rid) {
   document.getElementById('modalDetalle').style.display = 'flex';
   fetch(url).then(r => r.json()).then(data => {
     document.getElementById('detalleContent').innerHTML = buildDetalleHTML(data);
+    // Inicializar iconos Feather después de cargar el contenido
+    setTimeout(() => {
+      if (typeof feather !== 'undefined') {
+        feather.replace({ 'stroke-width': 1.2 });
+      }
+    }, 50);
   });
 }
 
@@ -438,11 +444,4 @@ function cerrarModalValidar() {
 function abrirValidar(imagenId, imgSrc, registroId) {
   // Esta función ya no se usa, pero la mantenemos por compatibilidad
   console.warn('abrirValidar is deprecated, use abrirValidarConjunto instead');
-}
-
-// ── ARCHIVAR confirm ──
-function confirmarEliminar(rid) {
-  if (confirm('Este reporte no está culminado. Solo se pueden archivar reportes CULMINADOS.')) {
-    alert('El reporte debe estar en estado CULMINADO para ser archivado.');
-  }
 }

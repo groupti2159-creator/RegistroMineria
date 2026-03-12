@@ -1,17 +1,11 @@
 <div class="table-card">
   <div class="table-header">
     <div class="table-title-row">
-      <span class="table-icon">📋</span>
+      <span class="table-icon"><i data-feather="clipboard"></i></span>
       <div>
         <h3>Reportes Ambientales</h3>
-        <p>Total: {{ registros|length }} registros</p>
+        <p>Total: {{ total }} registros</p>
       </div>
-    </div>
-    <div class="table-filters">
-      <a href="?estado=" class="filter-btn {% if not estado_filter %}active{% endif %}">Todos</a>
-      <a href="?estado=Culminado" class="filter-btn filter-green {% if estado_filter=='Culminado' %}active{% endif %}">Completado</a>
-      <a href="?estado=En Proceso" class="filter-btn filter-yellow {% if estado_filter=='En Proceso' %}active{% endif %}">En Proceso</a>
-      <a href="?estado=Pendiente" class="filter-btn filter-red {% if estado_filter=='Pendiente' %}active{% endif %}">Pendiente</a>
     </div>
   </div>
 
@@ -20,12 +14,12 @@
     <table class="data-table">
       <thead>
         <tr>
-          <th>📅 FECHA</th>
-          <th>📄 CORRELATIVO</th>
-          <th>📍 UBICACIÓN</th>
-          <th>🔵 ESTADO</th>
-          <th>🖼️ IMÁGENES</th>
-          <th>⋮ ACCIONES</th>
+          <th><i data-feather="calendar"></i> FECHA</th>
+          <th><i data-feather="hash"></i> CORRELATIVO</th>
+          <th><i data-feather="map-pin"></i> UBICACIÓN</th>
+          <th><i data-feather="activity"></i> ESTADO</th>
+          <th><i data-feather="image"></i> IMÁGENES</th>
+          <th><i data-feather="more-vertical"></i> ACCIONES</th>
         </tr>
       </thead>
       <tbody>
@@ -40,26 +34,25 @@
           <td><span class="estado-badge estado-{{ r.estado|lower|replace(' ','-') }}">{{ r.estado|upper }}</span></td>
           <td>
             <div class="img-count-badges">
-              <span class="img-badge" title="Evidencias">🖼️ {{ r.cnt_evidencias }}</span>
-              <span class="img-badge" title="Levantamientos">✏️ {{ r.cnt_levantamientos }}</span>
+              <span class="img-badge" title="Evidencias"><i data-feather="image"></i> {{ r.cnt_evidencias }}</span>
+              <span class="img-badge" title="Levantamientos"><i data-feather="file"></i> {{ r.cnt_levantamientos }}</span>
             </div>
           </td>
           <td>
             <div class="action-btns">
-              <button class="btn-icon btn-blue" onclick="verDetalle('{{ r.idregistro }}')" title="Ver detalle">👁️</button>
+              <button class="btn-icon btn-blue" onclick="verDetalle('{{ r.idregistro }}')" title="Ver detalle">
+                <i data-feather="eye"></i>
+              </button>
               {% if is_admin %}
-              <button class="btn-icon btn-yellow" onclick="editarRegistro('{{ r.idregistro }}')" title="Editar">✏️</button>
-              {% if r.estado == 'Culminado' %}
-              <form method="POST" action="{{ url_for('admin.archivar_registro', rid=r.idregistro) }}" style="display:inline" onsubmit="return confirm('¿Archivar este reporte en el historial?')">
-                <button type="submit" class="btn-icon btn-red" title="Archivar">🗂️</button>
-              </form>
-              {% else %}
-              <button class="btn-icon btn-red" onclick="confirmarEliminar('{{ r.idregistro }}')" title="Archivar">🗂️</button>
-              {% endif %}
+              <button class="btn-icon btn-yellow" onclick="editarRegistro('{{ r.idregistro }}')" title="Editar">
+                <i data-feather="edit-2"></i>
+              </button>
               {% else %}
               {# Solo mostrar botón de subir si está en PENDIENTE #}
               {% if r.estado == 'Pendiente' %}
-              <button class="btn-icon btn-purple" onclick="abrirSubirModal('{{ r.idregistro }}')" title="Subir levantamiento">☁️</button>
+              <button class="btn-icon btn-purple" onclick="abrirSubirModal('{{ r.idregistro }}')" title="Subir levantamiento">
+                <i data-feather="upload-cloud"></i>
+              </button>
               {% endif %}
               {% endif %}
             </div>
@@ -70,11 +63,45 @@
     </table>
   </div>
   <div class="table-footer">
-    <span>Mostrando 1-{{ registros|length }} de {{ registros|length }} resultados</span>
+    <span>Mostrando {{ ((page - 1) * per_page) + 1 }}-{{ [page * per_page, total]|min }} de {{ total }} resultados</span>
+    
+    {% if total_pages > 1 %}
+    <div class="pagination">
+      {% if page > 1 %}
+      <a href="?estado={{ estado_filter }}&page={{ page - 1 }}" class="pagination-btn" title="Página anterior">
+        <i data-feather="chevron-left"></i>
+      </a>
+      {% else %}
+      <span class="pagination-btn disabled" title="Primera página">
+        <i data-feather="chevron-left"></i>
+      </span>
+      {% endif %}
+      
+      {% for p in range(1, total_pages + 1) %}
+        {% if p == page %}
+          <span class="pagination-number active">{{ p }}</span>
+        {% elif p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+          <a href="?estado={{ estado_filter }}&page={{ p }}" class="pagination-number">{{ p }}</a>
+        {% elif p == page - 3 or p == page + 3 %}
+          <span class="pagination-dots">...</span>
+        {% endif %}
+      {% endfor %}
+      
+      {% if page < total_pages %}
+      <a href="?estado={{ estado_filter }}&page={{ page + 1 }}" class="pagination-btn" title="Página siguiente">
+        <i data-feather="chevron-right"></i>
+      </a>
+      {% else %}
+      <span class="pagination-btn disabled" title="Última página">
+        <i data-feather="chevron-right"></i>
+      </span>
+      {% endif %}
+    </div>
+    {% endif %}
   </div>
   {% else %}
   <div class="empty-state" style="padding:3rem">
-    <span style="font-size:3rem">📭</span>
+    <i data-feather="inbox" style="width:64px;height:64px;color:var(--text-muted)"></i>
     <p>No hay reportes registrados</p>
   </div>
   {% endif %}

@@ -6,15 +6,21 @@
 <title>{% block title %}ecoSupervisor{% endblock %}</title>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
 </head>
 <body>
 
 {% if session.user_id %}
+<!-- Overlay para cerrar sidebar en móvil -->
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeMobileMenu()"></div>
+
 <div class="layout">
   <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-brand">
-      <div class="brand-icon">🌍</div>
+      <div class="brand-icon">
+        <i data-feather="globe"></i>
+      </div>
       <div class="brand-text">
         <span class="brand-eco">Eco</span><span class="brand-sup">Supervisor</span>
         <small>DNI: {{ session.dni }}</small>
@@ -25,36 +31,55 @@
     <nav class="sidebar-nav">
       {% if session.rol == 'Administrador' %}
         <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-          <span class="nav-icon">🏠</span><span>Dashboard</span>
+          <span class="nav-icon"><i data-feather="home"></i></span><span>Dashboard</span>
         </a>
-        <a href="{{ url_for('admin.desvios') }}" class="nav-item {% if request.endpoint == 'admin.desvios' %}active{% endif %}">
-          <span class="nav-icon">⚠️</span><span>Desvíos Ambientales</span>
-          {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
-        </a>
-        <a href="{{ url_for('admin.historial') }}" class="nav-item {% if request.endpoint == 'admin.historial' %}active{% endif %}">
-          <span class="nav-icon">📋</span><span>Historial</span>
-        </a>
-        <a href="#" class="nav-item disabled" title="Próximamente">
-          <span class="nav-icon">📊</span><span>Estadísticas</span>
-          <span class="nav-soon">Pronto</span>
-        </a>
+        
+        <!-- Desvíos Ambientales con submenu -->
+        <div class="nav-group">
+          <button class="nav-item nav-toggle {% if request.endpoint in ['admin.desvios', 'admin.registrar', 'admin.estadisticas'] %}active{% endif %}" onclick="toggleSubmenu(this)">
+            <span class="nav-icon"><i data-feather="alert-triangle"></i></span>
+            <span>Desvíos Ambientales</span>
+            {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
+            <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
+          </button>
+          <div class="nav-submenu {% if request.endpoint in ['admin.desvios', 'admin.registrar', 'admin.estadisticas'] %}open{% endif %}">
+            <a href="{{ url_for('admin.registrar') }}" class="nav-subitem {% if request.endpoint in ['admin.registrar', 'admin.desvios'] %}active{% endif %}">
+              <span class="nav-icon"><i data-feather="file-plus"></i></span><span>Registrar Reporte</span>
+            </a>
+            <a href="{{ url_for('admin.estadisticas') }}" class="nav-subitem {% if request.endpoint == 'admin.estadisticas' %}active{% endif %}">
+              <span class="nav-icon"><i data-feather="bar-chart-2"></i></span><span>Estadísticas</span>
+            </a>
+          </div>
+        </div>
+        
+        <!-- Configuración con submenu -->
+        <div class="nav-group">
+          <button class="nav-item nav-toggle {% if request.endpoint in ['admin.configuracion', 'admin.configuracion_usuarios'] %}active{% endif %}" onclick="toggleSubmenu(this)">
+            <span class="nav-icon"><i data-feather="settings"></i></span>
+            <span>Configuración</span>
+            <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
+          </button>
+          <div class="nav-submenu {% if request.endpoint in ['admin.configuracion', 'admin.configuracion_usuarios'] %}open{% endif %}">
+            <a href="{{ url_for('admin.configuracion_usuarios') }}" class="nav-subitem {% if request.endpoint == 'admin.configuracion_usuarios' %}active{% endif %}">
+              <span class="nav-icon"><i data-feather="users"></i></span><span>Usuarios</span>
+            </a>
+          </div>
+        </div>
+        
       {% else %}
         <a href="{{ url_for('supervisor.desvios') }}" class="nav-item {% if request.endpoint == 'supervisor.desvios' %}active{% endif %}">
-          <span class="nav-icon">⚠️</span><span>Desvíos Ambientales</span>
+          <span class="nav-icon"><i data-feather="alert-triangle"></i></span><span>Desvíos Ambientales</span>
           {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
-        </a>
-        <a href="{{ url_for('supervisor.historial') }}" class="nav-item {% if request.endpoint == 'supervisor.historial' %}active{% endif %}">
-          <span class="nav-icon">📋</span><span>Mi Historial</span>
         </a>
       {% endif %}
     </nav>
 
     <div class="sidebar-footer">
       <button class="nav-item" onclick="toggleDark()" id="darkToggle">
-        <span class="nav-icon">🌙</span><span>Modo Oscuro</span>
+        <span class="nav-icon"><i data-feather="moon"></i></span><span>Modo Oscuro</span>
       </button>
       <a href="{{ url_for('auth.logout') }}" class="nav-item logout">
-        <span class="nav-icon">🚪</span><span>Cerrar Sesión</span>
+        <span class="nav-icon"><i data-feather="log-out"></i></span><span>Cerrar Sesión</span>
       </a>
     </div>
   </aside>
@@ -62,6 +87,11 @@
   <!-- MAIN -->
   <main class="main-content">
     <header class="top-bar">
+      <!-- Botón hamburguesa para móvil -->
+      <button class="menu-toggle" onclick="toggleMobileMenu()">
+        <i data-feather="menu"></i>
+      </button>
+      
       <div class="top-bar-title">
         <h1>{% block page_title %}{% endblock %}</h1>
         <p>Bienvenido, {{ session.dni }}</p>
@@ -69,7 +99,7 @@
       <div class="top-bar-actions">
         <div class="notif-wrapper">
           <button class="notif-btn" onclick="toggleNotifPanel()" id="notifBtn">
-            🔔
+            <i data-feather="bell"></i>
             {% if notif_count and notif_count > 0 %}
             <span class="notif-badge" id="notifCount">{{ notif_count }}</span>
             {% endif %}
@@ -91,8 +121,13 @@
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for cat, msg in messages %}
           <div class="alert alert-{{ cat }}">
-            <span>{% if cat == 'success' %}✅{% elif cat == 'error' %}❌{% else %}ℹ️{% endif %} {{ msg }}</span>
-            <button onclick="this.parentElement.remove()">✕</button>
+            <span>
+              {% if cat == 'success' %}<i data-feather="check-circle"></i>
+              {% elif cat == 'error' %}<i data-feather="x-circle"></i>
+              {% else %}<i data-feather="info"></i>{% endif %} 
+              {{ msg }}
+            </span>
+            <button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>
           </div>
         {% endfor %}
       {% endwith %}

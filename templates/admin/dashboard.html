@@ -11,68 +11,61 @@
 <div class="stats-grid">
   <div class="stat-card stat-blue">
     <div class="stat-info">
-      <p class="stat-label">TOTAL REPORTES</p>
+      <p class="stat-label">Total Reportes</p>
       <h2 class="stat-value">{{ stats.total }}</h2>
       <p class="stat-desc">Todos los registros</p>
     </div>
-    <div class="stat-icon">📄</div>
+    <div class="stat-icon"><i data-feather="file-text"></i></div>
   </div>
   <div class="stat-card stat-green">
     <div class="stat-info">
-      <p class="stat-label">CULMINADOS</p>
+      <p class="stat-label">Culminados</p>
       <h2 class="stat-value">{{ stats.culminados }}</h2>
-      <p class="stat-desc">✓ Completados</p>
+      <p class="stat-desc">Completados</p>
     </div>
-    <div class="stat-icon">✅</div>
+    <div class="stat-icon"><i data-feather="check-circle"></i></div>
   </div>
   <div class="stat-card stat-yellow">
     <div class="stat-info">
-      <p class="stat-label">EN PROCESO</p>
+      <p class="stat-label">En Proceso</p>
       <h2 class="stat-value">{{ stats.en_proceso }}</h2>
-      <p class="stat-desc">⏱ En progreso</p>
+      <p class="stat-desc">En progreso</p>
     </div>
-    <div class="stat-icon">🕐</div>
+    <div class="stat-icon"><i data-feather="clock"></i></div>
   </div>
   <div class="stat-card stat-red">
     <div class="stat-info">
-      <p class="stat-label">PENDIENTES</p>
+      <p class="stat-label">Pendientes</p>
       <h2 class="stat-value">{{ stats.pendientes }}</h2>
-      <p class="stat-desc">⚠ Requieren atención</p>
+      <p class="stat-desc">Requieren atención</p>
     </div>
-    <div class="stat-icon">🔔</div>
+    <div class="stat-icon"><i data-feather="alert-circle"></i></div>
   </div>
 </div>
 
 <div class="dashboard-grid">
   <div class="card">
-    <h3 class="card-title">⚡ Acciones Rápidas</h3>
+    <h3 class="card-title"><i data-feather="zap"></i> Acciones Rápidas</h3>
     <div class="quick-actions">
       <a href="{{ url_for('admin.desvios') }}" class="quick-btn" onclick="openModalFromDash()">
-        <span class="qa-icon">➕</span>
+        <span class="qa-icon"><i data-feather="plus-circle"></i></span>
         <div>
           <p class="qa-title">Crear Nuevo Reporte</p>
           <p class="qa-sub">Registrar desvío ambiental</p>
         </div>
       </a>
       <a href="{{ url_for('admin.desvios') }}" class="quick-btn">
-        <span class="qa-icon">📋</span>
+        <span class="qa-icon"><i data-feather="list"></i></span>
         <div>
           <p class="qa-title">Ver Todos los Reportes</p>
           <p class="qa-sub">Gestionar desvíos existentes</p>
-        </div>
-      </a>
-      <a href="{{ url_for('admin.historial') }}" class="quick-btn">
-        <span class="qa-icon">🗂️</span>
-        <div>
-          <p class="qa-title">Ver Historial</p>
-          <p class="qa-sub">Registros archivados</p>
         </div>
       </a>
     </div>
   </div>
 
   <div class="card">
-    <h3 class="card-title">🕐 Actividad Reciente</h3>
+    <h3 class="card-title"><i data-feather="activity"></i> Actividad Reciente</h3>
     <div class="activity-list">
       {% if notifs %}
         {% for n in notifs[:6] %}
@@ -86,7 +79,7 @@
         {% endfor %}
       {% else %}
         <div class="empty-state">
-          <span style="font-size:2rem">📋</span>
+          <i data-feather="inbox" style="width:48px;height:48px;color:var(--text-muted)"></i>
           <p>No hay actividad reciente</p>
         </div>
       {% endif %}

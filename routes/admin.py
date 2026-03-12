@@ -63,18 +63,153 @@ def dashboard():
         stats=stats or {'total':0,'culminados':0,'en_proceso':0,'pendientes':0},
         notifs=notifs, notif_count=get_notif_count())
 
+@admin_bp.route('/registrar')
+@admin_required
+def registrar():
+    estado_filter = request.args.get('estado','')
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    # Obtener TODOS los registros sin filtro para extraer estados únicos
+    cur = mysql.connection.cursor()
+    todos_registros = sp_exec(cur, 'sp_listarregistros', (None,))
+    cur.close()
+    
+    # Obtener estados únicos de TODOS los registros
+    estados_unicos = sorted(list(set([r.get('estado', '') for r in todos_registros if r.get('estado')])))
+    
+    # Ahora obtener registros con filtro si aplica
+    cur = mysql.connection.cursor()
+    registros = sp_exec(cur, 'sp_listarregistros', (estado_filter or None,))
+    cur.close()
+    
+    # Definir orden de prioridad de estados
+    orden_estados = {
+        'Pendiente': 1,
+        'En Proceso': 2,
+        'Enviado': 3,
+        'En Revisión': 4,
+        'Culminado': 5,
+        'Rechazado': 6,
+        'Cerrado': 7
+    }
+    
+    # Ordenar registros por prioridad de estado
+    registros_ordenados = sorted(
+        registros, 
+        key=lambda x: orden_estados.get(x.get('estado', ''), 999)
+    )
+    
+    # Calcular paginación
+    total = len(registros_ordenados)
+    total_pages = (total + per_page - 1) // per_page  # Redondeo hacia arriba
+    
+    # Validar página
+    if page < 1:
+        page = 1
+    if page > total_pages and total_pages > 0:
+        page = total_pages
+    
+    # Obtener registros de la página actual
+    start = (page - 1) * per_page
+    end = start + per_page
+    registros_pagina = registros_ordenados[start:end]
+    
+    areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
+    
+    return render_template('admin/desvios.html',
+        registros=registros_pagina,
+        areas_rep=areas_rep, areas_res=areas_res,
+        ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
+        estado_filter=estado_filter, 
+        notif_count=get_notif_count(),
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        per_page=per_page,
+        estados_unicos=estados_unicos)
+
+@admin_bp.route('/estadisticas')
+@admin_required
+def estadisticas():
+    cur = mysql.connection.cursor()
+    # Obtener estadísticas por área responsable
+    stats_areas = sp_exec(cur, 'sp_estadisticasareas')
+    cur.close()
+    return render_template('admin/estadisticas.html', stats_areas=stats_areas, notif_count=get_notif_count())
+
+@admin_bp.route('/configuracion/usuarios')
+@admin_required
+def configuracion_usuarios():
+    return render_template('admin/configuracion_usuarios.html', notif_count=get_notif_count())
+
+# Mantener la ruta /desvios para redireccionar a /registrar
 @admin_bp.route('/desvios')
 @admin_required
 def desvios():
+    return redirect(url_for('admin.registrar', **request.args))
     estado_filter = request.args.get('estado','')
-    cur       = mysql.connection.cursor()
+    page = request.args.get('page', 1, type=int)
+    per_page = 10
+    
+    # Obtener TODOS los registros sin filtro para extraer estados únicos
+    cur = mysql.connection.cursor()
+    todos_registros = sp_exec(cur, 'sp_listarregistros', (None,))
+    cur.close()
+    
+    # Obtener estados únicos de TODOS los registros
+    estados_unicos = sorted(list(set([r.get('estado', '') for r in todos_registros if r.get('estado')])))
+    
+    # Ahora obtener registros con filtro si aplica
+    cur = mysql.connection.cursor()
     registros = sp_exec(cur, 'sp_listarregistros', (estado_filter or None,))
     cur.close()
+    
+    # Definir orden de prioridad de estados
+    orden_estados = {
+        'Pendiente': 1,
+        'En Proceso': 2,
+        'Enviado': 3,
+        'En Revisión': 4,
+        'Culminado': 5,
+        'Rechazado': 6,
+        'Cerrado': 7
+    }
+    
+    # Ordenar registros por prioridad de estado
+    registros_ordenados = sorted(
+        registros, 
+        key=lambda x: orden_estados.get(x.get('estado', ''), 999)
+    )
+    
+    # Calcular paginación
+    total = len(registros_ordenados)
+    total_pages = (total + per_page - 1) // per_page  # Redondeo hacia arriba
+    
+    # Validar página
+    if page < 1:
+        page = 1
+    if page > total_pages and total_pages > 0:
+        page = total_pages
+    
+    # Obtener registros de la página actual
+    start = (page - 1) * per_page
+    end = start + per_page
+    registros_pagina = registros_ordenados[start:end]
+    
     areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
+    
     return render_template('admin/desvios.html',
-        registros=registros, areas_rep=areas_rep, areas_res=areas_res,
+        registros=registros_pagina,
+        areas_rep=areas_rep, areas_res=areas_res,
         ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
-        estado_filter=estado_filter, notif_count=get_notif_count())
+        estado_filter=estado_filter, 
+        notif_count=get_notif_count(),
+        page=page,
+        total_pages=total_pages,
+        total=total,
+        per_page=per_page,
+        estados_unicos=estados_unicos)
 
 @admin_bp.route('/desvios/crear', methods=['POST'])
 @admin_required
@@ -135,7 +270,7 @@ def crear_registro():
         flash('Reporte creado exitosamente', 'success')
     except Exception as e:
         flash(f'Error al crear reporte: {str(e)}', 'error')
-    return redirect(url_for('admin.desvios'))
+    return redirect(url_for('admin.registrar'))
 
 @admin_bp.route('/desvios/editar/<rid>', methods=['POST'])
 @admin_required
@@ -189,20 +324,7 @@ def editar_registro(rid):
         flash('Reporte actualizado', 'success')
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
-    return redirect(url_for('admin.desvios'))
-
-@admin_bp.route('/desvios/archivar/<rid>', methods=['POST'])
-@admin_required
-def archivar_registro(rid):
-    try:
-        cur = mysql.connection.cursor()
-        sp_exec(cur, 'sp_archivarregistro', (rid, session['usuario_rol']))
-        mysql.connection.commit()
-        cur.close()
-        flash('Reporte archivado en historial', 'success')
-    except Exception as e:
-        flash(f'Error: {str(e)}', 'error')
-    return redirect(url_for('admin.desvios'))
+    return redirect(url_for('admin.registrar'))
 
 @admin_bp.route('/desvios/detalle/<rid>')
 @admin_required
@@ -263,7 +385,7 @@ def validar_levantamiento(rid):
             imagenes_ids = request.form.get('imagenes_ids','')
             if not imagenes_ids:
                 flash('No se recibieron imágenes para aprobar', 'error')
-                return redirect(url_for('admin.desvios'))
+                return redirect(url_for('admin.registrar'))
             
             ids_list = [id.strip() for id in imagenes_ids.split(',') if id.strip()]
             
@@ -295,7 +417,7 @@ def validar_levantamiento(rid):
             imagenes_ids_rechazar = request.form.get('imagenes_ids_rechazar','')
             if not imagenes_ids_rechazar:
                 flash('No se recibieron imágenes para rechazar', 'error')
-                return redirect(url_for('admin.desvios'))
+                return redirect(url_for('admin.registrar'))
             
             ids_list = [id.strip() for id in imagenes_ids_rechazar.split(',') if id.strip()]
             
@@ -331,15 +453,7 @@ def validar_levantamiento(rid):
         
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
-    return redirect(url_for('admin.desvios'))
-
-@admin_bp.route('/historial')
-@admin_required
-def historial():
-    cur       = mysql.connection.cursor()
-    registros = sp_exec(cur, 'sp_historialadmin')
-    cur.close()
-    return render_template('admin/historial.html', registros=registros, notif_count=get_notif_count())
+    return redirect(url_for('admin.registrar'))
 
 @admin_bp.route('/exportar')
 @admin_required
@@ -544,7 +658,7 @@ def exportar_excel():
                          as_attachment=True)
     except Exception as e:
         flash(f'Error al exportar: {str(e)}','error')
-        return redirect(url_for('admin.desvios'))
+        return redirect(url_for('admin.registrar'))
 
 @admin_bp.route('/notificaciones/leer/<nid>', methods=['POST'])
 @admin_required

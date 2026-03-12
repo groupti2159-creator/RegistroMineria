@@ -26,5 +26,5 @@ RUN mkdir -p static/uploads/evidencias static/uploads/levantamientos
 # Railway inyecta PORT automáticamente, usar 8080 como fallback
 ENV PORT=8080
 
-# Comando de inicio simple
-CMD python app.py
+# Comando de inicio con gunicorn (más estable para producción)
+CMD gunicorn app:app --bind 0.0.0.0:$PORT --workers 1 --timeout 120
