@@ -3128,3 +3128,56 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Mejoras para estadísticas en modo oscuro */
+[data-theme="dark"] .chart-card {
+  background: var(--bg-card);
+  border-color: var(--gray-200);
+}
+
+[data-theme="dark"] .chart-title {
+  color: var(--text);
+}
+
+[data-theme="dark"] .data-table thead {
+  background: var(--gray-200);
+}
+
+[data-theme="dark"] .data-table thead th {
+  color: var(--text);
+  border-bottom-color: var(--gray-300);
+}
+
+[data-theme="dark"] .data-table tbody tr {
+  background: var(--bg-card);
+  border-bottom-color: var(--gray-200);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover {
+  background: var(--gray-200);
+}
+
+[data-theme="dark"] .data-table tbody td {
+  color: var(--text);
+}
+
+/* Badges de estado en modo oscuro para estadísticas */
+[data-theme="dark"] .estado-badge {
+  filter: brightness(1.1);
+}
+
+[data-theme="dark"] .estado-culminado {
+  background: #1e3a2d;
+  color: #86efac;
+}
+
+[data-theme="dark"] .estado-pendiente {
+  background: #4a3e1e;
+  color: #fde68a;
+}
+
+[data-theme="dark"] .estado-en-proceso {
+  background: #1e3a5f;
+  color: #93c5fd;
+}

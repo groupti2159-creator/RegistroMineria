@@ -63,16 +63,30 @@
 {% if stats_areas %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Configuración global
+// Detectar tema actual
+const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+
+// Configuración global adaptada al tema
 Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.color = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim();
+Chart.defaults.color = isDarkMode ? '#e5e5e5' : '#404040';
 
 // Datos del gráfico
 const areas = {{ stats_areas | map(attribute='area_responsable') | list | tojson }};
 const totales = {{ stats_areas | map(attribute='total') | list | tojson }};
 
-// Colores vibrantes para cada barra
-const colores = [
+// Colores vibrantes para cada barra (adaptados para ambos temas)
+const colores = isDarkMode ? [
+  '#60a5fa', // Azul más claro
+  '#34d399', // Verde más claro
+  '#fbbf24', // Naranja más claro
+  '#f87171', // Rojo más claro
+  '#a78bfa', // Púrpura más claro
+  '#f472b6', // Rosa más claro
+  '#22d3ee', // Cyan más claro
+  '#a3e635', // Lima más claro
+  '#fb923c', // Naranja oscuro más claro
+  '#818cf8'  // Índigo más claro
+] : [
   '#3b82f6', // Azul
   '#10b981', // Verde
   '#f59e0b', // Naranja
@@ -87,7 +101,7 @@ const colores = [
 
 // Crear gráfico
 const ctx = document.getElementById('areasChart').getContext('2d');
-new Chart(ctx, {
+const chart = new Chart(ctx, {
   type: 'bar',
   data: {
     labels: areas,
@@ -107,7 +121,7 @@ new Chart(ctx, {
         display: false
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(0, 0, 0, 0.8)',
         padding: 12,
         titleFont: {
           size: 14,
@@ -116,7 +130,7 @@ new Chart(ctx, {
         bodyFont: {
           size: 13
         },
-        borderColor: 'rgba(255, 255, 255, 0.1)',
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
         borderWidth: 1,
         displayColors: false,
         callbacks: {
@@ -133,10 +147,11 @@ new Chart(ctx, {
           stepSize: 1,
           font: {
             size: 12
-          }
+          },
+          color: isDarkMode ? '#a3a3a3' : '#525252'
         },
         grid: {
-          color: 'rgba(0, 0, 0, 0.05)',
+          color: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
           drawBorder: false
         }
       },
@@ -146,7 +161,8 @@ new Chart(ctx, {
             size: 12
           },
           maxRotation: 45,
-          minRotation: 45
+          minRotation: 45,
+          color: isDarkMode ? '#a3a3a3' : '#525252'
         },
         grid: {
           display: false
@@ -158,6 +174,39 @@ new Chart(ctx, {
       easing: 'easeInOutQuart'
     }
   }
+});
+
+// Actualizar gráfico cuando cambie el tema
+const observer = new MutationObserver((mutations) => {
+  mutations.forEach((mutation) => {
+    if (mutation.attributeName === 'data-theme') {
+      const newIsDark = document.documentElement.getAttribute('data-theme') === 'dark';
+      
+      // Actualizar colores del gráfico
+      chart.data.datasets[0].backgroundColor = newIsDark ? [
+        '#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa',
+        '#f472b6', '#22d3ee', '#a3e635', '#fb923c', '#818cf8'
+      ].slice(0, areas.length) : [
+        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
+        '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
+      ].slice(0, areas.length);
+      
+      // Actualizar colores de texto y grid
+      Chart.defaults.color = newIsDark ? '#e5e5e5' : '#404040';
+      chart.options.scales.y.ticks.color = newIsDark ? '#a3a3a3' : '#525252';
+      chart.options.scales.x.ticks.color = newIsDark ? '#a3a3a3' : '#525252';
+      chart.options.scales.y.grid.color = newIsDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+      chart.options.plugins.tooltip.backgroundColor = newIsDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(0, 0, 0, 0.8)';
+      chart.options.plugins.tooltip.borderColor = newIsDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)';
+      
+      chart.update();
+    }
+  });
+});
+
+observer.observe(document.documentElement, {
+  attributes: true,
+  attributeFilter: ['data-theme']
 });
 </script>
 {% endif %}
