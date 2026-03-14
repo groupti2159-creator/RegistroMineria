@@ -17,6 +17,8 @@
           <th><i data-feather="calendar"></i> FECHA</th>
           <th><i data-feather="hash"></i> CORRELATIVO</th>
           <th><i data-feather="map-pin"></i> UBICACIÓN</th>
+          <th><i data-feather="briefcase"></i> ÁREA RESPONSABLE</th>
+          <th><i data-feather="user"></i> CCTA RESPONSABLE</th>
           <th><i data-feather="activity"></i> ESTADO</th>
           <th><i data-feather="image"></i> IMÁGENES</th>
           <th><i data-feather="more-vertical"></i> ACCIONES</th>
@@ -31,6 +33,8 @@
           </td>
           <td><span class="codigo-badge">{{ r.codigo }}</span></td>
           <td>{{ r.ubicacion }}</td>
+          <td>{{ r.arearesponsable or '—' }}</td>
+          <td>{{ r.cctaresponsable or '—' }}</td>
           <td><span class="estado-badge estado-{{ r.estado|lower|replace(' ','-') }}">{{ r.estado|upper }}</span></td>
           <td>
             <div class="img-count-badges">
@@ -46,6 +50,9 @@
               {% if is_admin %}
               <button class="btn-icon btn-yellow" onclick="editarRegistro('{{ r.idregistro }}')" title="Editar">
                 <i data-feather="edit-2"></i>
+              </button>
+              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('{{ r.idregistro }}', '{{ r.codigo }}')" title="Eliminar">
+                <i data-feather="trash-2"></i>
               </button>
               {% else %}
               {# Solo mostrar botón de subir si está en PENDIENTE #}

@@ -5,7 +5,6 @@ from utils.helpers import consume_results
 auth_bp = Blueprint('auth', __name__)
 
 def sp_fetchone(cur):
-    """Consume todos los result sets de un callproc y retorna el primero."""
     result = None
     first = True
     while True:
@@ -20,13 +19,40 @@ def sp_fetchone(cur):
             break
     return result
 
+def sp_fetchall(cur):
+    result = []
+    first = True
+    while True:
+        try:
+            rows = cur.fetchall()
+            if first and rows:
+                result = rows
+                first = False
+        except Exception:
+            pass
+        if not cur.nextset():
+            break
+    return result
+
+def set_session(user):
+    session['user_id']        = user.get('idusuario')
+    session['usuario_rol']    = user.get('idusuariorol')
+    session['dni']            = user.get('dni')
+    session['nombre']         = user.get('nombrecompleto')
+    session['rol']            = user.get('nombrerol')
+    session['rol_id']         = user.get('idroles')
+    session['proyecto_actual'] = 'DESVIOS_AMB'
+
+def redirect_by_rol(rol):
+    if rol == 'Administrador':
+        return redirect(url_for('admin.dashboard'))
+    return redirect(url_for('supervisor.desvios'))
+
 @auth_bp.route('/', methods=['GET','POST'])
 @auth_bp.route('/login', methods=['GET','POST'])
 def login():
     if 'user_id' in session:
-        if session.get('rol') == 'Administrador':
-            return redirect(url_for('admin.dashboard'))
-        return redirect(url_for('supervisor.desvios'))
+        return redirect_by_rol(session.get('rol'))
 
     error = None
     if request.method == 'POST':
@@ -41,33 +67,77 @@ def login():
                 consume_results(cur)
                 cur.callproc('sp_login', (dni, pwd))
                 user = sp_fetchone(cur)
-                
-                if user:
-                    session['user_id']     = user.get('idusuario')
-                    session['usuario_rol'] = user.get('idusuariorol')
-                    session['dni']         = user.get('dni')
-                    session['nombre']      = user.get('nombrecompleto')
-                    session['rol']         = user.get('nombrerol')
-                    session['rol_id']      = user.get('idroles')
-                    
-                    cur.close()
-                    
-                    if user.get('nombrerol') == 'Administrador':
-                        return redirect(url_for('admin.dashboard'))
-                    return redirect(url_for('supervisor.desvios'))
-                else:
+                cur.close()
+
+                if not user:
                     error = 'DNI o contraseña incorrectos'
+                else:
+                    # Obtener TODOS los roles del usuario
+                    cur2 = mysql.connection.cursor()
+                    cur2.execute("""
+                        SELECT ur.idusuariorol, r.idroles, r.nombrerol,
+                               u.idusuario, u.dni, u.nombrecompleto
+                        FROM tbl_usuariorol ur
+                        JOIN tbl_roles r ON r.idroles = ur.idroles
+                        JOIN tbl_usuario u ON u.idusuario = ur.idusuario
+                        WHERE u.idusuario = %s AND u.activo = 1
+                    """, (user.get('idusuario'),))
+                    roles = cur2.fetchall()
+                    cur2.close()
+
+                    if len(roles) > 1:
+                        # Guardar datos temporales y mostrar selector de rol
+                        session['_pending_user'] = {
+                            'idusuario':     user.get('idusuario'),
+                            'dni':           user.get('dni'),
+                            'nombrecompleto': user.get('nombrecompleto'),
+                            'roles': [
+                                {'idusuariorol': r['idusuariorol'],
+                                 'idroles':      r['idroles'],
+                                 'nombrerol':    r['nombrerol']}
+                                for r in roles
+                            ]
+                        }
+                        return redirect(url_for('auth.seleccionar_rol'))
+                    else:
+                        set_session(user)
+                        return redirect_by_rol(user.get('nombrerol'))
+
             except Exception as e:
                 error = f'Error de conexión: {str(e)}'
-                print(f"Login error: {e}")  # Para debugging
+                print(f"Login error: {e}")
             finally:
                 if cur:
-                    try:
-                        cur.close()
-                    except:
-                        pass
+                    try: cur.close()
+                    except: pass
 
     return render_template('auth/login.html', error=error)
+
+
+@auth_bp.route('/seleccionar-rol', methods=['GET','POST'])
+def seleccionar_rol():
+    pending = session.get('_pending_user')
+    if not pending:
+        return redirect(url_for('auth.login'))
+
+    if request.method == 'POST':
+        idusuariorol = request.form.get('idusuariorol')
+        # Buscar el rol seleccionado
+        rol_elegido = next((r for r in pending['roles'] if r['idusuariorol'] == idusuariorol), None)
+        if not rol_elegido:
+            return render_template('auth/seleccionar_rol.html', pending=pending,
+                                   error='Selección inválida')
+        session.pop('_pending_user', None)
+        session['user_id']        = pending['idusuario']
+        session['usuario_rol']    = rol_elegido['idusuariorol']
+        session['dni']            = pending['dni']
+        session['nombre']         = pending['nombrecompleto']
+        session['rol']            = rol_elegido['nombrerol']
+        session['rol_id']         = rol_elegido['idroles']
+        session['proyecto_actual'] = 'DESVIOS_AMB'
+        return redirect_by_rol(rol_elegido['nombrerol'])
+
+    return render_template('auth/seleccionar_rol.html', pending=pending)
 
 @auth_bp.route('/logout')
 def logout():

@@ -191,7 +191,22 @@ def subir_levantamiento(rid):
                 cur.close()
 
         flash(f'{saved} imagen(es) subida(s) exitosamente', 'success')
+        
+        # Soporte AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'message': f'{saved} imagen(es) subida(s) exitosamente'
+            })
+            
     except Exception as e:
+        # Soporte AJAX para errores
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'error': f'Error: {str(e)}'
+            }), 400
+            
         flash(f'Error: {str(e)}', 'error')
     return redirect(url_for('supervisor.desvios'))
 

@@ -14,7 +14,7 @@
 </div>
 
 <div class="action-bar">
-  <button class="btn btn-primary" onclick="document.getElementById('modalCrear').style.display='flex'">
+  <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='flex'">
     <i data-feather="plus-circle"></i> <strong>Nuevo Reporte Ambiental</strong>
   </button>
   <a href="{{ url_for('admin.exportar_excel') }}" class="btn btn-export">
@@ -25,13 +25,24 @@
 <div class="filter-bar">
   <div class="filter-select-wrapper">
     <i data-feather="filter"></i>
-    <select class="filter-select" onchange="window.location.href='?estado=' + this.value + '&page=1'">
+    <select class="filter-select" onchange="window.location.href='?estado=' + this.value + '{% if personal_filter %}&personal={{ personal_filter|urlencode }}{% endif %}&page=1'">
       <option value="" {% if not estado_filter %}selected{% endif %}>Filtrar por estado</option>
       {% for estado in estados_unicos %}
       <option value="{{ estado }}" {% if estado_filter==estado %}selected{% endif %}>{{ estado }}</option>
       {% endfor %}
     </select>
   </div>
+  
+  {% if personal_filter %}
+  <div class="filter-badge">
+    <i data-feather="user" style="width:14px;height:14px"></i>
+    <span>Personal: <strong>{{ personal_filter }}</strong></span>
+    <a href="{{ url_for('admin.registrar') }}{% if estado_filter %}?estado={{ estado_filter }}{% endif %}" class="filter-badge-close">
+      <i data-feather="x" style="width:14px;height:14px"></i>
+    </a>
+  </div>
+  {% endif %}
+  
   <span class="filter-count">{{ total }} reportes</span>
 </div>
 
@@ -50,7 +61,7 @@
           <p>Completa todos los campos obligatorios (*)</p>
         </div>
       </div>
-      <button class="modal-close" onclick="document.getElementById('modalCrear').style.display='none'">
+      <button class="modal-close" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'">
         <i data-feather="x"></i>
       </button>
     </div>
@@ -151,7 +162,18 @@
               </select>
             </div>
             <div class="form-group">
-              <label class="form-label">PERSONAL RESPONSABLE *</label>
+              <label class="form-label">CCTA RESPONSABLE</label>
+              <select name="ccta_responsable" class="form-select">
+                <option value="">Seleccionar contrata...</option>
+                {% for a in areas_rep %}
+                <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">PERSONAL RESPONSABLE</label>
               <input type="text" name="personal_responsable" class="form-input" placeholder="Nombre del responsable">
             </div>
           </div>
@@ -170,14 +192,14 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">IMÁGENES DE EVIDENCIA</label>
+              <label class="form-label">IMÁGENES DE EVIDENCIA *</label>
               <div class="file-upload-area">
                 <input type="file" name="evidencias" multiple accept="image/*" class="file-input" id="fileEvidencias">
                 <label for="fileEvidencias" class="file-label">
                   <span class="btn btn-outline-green"><i data-feather="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i> Elegir archivos</span>
                   <span class="file-name" id="nameEvidencias">Sin archivos seleccionados</span>
                 </label>
-                <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
+                <small class="form-hint" style="color:var(--text-red)"><i data-feather="alert-circle" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Obligatorio - Debes subir al menos 1 imagen de evidencia (Max 5, 16MB cada una)</small>
               </div>
               <div id="previewEvidencias" class="image-preview-container" style="display:none"></div>
             </div>
@@ -189,7 +211,7 @@
                   <span class="btn btn-outline-green"><i data-feather="upload" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i> Elegir archivos</span>
                   <span class="file-name" id="nameLevantamientos">Sin archivos seleccionados</span>
                 </label>
-                <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
+                <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Opcional - Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
               </div>
               <div id="previewLevantamientos" class="image-preview-container" style="display:none"></div>
             </div>
@@ -197,8 +219,14 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary btn-lg"><i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Guardar Reporte</button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalCrear').style.display='none'"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
+        <button type="submit" class="btn btn-primary btn-lg" id="btnGuardarReporte" disabled>
+          <i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
+          Guardar Reporte
+        </button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'">
+          <i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
+          Cancelar
+        </button>
       </div>
     </form>
   </div>
@@ -304,6 +332,17 @@
               </select>
             </div>
             <div class="form-group">
+              <label class="form-label">CCTA RESPONSABLE</label>
+              <select name="ccta_responsable" id="edit_ccta" class="form-select">
+                <option value="">Seleccionar contrata...</option>
+                {% for a in areas_rep %}
+                <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
               <label class="form-label">PERSONAL RESPONSABLE</label>
               <input type="text" name="personal_responsable" id="edit_personal" class="form-input">
             </div>
@@ -362,14 +401,16 @@
   <div class="modal-box" style="max-width:800px">
     <div class="modal-header">
       <h3><i data-feather="check-circle"></i> Validar Imágenes de Levantamiento</h3>
-      <button class="modal-close" style="color:white" onclick="cerrarModalValidar()">✕</button>
+      <button class="modal-close" onclick="cerrarModalValidar()">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <form method="POST" id="formValidar" onsubmit="return validarFormulario()">
       <input type="hidden" name="imagenes_ids" id="validarImagenesIds">
       <input type="hidden" name="imagenes_ids_rechazar" id="validarImagenesIdsRechazar">
       <div class="modal-body">
         <div class="alert alert-info" style="margin-bottom:1rem;font-size:.85rem">
-          ℹ️ Puedes eliminar las imágenes que no cumplen con los requisitos. Debe quedar al menos 1 imagen.<br>
+          <i data-feather="info" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Puedes eliminar las imágenes que no cumplen con los requisitos. Debe quedar al menos 1 imagen.<br>
           <strong>APROBAR:</strong> Solo se aprueban las imágenes que quedan.<br>
           <strong>RECHAZAR:</strong> Se rechazan TODAS las imágenes originales.
         </div>
@@ -380,8 +421,8 @@
         </div>
       </div>
       <div class="modal-footer">
-        <button type="submit" name="decision" value="APROBADA" class="btn btn-primary btn-lg">✅ Aprobar Conjunto</button>
-        <button type="submit" name="decision" value="RECHAZADA" class="btn btn-danger btn-lg">❌ Rechazar Conjunto</button>
+        <button type="submit" name="decision" value="APROBADA" class="btn btn-primary btn-lg"><i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Aprobar Conjunto</button>
+        <button type="submit" name="decision" value="RECHAZADA" class="btn btn-danger btn-lg"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Rechazar Conjunto</button>
       </div>
     </form>
   </div>
@@ -394,6 +435,7 @@
 const DETALLE_URL_BASE = "{{ url_for('admin.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const EDITAR_URL_BASE  = "{{ url_for('admin.editar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const VALIDAR_URL_BASE = "{{ url_for('admin.validar_levantamiento', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const ELIMINAR_URL_BASE = "{{ url_for('admin.eliminar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = true;
 </script>
 <script src="{{ url_for('static', filename='js/desvios.js') }}"></script>

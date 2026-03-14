@@ -266,33 +266,57 @@ setTimeout(() => {
 
 
 // ── PREVIEW DE IMÁGENES ──
+const _previewInstances = {};
+
+function removePreviewImage(inputId, previewContainerId, index) {
+  const instance = _previewInstances[inputId];
+  if (!instance) return;
+  instance.removeFile(index);
+}
+
 function setupImagePreview(inputId, previewContainerId) {
   const input = document.getElementById(inputId);
   if (!input) return;
-  
+
+  // Remover listener anterior para evitar acumulación
+  if (input._previewHandler) {
+    input.removeEventListener('change', input._previewHandler);
+  }
+
   let selectedFiles = [];
-  
-  input.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    selectedFiles = files.slice(0, 5); // Máximo 5 imágenes
-    
+
+  const instance = {
+    removeFile(index) {
+      selectedFiles.splice(index, 1);
+      const dt = new DataTransfer();
+      selectedFiles.forEach(file => dt.items.add(file));
+      input.files = dt.files;
+      renderPreview();
+      updateFileLabel();
+    },
+    reset() {
+      selectedFiles = [];
+    }
+  };
+  _previewInstances[inputId] = instance;
+
+  input._previewHandler = function(e) {
+    selectedFiles = Array.from(e.target.files).slice(0, 5);
     renderPreview();
-    updateFileLabel(inputId);
-  });
-  
+    updateFileLabel();
+  };
+  input.addEventListener('change', input._previewHandler);
+
   function renderPreview() {
     const container = document.getElementById(previewContainerId);
     if (!container) return;
-    
     if (selectedFiles.length === 0) {
       container.innerHTML = '';
       container.style.display = 'none';
       return;
     }
-    
     container.style.display = 'grid';
     container.innerHTML = '';
-    
     selectedFiles.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = function(e) {
@@ -308,31 +332,13 @@ function setupImagePreview(inputId, previewContainerId) {
       reader.readAsDataURL(file);
     });
   }
-  
-  window.removePreviewImage = function(inputId, previewContainerId, index) {
-    const input = document.getElementById(inputId);
-    selectedFiles.splice(index, 1);
-    
-    // Actualizar el input con los archivos restantes
-    const dt = new DataTransfer();
-    selectedFiles.forEach(file => dt.items.add(file));
-    input.files = dt.files;
-    
-    renderPreview();
-    updateFileLabel(inputId);
-  };
-  
-  function updateFileLabel(inputId) {
+
+  function updateFileLabel() {
     const nameEl = document.querySelector(`label[for="${inputId}"] .file-name`);
     if (!nameEl) return;
-    
-    if (selectedFiles.length === 0) {
-      nameEl.textContent = 'Sin archivos seleccionados';
-    } else if (selectedFiles.length === 1) {
-      nameEl.textContent = selectedFiles[0].name;
-    } else {
-      nameEl.textContent = `${selectedFiles.length} archivos seleccionados`;
-    }
+    if (selectedFiles.length === 0) nameEl.textContent = 'Sin archivos seleccionados';
+    else if (selectedFiles.length === 1) nameEl.textContent = selectedFiles[0].name;
+    else nameEl.textContent = `${selectedFiles.length} archivos seleccionados`;
   }
 }
 
@@ -345,6 +351,26 @@ document.addEventListener('DOMContentLoaded', function() {
   // Para el modal de subir (supervisor)
   setupImagePreview('fileSubirImagenes', 'previewSubirImagenes');
 });
+
+// Limpia el formulario de crear y todos sus previews
+function resetFormCrear() {
+  var modalCrear = document.getElementById('modalCrear');
+  if (!modalCrear) return;
+  var form = modalCrear.querySelector('form');
+  if (form) form.reset();
+  ['fileEvidencias', 'fileLevantamientos'].forEach(function(inputId) {
+    var previewId = inputId === 'fileEvidencias' ? 'previewEvidencias' : 'previewLevantamientos';
+    // Limpiar selectedFiles internos sin re-registrar listeners
+    var instance = _previewInstances[inputId];
+    if (instance) instance.reset();
+    // Limpiar contenedor visual
+    var container = document.getElementById(previewId);
+    if (container) { container.innerHTML = ''; container.style.display = 'none'; }
+    // Resetear label
+    var nameEl = document.querySelector('label[for="' + inputId + '"] .file-name');
+    if (nameEl) nameEl.textContent = 'Sin archivos seleccionados';
+  });
+}
 
 
 // ── FECHA AUTOMÁTICA (Zona horaria Perú) ──
@@ -390,3 +416,203 @@ document.addEventListener('DOMContentLoaded', function() {
     observer.observe(modalCrear, { attributes: true, attributeFilter: ['style'] });
   }
 });
+
+
+// ── PROYECTO SELECTOR ──
+function toggleProyectos() {
+  const dropdown = document.getElementById('proyectoDropdown');
+  const btn = document.getElementById('proyectoBtn');
+  if (!dropdown || !btn) return;
+  
+  const isOpen = dropdown.classList.contains('open');
+  
+  if (isOpen) {
+    dropdown.classList.remove('open');
+    btn.classList.remove('open');
+  } else {
+    dropdown.classList.add('open');
+    btn.classList.add('open');
+    cargarProyectosDisponibles();
+  }
+}
+
+function cargarProyectosDisponibles() {
+  console.log('Iniciando carga de proyectos...');
+  fetch('/proyectos/api/proyectos-disponibles')
+    .then(r => {
+      console.log('Respuesta recibida, status:', r.status);
+      return r.json();
+    })
+    .then(data => {
+      console.log('Proyectos recibidos:', data);
+      const list = document.getElementById('proyectoList');
+      console.log('Elemento proyectoList:', list);
+      
+      if (!list) {
+        console.error('No se encontró el elemento proyectoList');
+        return;
+      }
+      
+      if (!data.success) {
+        console.error('API retornó success=false:', data);
+        list.innerHTML = '<div class="proyecto-loading">Error: ' + (data.error || 'Error desconocido') + '</div>';
+        return;
+      }
+      
+      if (!data.proyectos || data.proyectos.length === 0) {
+        console.warn('No hay proyectos disponibles');
+        list.innerHTML = '<div class="proyecto-loading">No hay proyectos disponibles</div>';
+        return;
+      }
+      
+      console.log('Generando HTML para', data.proyectos.length, 'proyectos');
+      list.innerHTML = data.proyectos.map(p => `
+        <div class="proyecto-item ${p.activo ? 'active' : ''}" 
+             onclick="cambiarProyecto('${p.codigo}', '${p.nombre}')">
+          <div class="proyecto-item-icon" style="background: #22c55e20; color: #22c55e">
+            <i data-feather="folder"></i>
+          </div>
+          <div class="proyecto-item-info">
+            <span class="proyecto-item-nombre">${p.nombre}</span>
+            <span class="proyecto-item-desc">${p.descripcion || 'Sin descripción'}</span>
+          </div>
+          <span class="proyecto-item-check">✓</span>
+        </div>
+      `).join('');
+      
+      console.log('HTML generado, inicializando iconos Feather');
+      // Inicializar iconos Feather
+      if (typeof feather !== 'undefined') {
+        feather.replace();
+      }
+    })
+    .catch(err => {
+      console.error('Error cargando proyectos:', err);
+      const list = document.getElementById('proyectoList');
+      if (list) list.innerHTML = '<div class="proyecto-loading">Error al cargar proyectos</div>';
+    });
+}
+
+function cambiarProyecto(codigo, nombre) {
+  // Cerrar dropdown
+  const dropdown = document.getElementById('proyectoDropdown');
+  const btn = document.getElementById('proyectoBtn');
+  if (dropdown) dropdown.classList.remove('open');
+  if (btn) btn.classList.remove('open');
+  
+  // Mostrar loading en el botón
+  const nombreEl = document.getElementById('proyectoNombre');
+  if (nombreEl) nombreEl.textContent = 'Cambiando...';
+  
+  // Hacer petición para cambiar proyecto
+  fetch('/proyectos/api/cambiar-proyecto', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ codigo_proyecto: codigo })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      // Actualizar nombre del proyecto en el botón
+      if (nombreEl) nombreEl.textContent = nombre;
+      
+      // Redirigir al dashboard correspondiente según el proyecto
+      if (codigo === 'DESVIOS_AMB') {
+        // Ir al dashboard de desvíos ambientales
+        window.location.href = '/admin/dashboard';
+      } else {
+        // Ir al dashboard genérico del proyecto
+        window.location.href = '/proyectos/dashboard/' + codigo;
+      }
+    } else {
+      alert('Error al cambiar proyecto: ' + (data.error || 'Error desconocido'));
+      if (nombreEl) nombreEl.textContent = nombre;
+    }
+  })
+  .catch(err => {
+    console.error('Error:', err);
+    alert('Error al cambiar proyecto');
+    if (nombreEl) nombreEl.textContent = nombre;
+  });
+}
+
+function cargarSidebarProyecto(codigo) {
+  const sidebarNav = document.querySelector('.sidebar-nav');
+  if (!sidebarNav) return;
+  
+  // Añadir clase de transición
+  sidebarNav.classList.add('transitioning');
+  
+  // Cargar nuevo contenido del sidebar
+  fetch('/proyectos/api/sidebar-proyecto')
+    .then(r => r.text())
+    .then(html => {
+      setTimeout(() => {
+        sidebarNav.innerHTML = html;
+        sidebarNav.classList.remove('transitioning');
+        sidebarNav.classList.add('loaded');
+        
+        setTimeout(() => {
+          sidebarNav.classList.remove('loaded');
+        }, 300);
+      }, 150);
+    })
+    .catch(err => {
+      console.error('Error cargando sidebar:', err);
+      sidebarNav.classList.remove('transitioning');
+    });
+}
+
+// Cargar sidebar y nombre del proyecto al cargar la página
+document.addEventListener('DOMContentLoaded', function() {
+  // Cargar sidebar dinámico
+  cargarSidebarDinamico();
+  
+  // Cargar nombre del proyecto (solo si existe el selector)
+  const nombreEl = document.getElementById('proyectoNombre');
+  if (nombreEl) {
+    console.log('Cargando nombre del proyecto...');
+    fetch('/proyectos/api/proyectos-disponibles')
+      .then(r => r.json())
+      .then(data => {
+        console.log('Datos para nombre proyecto:', data);
+        if (data.success && data.proyectos && data.proyectos.length > 0) {
+          // Buscar proyecto activo, si no hay usar el primero
+          const proyectoActual = data.proyectos.find(p => p.activo) || data.proyectos[0];
+          nombreEl.textContent = proyectoActual.nombre;
+          console.log('Nombre del proyecto actualizado:', proyectoActual.nombre);
+        } else {
+          console.warn('No hay proyectos disponibles');
+          nombreEl.textContent = 'Sin proyecto';
+        }
+      })
+      .catch(err => {
+        console.error('Error cargando nombre proyecto:', err);
+        nombreEl.textContent = 'Error';
+      });
+  }
+});
+
+// Función para cargar sidebar dinámicamente
+function cargarSidebarDinamico() {
+  const sidebarNav = document.getElementById('sidebarNav');
+  if (!sidebarNav) return;
+  
+  console.log('Cargando sidebar dinámico...');
+  
+  fetch('/proyectos/api/sidebar-proyecto')
+    .then(r => r.text())
+    .then(html => {
+      sidebarNav.innerHTML = html;
+      // Reinicializar iconos de Feather
+      if (typeof feather !== 'undefined') {
+        feather.replace();
+      }
+      console.log('Sidebar cargado correctamente');
+    })
+    .catch(err => {
+      console.error('Error cargando sidebar:', err);
+      sidebarNav.innerHTML = '<div class="nav-error">Error al cargar menú</div>';
+    });
+}
+

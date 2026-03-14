@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}{{ proyecto.nombre_proyecto }} - Dashboard{% endblock %}
+{% block page_title %}{{ proyecto.nombre_proyecto }}{% endblock %}
+
+{% block content %}
+<div class="proyecto-dashboard-placeholder">
+  <div class="placeholder-card">
+    <div class="placeholder-icon">
+      <span style="font-size: 4rem;">{{ proyecto.icono }}</span>
+    </div>
+    
+    <h2>{{ proyecto.nombre_proyecto }}</h2>
+    <p class="placeholder-description">{{ proyecto.descripcion }}</p>
+    
+    <div class="placeholder-status">
+      <div class="status-badge status-desarrollo">
+        <i data-feather="info"></i>
+        <span>En Desarrollo</span>
+      </div>
+    </div>
+    
+    <div class="placeholder-message">
+      <i data-feather="alert-circle"></i>
+      <p>Este proyecto está en fase de desarrollo. El contenido y los módulos se agregarán próximamente.</p>
+    </div>
+    
+    <div class="placeholder-actions">
+      <button class="btn-secondary" onclick="window.location.href='{{ url_for('admin.dashboard') }}'">
+        <i data-feather="arrow-left"></i>
+        Volver a Desvíos Ambientales
+      </button>
+    </div>
+  </div>
+</div>
+
+<style>
+.proyecto-dashboard-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: 2rem;
+}
+
+.placeholder-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 3rem;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+}
+
+.placeholder-icon {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border);
+}
+
+.placeholder-card h2 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.placeholder-description {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin-bottom: 2rem;
+  line-height: 1.6;
+}
+
+.placeholder-status {
+  margin-bottom: 2rem;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.status-badge i {
+  width: 16px;
+  height: 16px;
+}
+
+.status-planificacion {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-desarrollo {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+[data-theme="dark"] .status-desarrollo {
+  background: #78350f;
+  color: #fef3c7;
+}
+
+.placeholder-message {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.placeholder-message i {
+  width: 20px;
+  height: 20px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.placeholder-message p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.placeholder-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--text-tertiary);
+}
+
+.btn-secondary i {
+  width: 16px;
+  height: 16px;
+}
+</style>
+{% endblock %}

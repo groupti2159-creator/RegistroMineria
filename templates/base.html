@@ -28,50 +28,12 @@
       </div>
     </div>
 
-    <nav class="sidebar-nav">
-      {% if session.rol == 'Administrador' %}
-        <a href="{{ url_for('admin.dashboard') }}" class="nav-item {% if request.endpoint == 'admin.dashboard' %}active{% endif %}">
-          <span class="nav-icon"><i data-feather="home"></i></span><span>Dashboard</span>
-        </a>
-        
-        <!-- Desvíos Ambientales con submenu -->
-        <div class="nav-group">
-          <button class="nav-item nav-toggle {% if request.endpoint in ['admin.desvios', 'admin.registrar', 'admin.estadisticas'] %}active{% endif %}" onclick="toggleSubmenu(this)">
-            <span class="nav-icon"><i data-feather="alert-triangle"></i></span>
-            <span>Desvíos Ambientales</span>
-            {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
-            <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
-          </button>
-          <div class="nav-submenu {% if request.endpoint in ['admin.desvios', 'admin.registrar', 'admin.estadisticas'] %}open{% endif %}">
-            <a href="{{ url_for('admin.registrar') }}" class="nav-subitem {% if request.endpoint in ['admin.registrar', 'admin.desvios'] %}active{% endif %}">
-              <span class="nav-icon"><i data-feather="file-plus"></i></span><span>Registrar Reporte</span>
-            </a>
-            <a href="{{ url_for('admin.estadisticas') }}" class="nav-subitem {% if request.endpoint == 'admin.estadisticas' %}active{% endif %}">
-              <span class="nav-icon"><i data-feather="bar-chart-2"></i></span><span>Estadísticas</span>
-            </a>
-          </div>
-        </div>
-        
-        <!-- Configuración con submenu -->
-        <div class="nav-group">
-          <button class="nav-item nav-toggle {% if request.endpoint in ['admin.configuracion', 'admin.configuracion_usuarios'] %}active{% endif %}" onclick="toggleSubmenu(this)">
-            <span class="nav-icon"><i data-feather="settings"></i></span>
-            <span>Configuración</span>
-            <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
-          </button>
-          <div class="nav-submenu {% if request.endpoint in ['admin.configuracion', 'admin.configuracion_usuarios'] %}open{% endif %}">
-            <a href="{{ url_for('admin.configuracion_usuarios') }}" class="nav-subitem {% if request.endpoint == 'admin.configuracion_usuarios' %}active{% endif %}">
-              <span class="nav-icon"><i data-feather="users"></i></span><span>Usuarios</span>
-            </a>
-          </div>
-        </div>
-        
-      {% else %}
-        <a href="{{ url_for('supervisor.desvios') }}" class="nav-item {% if request.endpoint == 'supervisor.desvios' %}active{% endif %}">
-          <span class="nav-icon"><i data-feather="alert-triangle"></i></span><span>Desvíos Ambientales</span>
-          {% if notif_count and notif_count > 0 %}<span class="nav-badge">{{ notif_count }}</span>{% endif %}
-        </a>
-      {% endif %}
+    <nav class="sidebar-nav" id="sidebarNav">
+      <!-- El contenido se carga dinámicamente -->
+      <div class="nav-loading">
+        <i data-feather="loader"></i>
+        <span>Cargando menú...</span>
+      </div>
     </nav>
 
     <div class="sidebar-footer">
@@ -91,6 +53,24 @@
       <button class="menu-toggle" onclick="toggleMobileMenu()">
         <i data-feather="menu"></i>
       </button>
+      
+      <!-- SELECTOR DE PROYECTOS (Solo para Administrador) -->
+      {% if session.rol == 'Administrador' %}
+      <div class="proyecto-selector">
+        <button class="proyecto-btn" onclick="toggleProyectos()" id="proyectoBtn">
+          <span class="proyecto-icon">📁</span>
+          <span class="proyecto-nombre" id="proyectoNombre">Cargando...</span>
+          <span class="proyecto-arrow">▼</span>
+        </button>
+        
+        <div class="proyecto-dropdown" id="proyectoDropdown">
+          <div class="proyecto-dropdown-header">Cambiar Proyecto</div>
+          <div class="proyecto-list" id="proyectoList">
+            <div class="proyecto-loading">Cargando proyectos...</div>
+          </div>
+        </div>
+      </div>
+      {% endif %}
       
       <div class="top-bar-title">
         <h1>{% block page_title %}{% endblock %}</h1>
@@ -140,6 +120,7 @@
 {% endif %}
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/ajax_handler.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

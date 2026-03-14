@@ -19,11 +19,13 @@ from routes.auth       import auth_bp
 from routes.admin      import admin_bp
 from routes.supervisor import supervisor_bp
 from routes.shared     import shared_bp
+from routes.proyectos  import proyectos_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp,       url_prefix='/admin')
 app.register_blueprint(supervisor_bp,  url_prefix='/supervisor')
 app.register_blueprint(shared_bp,      url_prefix='/api')
+app.register_blueprint(proyectos_bp,   url_prefix='/proyectos')
 
 if __name__ == '__main__':
     # Railway inyecta PORT automáticamente

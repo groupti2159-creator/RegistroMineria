@@ -1,21 +1,413 @@
 {% extends 'base.html' %}
-
 {% block title %}Configuración - Usuarios - ecoSupervisor{% endblock %}
 {% block page_title %}Configuración - Usuarios{% endblock %}
 
 {% block content %}
-<div class="card">
-  <div class="card-title">
+<div class="page-header-section">
+  <div class="page-header-icon">
     <i data-feather="users"></i>
-    Gestión de Usuarios
   </div>
-  
-  <div class="module-placeholder">
-    <div class="module-placeholder-icon">
-      <i data-feather="users"></i>
-    </div>
-    <h2>Este es el módulo de Usuarios</h2>
-    <p>Aquí podrás gestionar los usuarios del sistema</p>
+  <div>
+    <h2 class="section-title">Configuración de <span class="text-green">Usuarios</span></h2>
+    <p class="section-sub">Gestiona los usuarios del sistema y sus permisos de acceso</p>
   </div>
 </div>
+
+<!-- Acciones principales -->
+<div class="action-bar" style="margin-bottom:1.5rem">
+  <button class="btn btn-primary" onclick="abrirModalCrear()">
+    <i data-feather="user-plus"></i> <strong>Nuevo Usuario</strong>
+  </button>
+  <button class="btn btn-blue" onclick="abrirModalCambiarPassword()">
+    <i data-feather="key"></i> <strong>Cambiar Contraseña</strong>
+  </button>
+</div>
+
+<!-- Tabla de usuarios -->
+<div class="card">
+  <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem">
+    <div>
+      <i data-feather="users"></i>
+      Usuarios Activos
+      <span class="badge-count" id="totalUsuarios">{{ usuarios|length }} usuarios registrados</span>
+    </div>
+    <div class="search-wrapper" style="position:relative">
+      <i data-feather="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#94a3b8"></i>
+      <input type="text" id="buscarUsuario" placeholder="Buscar usuario..." 
+             class="form-input" style="padding-left:2rem;width:220px"
+             oninput="filtrarUsuarios(this.value)">
+    </div>
+  </div>
+
+  <div class="table-wrapper">
+    <table class="data-table" id="tablaUsuarios">
+      <thead>
+        <tr>
+          <th>DNI</th>
+          <th>NOMBRE</th>
+          <th>CORREO</th>
+          <th>ROLES</th>
+          <th>ESTADO</th>
+          <th>ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody id="tbodyUsuarios">
+        {% for u in usuarios %}
+        <tr data-search="{{ u.nombrecompleto|lower }} {{ u.dni }}">
+          <td><strong>{{ u.dni }}</strong></td>
+          <td>{{ u.nombrecompleto }}</td>
+          <td style="color:#64748b;font-size:.85rem">{{ u.correo or '—' }}</td>
+          <td>
+            <div style="display:flex;flex-wrap:wrap;gap:.3rem">
+              {% if u.roles %}
+                {% for rol in u.roles.split(',') %}
+                  <span class="badge badge-rol badge-{{ rol.strip()|lower|replace(' ','') }}">{{ rol.strip() }}</span>
+                {% endfor %}
+              {% else %}
+                <span style="color:#94a3b8;font-size:.8rem">Sin rol</span>
+              {% endif %}
+            </div>
+          </td>
+          <td>
+            {% if u.activo %}
+              <span class="status-badge status-active">Activo</span>
+            {% else %}
+              <span class="status-badge status-inactive">Inactivo</span>
+            {% endif %}
+          </td>
+          <td>
+            <div style="display:flex;gap:.5rem;align-items:center">
+              <button class="btn-icon btn-icon-edit" title="Editar"
+                onclick="abrirModalEditar('{{ u.idusuario }}','{{ u.dni }}','{{ u.nombrecompleto }}','{{ u.correo or '' }}','{{ u.roles_ids or '' }}')">
+                <i data-feather="edit-2"></i>
+              </button>
+              <button class="btn-icon {{ 'btn-icon-warning' if u.activo else 'btn-icon-success' }}" 
+                title="{{ 'Desactivar' if u.activo else 'Activar' }}"
+                onclick="toggleUsuario('{{ u.idusuario }}', {{ 'true' if u.activo else 'false' }})">
+                <i data-feather="{{ 'user-x' if u.activo else 'user-check' }}"></i>
+              </button>
+              <button class="btn-icon btn-icon-danger" title="Eliminar"
+                onclick="eliminarUsuario('{{ u.idusuario }}', '{{ u.nombrecompleto }}')">
+                <i data-feather="trash-2"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:2rem">No hay usuarios registrados</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== MODAL CREAR USUARIO ===== -->
+<div class="modal-overlay" id="modalCrearUsuario">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="user-plus"></i></span>
+        <div>
+          <h3>Nuevo Usuario</h3>
+          <p>Completa el formulario para crear un usuario</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="cerrarModalCrear()"><i data-feather="x"></i></button>
+    </div>
+    <form id="formCrearUsuario" onsubmit="crearUsuario(event)">
+      <div class="modal-body">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">DNI *</label>
+            <input type="text" id="crear_dni" name="dni" class="form-input" 
+                   placeholder="12345678" maxlength="12" required
+                   oninput="this.value=this.value.replace(/\D/g,'')">
+            <small class="form-hint">Máximo 12 dígitos numéricos</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre Completo *</label>
+            <input type="text" id="crear_nombre" name="nombre" class="form-input" 
+                   placeholder="Juan Pérez García" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" id="crear_correo" name="correo" class="form-input" 
+                 placeholder="correo@ejemplo.com">
+        </div>
+
+        <div class="alert alert-info" style="margin:.5rem 0;font-size:.85rem">
+          <i data-feather="info" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i>
+          La contraseña por defecto será: <strong>123456</strong>
+        </div>
+
+        <div class="form-section" style="margin-top:1rem">
+          <h4 class="form-section-title"><i data-feather="shield"></i> Roles y Permisos</h4>
+          <div class="roles-grid">
+            {% for rol in roles %}
+            <label class="rol-checkbox-card">
+              <input type="checkbox" name="roles" value="{{ rol.idroles }}" class="rol-check">
+              <span class="rol-card-content">
+                <i data-feather="{{ 'settings' if 'Admin' in rol.nombrerol else ('eye' if 'Supervisor' in rol.nombrerol else 'user') }}"></i>
+                <span>{{ rol.nombrerol }}</span>
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i data-feather="check"></i> Crear Usuario
+        </button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModalCrear()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL EDITAR USUARIO ===== -->
+<div class="modal-overlay" id="modalEditarUsuario">
+  <div class="modal-box" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="edit-2"></i></span>
+        <div>
+          <h3>Editar Usuario</h3>
+          <p>Modifica los datos del usuario</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="cerrarModalEditar()"><i data-feather="x"></i></button>
+    </div>
+    <form id="formEditarUsuario" onsubmit="editarUsuario(event)">
+      <input type="hidden" id="editar_id" name="id">
+      <div class="modal-body">
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">DNI *</label>
+            <input type="text" id="editar_dni" name="dni" class="form-input" 
+                   maxlength="12" required oninput="this.value=this.value.replace(/\D/g,'')">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre Completo *</label>
+            <input type="text" id="editar_nombre" name="nombre" class="form-input" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Correo Electrónico</label>
+          <input type="email" id="editar_correo" name="correo" class="form-input">
+        </div>
+
+        <div class="form-section" style="margin-top:1rem">
+          <h4 class="form-section-title"><i data-feather="shield"></i> Roles y Permisos</h4>
+          <div class="roles-grid">
+            {% for rol in roles %}
+            <label class="rol-checkbox-card">
+              <input type="checkbox" name="roles" value="{{ rol.idroles }}" 
+                     class="rol-check editar-rol-check" id="editar_rol_{{ rol.idroles }}">
+              <span class="rol-card-content">
+                <i data-feather="{{ 'settings' if 'Admin' in rol.nombrerol else ('eye' if 'Supervisor' in rol.nombrerol else 'user') }}"></i>
+                <span>{{ rol.nombrerol }}</span>
+              </span>
+            </label>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-yellow btn-lg">
+          <i data-feather="save"></i> Guardar Cambios
+        </button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModalEditar()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL CAMBIAR CONTRASEÑA ===== -->
+<div class="modal-overlay" id="modalCambiarPassword">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="key"></i></span>
+        <div>
+          <h3>Cambiar Contraseña</h3>
+          <p>Modifica las credenciales de un usuario</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modalCambiarPassword').style.display='none'">
+        <i data-feather="x"></i>
+      </button>
+    </div>
+    <form id="formCambiarPassword" onsubmit="cambiarPassword(event)">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Usuario (DNI) *</label>
+          <select id="pwd_usuario" name="usuario_id" class="form-select" required>
+            <option value="">Seleccionar usuario...</option>
+            {% for u in usuarios %}
+            <option value="{{ u.idusuario }}">{{ u.dni }} — {{ u.nombrecompleto }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nueva Contraseña *</label>
+          <input type="password" id="pwd_nueva" name="nueva_password" class="form-input" 
+                 placeholder="Mínimo 6 caracteres" minlength="6" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Confirmar Contraseña *</label>
+          <input type="password" id="pwd_confirmar" name="confirmar_password" class="form-input" 
+                 placeholder="Repite la contraseña" minlength="6" required>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-blue btn-lg">
+          <i data-feather="check"></i> Cambiar Contraseña
+        </button>
+        <button type="button" class="btn btn-secondary btn-lg" 
+                onclick="document.getElementById('modalCambiarPassword').style.display='none'">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const URL_USUARIOS = {
+  crear:   "{{ url_for('admin.usuarios_crear') }}",
+  editar:  "{{ url_for('admin.usuarios_editar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
+  toggle:  "{{ url_for('admin.usuarios_toggle', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
+  eliminar:"{{ url_for('admin.usuarios_eliminar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
+  password:"{{ url_for('admin.usuarios_password') }}"
+};
+
+function abrirModalCrear() {
+  document.getElementById('formCrearUsuario').reset();
+  document.getElementById('modalCrearUsuario').style.display = 'flex';
+  feather.replace();
+}
+function cerrarModalCrear() {
+  document.getElementById('modalCrearUsuario').style.display = 'none';
+}
+
+function abrirModalEditar(id, dni, nombre, correo, rolesIds) {
+  document.getElementById('editar_id').value    = id;
+  document.getElementById('editar_dni').value   = dni;
+  document.getElementById('editar_nombre').value = nombre;
+  document.getElementById('editar_correo').value = correo;
+  // Marcar roles actuales
+  document.querySelectorAll('.editar-rol-check').forEach(cb => {
+    cb.checked = rolesIds.split(',').map(r=>r.trim()).includes(cb.value);
+  });
+  document.getElementById('modalEditarUsuario').style.display = 'flex';
+  feather.replace();
+}
+function cerrarModalEditar() {
+  document.getElementById('modalEditarUsuario').style.display = 'none';
+}
+
+function abrirModalCambiarPassword() {
+  document.getElementById('formCambiarPassword').reset();
+  document.getElementById('modalCambiarPassword').style.display = 'flex';
+}
+
+function filtrarUsuarios(q) {
+  q = q.toLowerCase();
+  document.querySelectorAll('#tbodyUsuarios tr[data-search]').forEach(tr => {
+    tr.style.display = tr.dataset.search.includes(q) ? '' : 'none';
+  });
+}
+
+async function crearUsuario(e) {
+  e.preventDefault();
+  const form = e.target;
+  const data = new FormData(form);
+  try {
+    const res = await fetch(URL_USUARIOS.crear, { method:'POST', body: data,
+      headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const json = await res.json();
+    if (json.success) { cerrarModalCrear(); location.reload(); }
+    else showToast(json.error || 'Error al crear usuario', 'error');
+  } catch(err) { showToast('Error de conexión', 'error'); }
+}
+
+async function editarUsuario(e) {
+  e.preventDefault();
+  const form = e.target;
+  const uid  = document.getElementById('editar_id').value;
+  const data = new FormData(form);
+  try {
+    const res = await fetch(URL_USUARIOS.editar + uid, { method:'POST', body: data,
+      headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const json = await res.json();
+    if (json.success) { cerrarModalEditar(); location.reload(); }
+    else showToast(json.error || 'Error al editar usuario', 'error');
+  } catch(err) { showToast('Error de conexión', 'error'); }
+}
+
+async function toggleUsuario(uid, activo) {
+  const accion = activo ? 'desactivar' : 'activar';
+  if (!confirm(`¿Deseas ${accion} este usuario?`)) return;
+  try {
+    const res = await fetch(URL_USUARIOS.toggle + uid, { method:'POST',
+      headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const json = await res.json();
+    if (json.success) location.reload();
+    else showToast(json.error || 'Error', 'error');
+  } catch(err) { showToast('Error de conexión', 'error'); }
+}
+
+async function eliminarUsuario(uid, nombre) {
+  if (!confirm(`¿Eliminar al usuario "${nombre}"? Esta acción no se puede deshacer.`)) return;
+  try {
+    const res = await fetch(URL_USUARIOS.eliminar + uid, { method:'POST',
+      headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const json = await res.json();
+    if (json.success) location.reload();
+    else showToast(json.error || 'Error al eliminar', 'error');
+  } catch(err) { showToast('Error de conexión', 'error'); }
+}
+
+async function cambiarPassword(e) {
+  e.preventDefault();
+  const nueva    = document.getElementById('pwd_nueva').value;
+  const confirmar = document.getElementById('pwd_confirmar').value;
+  if (nueva !== confirmar) { showToast('Las contraseñas no coinciden', 'error'); return; }
+  const data = new FormData(e.target);
+  try {
+    const res = await fetch(URL_USUARIOS.password, { method:'POST', body: data,
+      headers:{'X-Requested-With':'XMLHttpRequest'} });
+    const json = await res.json();
+    if (json.success) {
+      document.getElementById('modalCambiarPassword').style.display = 'none';
+      showToast('Contraseña actualizada', 'success');
+    } else showToast(json.error || 'Error', 'error');
+  } catch(err) { showToast('Error de conexión', 'error'); }
+}
+
+function showToast(msg, type) {
+  const d = document.createElement('div');
+  d.className = `alert alert-${type}`;
+  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
+  d.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>`;
+  document.body.appendChild(d);
+  feather.replace();
+  setTimeout(() => d.remove(), 4000);
+}
+</script>
 {% endblock %}

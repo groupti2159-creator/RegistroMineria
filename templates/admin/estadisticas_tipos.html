@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}Desvíos Pendientes por Tipo{% endblock %}
+{% block page_title %}Desvíos Pendientes por Tipo{% endblock %}
+
+{% block content %}
+<div class="card" style="margin-bottom:1.5rem;">
+  <div class="card-body">
+    <form method="GET" style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap;">
+      <div style="display:flex;flex-direction:column;gap:0.25rem;">
+        <label style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Desde</label>
+        <input type="date" name="fecha_ini" value="{{ fecha_ini }}"
+               style="padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:0.25rem;">
+        <label style="font-size:0.85rem;font-weight:500;color:var(--text-secondary);">Hasta</label>
+        <input type="date" name="fecha_fin" value="{{ fecha_fin }}"
+               style="padding:0.5rem 0.75rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);">
+      </div>
+      <button type="submit" class="btn btn-primary" style="padding:0.5rem 1.25rem;">
+        <i data-feather="filter" style="width:14px;height:14px;margin-right:4px;"></i>Filtrar
+      </button>
+      {% if fecha_ini or fecha_fin %}
+      <a href="{{ url_for('admin.estadisticas_tipos') }}" class="btn btn-secondary" style="padding:0.5rem 1.25rem;">
+        <i data-feather="x" style="width:14px;height:14px;margin-right:4px;"></i>Limpiar
+      </a>
+      {% endif %}
+    </form>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <i data-feather="alert-triangle"></i>
+    Desvíos Pendientes por Tipo
+  </div>
+  <div class="card-body">
+    {% if stats %}
+      <div class="chart-card" style="margin-bottom:2rem;">
+        <h3 class="chart-title"><i data-feather="bar-chart-2"></i> Distribución de Desvíos Pendientes</h3>
+        <div class="chart-container" style="height:{{ [stats|length * 40 + 100, 600]|min }}px;">
+          <canvas id="tiposChart"></canvas>
+        </div>
+      </div>
+      <div class="data-table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th><i data-feather="tag"></i> Tipo de Descripción</th>
+              <th style="text-align:center"><i data-feather="hash"></i> Cantidad Pendiente</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% set total = 0 %}
+            {% for row in stats %}
+            <tr>
+              <td><span style="font-weight:500">{{ row.tipo_descripcion }}</span></td>
+              <td style="text-align:center"><span class="cantidad-badge">{{ row.cantidad_pendiente }}</span></td>
+            </tr>
+            {% set total = total + row.cantidad_pendiente %}
+            {% endfor %}
+            <tr style="background:var(--gray-100);font-weight:700;border-top:2px solid var(--border)">
+              <td>TOTAL GENERAL</td>
+              <td style="text-align:center"><span class="cantidad-badge total">{{ total }}</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="module-placeholder">
+        <div class="module-placeholder-icon"><i data-feather="alert-triangle"></i></div>
+        <h2>No hay datos disponibles</h2>
+        <p>No se encontraron desvíos pendientes para el rango seleccionado</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+{% if stats %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+const labels = {{ stats | map(attribute='tipo_descripcion') | list | tojson }};
+const cantidades = {{ stats | map(attribute='cantidad_pendiente') | list | tojson }};
+const colores = (isDark
+  ? ['#f87171','#fb923c','#fbbf24','#fde047','#a3e635','#4ade80','#22d3ee','#60a5fa','#a78bfa','#f472b6']
+  : ['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899']
+).slice(0, labels.length);
+
+const chart = new Chart(document.getElementById('tiposChart').getContext('2d'), {
+  type: 'bar',
+  data: { labels, datasets: [{ label: 'Pendientes', data: cantidades, backgroundColor: colores, borderRadius: 6, borderSkipped: false }] },
+  options: {
+    indexAxis: 'y',
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false }, tooltip: { displayColors: false, callbacks: { label: c => 'Pendientes: ' + c.parsed.x + ' reportes' } } },
+    scales: {
+      x: { beginAtZero: true, ticks: { stepSize: 1, color: isDark ? '#a3a3a3' : '#525252' }, grid: { color: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' } },
+      y: { ticks: { autoSkip: false, color: isDark ? '#a3a3a3' : '#525252' }, grid: { display: false } }
+    },
+    animation: { duration: 1200, easing: 'easeInOutQuart' }
+  }
+});
+
+new MutationObserver(() => {
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  chart.data.datasets[0].backgroundColor = (dark
+    ? ['#f87171','#fb923c','#fbbf24','#fde047','#a3e635','#4ade80','#22d3ee','#60a5fa','#a78bfa','#f472b6']
+    : ['#ef4444','#f97316','#f59e0b','#eab308','#84cc16','#22c55e','#06b6d4','#3b82f6','#8b5cf6','#ec4899']
+  ).slice(0, labels.length);
+  chart.options.scales.x.ticks.color = dark ? '#a3a3a3' : '#525252';
+  chart.options.scales.y.ticks.color = dark ? '#a3a3a3' : '#525252';
+  chart.update();
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+</script>
+{% endif %}
+{% endblock %}

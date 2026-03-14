@@ -3,6 +3,7 @@ from functools import wraps
 from extensions import mysql
 from utils.helpers import gen_id, save_image, sp_exec, sp_one
 import io
+import os
 from datetime import datetime
 
 admin_bp = Blueprint('admin', __name__)
@@ -59,14 +60,31 @@ def dashboard():
     notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
     cur.close()
     
+    # Obtener registros pendientes para la tabla del dashboard
+    cur = mysql.connection.cursor()
+    todos = sp_exec(cur, 'sp_listarregistros', (None,))
+    cur.close()
+    
+    registros_pendientes = [r for r in todos if r.get('estado') == 'Pendiente']
+    total_pendientes = len(registros_pendientes)
+    
     return render_template('admin/dashboard.html',
         stats=stats or {'total':0,'culminados':0,'en_proceso':0,'pendientes':0},
-        notifs=notifs, notif_count=get_notif_count())
+        notifs=notifs,
+        notif_count=get_notif_count(),
+        registros=registros_pendientes,
+        total=total_pendientes,
+        page=1,
+        total_pages=1,
+        per_page=total_pendientes or 10,
+        estado_filter='Pendiente',
+        personal_filter='')
 
 @admin_bp.route('/registrar')
 @admin_required
 def registrar():
     estado_filter = request.args.get('estado','')
+    personal_filter = request.args.get('personal','')
     page = request.args.get('page', 1, type=int)
     per_page = 10
     
@@ -82,6 +100,10 @@ def registrar():
     cur = mysql.connection.cursor()
     registros = sp_exec(cur, 'sp_listarregistros', (estado_filter or None,))
     cur.close()
+    
+    # Filtrar por personal responsable si se especifica
+    if personal_filter:
+        registros = [r for r in registros if r.get('personalresponsable', '').lower() == personal_filter.lower()]
     
     # Definir orden de prioridad de estados
     orden_estados = {
@@ -121,7 +143,8 @@ def registrar():
         registros=registros_pagina,
         areas_rep=areas_rep, areas_res=areas_res,
         ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
-        estado_filter=estado_filter, 
+        estado_filter=estado_filter,
+        personal_filter=personal_filter,
         notif_count=get_notif_count(),
         page=page,
         total_pages=total_pages,
@@ -129,19 +152,176 @@ def registrar():
         per_page=per_page,
         estados_unicos=estados_unicos)
 
+@admin_bp.route('/estadisticas/areas')
+@admin_required
+def estadisticas_areas():
+    fecha_ini = request.args.get('fecha_ini') or None
+    fecha_fin = request.args.get('fecha_fin') or None
+    cur = mysql.connection.cursor()
+    stats = sp_exec(cur, 'sp_estadisticasareas', (fecha_ini, fecha_fin))
+    cur.close()
+    return render_template('admin/estadisticas_areas.html',
+                         stats=stats,
+                         fecha_ini=fecha_ini or '',
+                         fecha_fin=fecha_fin or '',
+                         notif_count=get_notif_count())
+
+@admin_bp.route('/estadisticas/ccta')
+@admin_required
+def estadisticas_ccta():
+    fecha_ini = request.args.get('fecha_ini') or None
+    fecha_fin = request.args.get('fecha_fin') or None
+    cur = mysql.connection.cursor()
+    stats = sp_exec(cur, 'sp_estadisticasccta', (fecha_ini, fecha_fin))
+    cur.close()
+    return render_template('admin/estadisticas_ccta.html',
+                         stats=stats,
+                         fecha_ini=fecha_ini or '',
+                         fecha_fin=fecha_fin or '',
+                         notif_count=get_notif_count())
+
+@admin_bp.route('/estadisticas/tipos')
+@admin_required
+def estadisticas_tipos():
+    fecha_ini = request.args.get('fecha_ini') or None
+    fecha_fin = request.args.get('fecha_fin') or None
+    cur = mysql.connection.cursor()
+    stats = sp_exec(cur, 'sp_estadisticas_tipos_pendientes', (fecha_ini, fecha_fin))
+    cur.close()
+    return render_template('admin/estadisticas_tipos.html',
+                         stats=stats,
+                         fecha_ini=fecha_ini or '',
+                         fecha_fin=fecha_fin or '',
+                         notif_count=get_notif_count())
+
 @admin_bp.route('/estadisticas')
 @admin_required
 def estadisticas():
-    cur = mysql.connection.cursor()
-    # Obtener estadísticas por área responsable
-    stats_areas = sp_exec(cur, 'sp_estadisticasareas')
-    cur.close()
-    return render_template('admin/estadisticas.html', stats_areas=stats_areas, notif_count=get_notif_count())
+    return redirect(url_for('admin.estadisticas_areas'))
 
 @admin_bp.route('/configuracion/usuarios')
 @admin_required
 def configuracion_usuarios():
-    return render_template('admin/configuracion_usuarios.html', notif_count=get_notif_count())
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT u.idusuario, u.dni, u.nombrecompleto, u.correo, u.activo,
+               GROUP_CONCAT(r.nombrerol ORDER BY r.nombrerol SEPARATOR ', ') AS roles,
+               GROUP_CONCAT(r.idroles ORDER BY r.nombrerol SEPARATOR ',') AS roles_ids
+        FROM tbl_usuario u
+        LEFT JOIN tbl_usuariorol ur ON ur.idusuario = u.idusuario
+        LEFT JOIN tbl_roles r ON r.idroles = ur.idroles
+        GROUP BY u.idusuario
+        ORDER BY u.nombrecompleto
+    """)
+    usuarios = cur.fetchall()
+    cur.execute("SELECT idroles, nombrerol FROM tbl_roles ORDER BY nombrerol")
+    roles = cur.fetchall()
+    cur.close()
+    return render_template('admin/configuracion_usuarios.html',
+                           usuarios=usuarios, roles=roles,
+                           notif_count=get_notif_count())
+
+
+@admin_bp.route('/configuracion/usuarios/crear', methods=['POST'])
+@admin_required
+def usuarios_crear():
+    from utils.helpers import md5
+    try:
+        dni    = request.form.get('dni','').strip()
+        nombre = request.form.get('nombre','').strip()
+        correo = request.form.get('correo','').strip() or None
+        roles  = request.form.getlist('roles')
+
+        if not dni or not nombre:
+            return jsonify({'success': False, 'error': 'DNI y nombre son requeridos'}), 400
+
+        uid = gen_id()
+        cur = mysql.connection.cursor()
+        cur.execute(
+            "INSERT INTO tbl_usuario (idusuario, dni, nombrecompleto, correo, contrasena) VALUES (%s,%s,%s,%s,%s)",
+            (uid, dni, nombre, correo, md5('123456'))
+        )
+        for rid in roles:
+            cur.execute(
+                "INSERT INTO tbl_usuariorol (idusuariorol, idusuario, idroles) VALUES (%s,%s,%s)",
+                (gen_id(), uid, rid)
+            )
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@admin_bp.route('/configuracion/usuarios/editar/<uid>', methods=['POST'])
+@admin_required
+def usuarios_editar(uid):
+    try:
+        dni    = request.form.get('dni','').strip()
+        nombre = request.form.get('nombre','').strip()
+        correo = request.form.get('correo','').strip() or None
+        roles  = request.form.getlist('roles')
+
+        cur = mysql.connection.cursor()
+        cur.execute(
+            "UPDATE tbl_usuario SET dni=%s, nombrecompleto=%s, correo=%s WHERE idusuario=%s",
+            (dni, nombre, correo, uid)
+        )
+        cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario=%s", (uid,))
+        for rid in roles:
+            cur.execute(
+                "INSERT INTO tbl_usuariorol (idusuariorol, idusuario, idroles) VALUES (%s,%s,%s)",
+                (gen_id(), uid, rid)
+            )
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@admin_bp.route('/configuracion/usuarios/toggle/<uid>', methods=['POST'])
+@admin_required
+def usuarios_toggle(uid):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE tbl_usuario SET activo = NOT activo WHERE idusuario=%s", (uid,))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@admin_bp.route('/configuracion/usuarios/eliminar/<uid>', methods=['POST'])
+@admin_required
+def usuarios_eliminar(uid):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("DELETE FROM tbl_usuario WHERE idusuario=%s", (uid,))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@admin_bp.route('/configuracion/usuarios/password', methods=['POST'])
+@admin_required
+def usuarios_password():
+    from utils.helpers import md5
+    try:
+        uid  = request.form.get('usuario_id','').strip()
+        pwd  = request.form.get('nueva_password','').strip()
+        if not uid or not pwd:
+            return jsonify({'success': False, 'error': 'Datos incompletos'}), 400
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE tbl_usuario SET contrasena=%s WHERE idusuario=%s", (md5(pwd), uid))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
 
 # Mantener la ruta /desvios para redireccionar a /registrar
 @admin_bp.route('/desvios')
@@ -267,8 +447,23 @@ def crear_registro():
             mysql.connection.commit()
             cur.close()
 
+        # Verificar si es petición AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'message': 'Reporte creado exitosamente',
+                'registro_id': rid,
+                'codigo': codigo
+            })
+        
         flash('Reporte creado exitosamente', 'success')
     except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'error': f'Error al crear reporte: {str(e)}'
+            }), 400
+        
         flash(f'Error al crear reporte: {str(e)}', 'error')
     return redirect(url_for('admin.registrar'))
 
@@ -322,9 +517,63 @@ def editar_registro(rid):
                     cur.close()
         
         flash('Reporte actualizado', 'success')
+        
+        # Soporte AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'message': 'Reporte actualizado exitosamente'
+            })
+            
     except Exception as e:
+        # Soporte AJAX para errores
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'error': f'Error: {str(e)}'
+            }), 400
+            
         flash(f'Error: {str(e)}', 'error')
     return redirect(url_for('admin.registrar'))
+
+
+@admin_bp.route('/desvios/eliminar/<rid>', methods=['POST'])
+@admin_required
+def eliminar_registro(rid):
+    try:
+        cur = mysql.connection.cursor()
+        # Obtener rutas de imágenes antes de borrar
+        cur.execute("SELECT rutaimagen FROM tbl_imagenregistro WHERE idregistro=%s", (rid,))
+        imagenes = cur.fetchall()
+
+        # Borrar en orden por FK
+        cur.execute("DELETE FROM tbl_historialaprobacion WHERE idregistro=%s", (rid,))
+        cur.execute("DELETE FROM tbl_notificacion WHERE idregistro=%s", (rid,))
+        cur.execute("DELETE FROM tbl_registro WHERE idregistro=%s", (rid,))
+        mysql.connection.commit()
+        cur.close()
+
+        # Borrar archivos físicos
+        base_dir = os.path.join(os.path.dirname(__file__), '..')
+        for img in imagenes:
+            ruta = img.get('rutaimagen', '')  # ej: "uploads/evidencias/abc.jpg"
+            if ruta:
+                filepath = os.path.normpath(os.path.join(base_dir, 'static', ruta))
+                try:
+                    if os.path.exists(filepath):
+                        os.remove(filepath)
+                except:
+                    pass
+
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': True})
+        flash('Registro eliminado', 'success')
+    except Exception as e:
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({'success': False, 'error': str(e)}), 400
+        flash(f'Error al eliminar: {str(e)}', 'error')
+    return redirect(url_for('admin.registrar'))
+
 
 @admin_bp.route('/desvios/detalle/<rid>')
 @admin_required
@@ -451,8 +700,23 @@ def validar_levantamiento(rid):
                 mysql.connection.commit()
                 cur.close()
         
+        # Soporte AJAX
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': True,
+                'message': f'Imágenes {"aprobadas" if decision=="APROBADA" else "rechazadas"} exitosamente'
+            })
+        
     except Exception as e:
+        # Soporte AJAX para errores
+        if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+            return jsonify({
+                'success': False,
+                'error': f'Error: {str(e)}'
+            }), 400
+            
         flash(f'Error: {str(e)}', 'error')
+    
     return redirect(url_for('admin.registrar'))
 
 @admin_bp.route('/exportar')

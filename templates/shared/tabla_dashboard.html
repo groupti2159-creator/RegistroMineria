@@ -1,0 +1,61 @@
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon"><i data-feather="clipboard"></i></span>
+      <div>
+        <h3>Reportes Pendientes</h3>
+        <p>Total: {{ total }} registros</p>
+      </div>
+    </div>
+  </div>
+
+  {% if registros %}
+  <div class="table-responsive">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><i data-feather="calendar"></i> FECHA</th>
+          <th><i data-feather="briefcase"></i> ÁREA RESPONSABLE</th>
+          <th><i data-feather="user"></i> PERSONAL RESPONSABLE</th>
+          <th><i data-feather="hash"></i> CÓDIGO</th>
+          <th><i data-feather="activity"></i> ESTADO</th>
+          <th><i data-feather="more-vertical"></i> ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in registros %}
+        <tr>
+          <td>
+            <span class="row-dot"></span>
+            {{ r.fechainicio.strftime('%Y-%m-%d') if r.fechainicio else '' }}
+          </td>
+          <td>
+            <span style="font-weight:600;font-size:.85rem">{{ r.arearesponsable or '—' }}</span>
+          </td>
+          <td>
+            <span style="font-size:.85rem">{{ r.personalresponsable or '—' }}</span>
+          </td>
+          <td><span class="codigo-badge">{{ r.codigo }}</span></td>
+          <td><span class="estado-badge estado-{{ r.estado|lower|replace(' ','-') }}">{{ r.estado|upper }}</span></td>
+          <td>
+            <div class="action-btns">
+              <button class="btn-icon btn-blue" onclick="verDetalle('{{ r.idregistro }}')" title="Ver detalle">
+                <i data-feather="eye"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <div class="table-footer">
+    <span>Mostrando {{ registros|length }} de {{ total }} resultados</span>
+  </div>
+  {% else %}
+  <div class="empty-state" style="padding:3rem">
+    <i data-feather="inbox" style="width:64px;height:64px;color:var(--text-muted)"></i>
+    <p>No hay reportes pendientes</p>
+  </div>
+  {% endif %}
+</div>

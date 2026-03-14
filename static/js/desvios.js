@@ -1,3 +1,30 @@
+// ── ELIMINAR REGISTRO ──
+async function eliminarRegistro(rid, codigo) {
+  if (!confirm(`¿Eliminar el registro "${codigo}"?\nEsta acción no se puede deshacer.`)) return;
+  try {
+    const res = await fetch(ELIMINAR_URL_BASE + rid, {
+      method: 'POST',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    });
+    const json = await res.json();
+    if (json.success) {
+      // Quitar la fila de la tabla sin recargar
+      const fila = document.querySelector(`button[onclick*="${rid}"]`)?.closest('tr');
+      if (fila) {
+        fila.style.transition = 'opacity .3s';
+        fila.style.opacity = '0';
+        setTimeout(() => { fila.remove(); }, 300);
+      } else {
+        location.reload();
+      }
+    } else {
+      alert('Error al eliminar: ' + (json.error || 'Error desconocido'));
+    }
+  } catch(e) {
+    alert('Error de conexión');
+  }
+}
+
 // ── DETALLE MODAL ──
 function buildDetalleHTML(data) {
   const r  = data.registro || {};
@@ -88,6 +115,10 @@ function buildDetalleHTML(data) {
             <label>Área Responsable</label>
             <p style="font-weight:600">${r.arearesponsable||'—'}</p>
           </div>
+          <div class="detalle-field" style="margin-bottom:.4rem">
+            <label>CCTA Responsable</label>
+            <p style="font-weight:600">${r.nombrecctaresponsable||'—'}</p>
+          </div>
           <div class="detalle-field">
             <label>Personal Responsable</label>
             <p>${r.personalresponsable||'—'}</p>
@@ -150,6 +181,7 @@ function editarRegistro(rid) {
     setVal('edit_descripcion', r.descripcion);
     setVal('edit_accion',      r.accion);
     setVal('edit_personal',    r.personalresponsable);
+    setVal('edit_ccta',        r.cctaresponsable);
     setVal('edit_area_rep',    r.idareareportante);
     setVal('edit_area_res',    r.idarearesponsable);
     setVal('edit_ubicacion',   r.idubicacion);
@@ -445,3 +477,170 @@ function abrirValidar(imagenId, imgSrc, registroId) {
   // Esta función ya no se usa, pero la mantenemos por compatibilidad
   console.warn('abrirValidar is deprecated, use abrirValidarConjunto instead');
 }
+
+
+// ── VALIDACIÓN DE FORMULARIO DE CREAR ──
+document.addEventListener('DOMContentLoaded', function() {
+  const modalCrear = document.getElementById('modalCrear');
+  if (!modalCrear) return;
+  
+  const formCrear = modalCrear.querySelector('form');
+  if (!formCrear) return;
+  
+  const btnGuardar = document.getElementById('btnGuardarReporte');
+  if (!btnGuardar) return;
+  
+  // Campos obligatorios
+  const camposObligatorios = {
+    fecha_inicio: formCrear.querySelector('[name="fecha_inicio"]'),
+    area_reportante: formCrear.querySelector('[name="area_reportante"]'),
+    fecha_ejecucion: formCrear.querySelector('[name="fecha_ejecucion"]'),
+    ubicacion: formCrear.querySelector('[name="ubicacion"]'),
+    descripcion: formCrear.querySelector('[name="descripcion"]'),
+    riesgo: formCrear.querySelector('[name="riesgo"]'),
+    tipo: formCrear.querySelector('[name="tipo"]'),
+    area_responsable: formCrear.querySelector('[name="area_responsable"]'),
+    personal_responsable: formCrear.querySelector('[name="personal_responsable"]'),
+    evidencias: document.getElementById('fileEvidencias')
+  };
+  
+  // Función para validar todos los campos
+  function validarFormulario() {
+    let todosCompletos = true;
+    
+    // Validar campos de texto y selects
+    for (let key in camposObligatorios) {
+      const campo = camposObligatorios[key];
+      if (!campo) continue;
+      
+      if (key === 'evidencias') {
+        // Validar que haya al menos 1 imagen
+        if (!campo.files || campo.files.length === 0) {
+          todosCompletos = false;
+          break;
+        }
+      } else if (campo.tagName === 'SELECT') {
+        // Validar selects
+        if (!campo.value || campo.value === '') {
+          todosCompletos = false;
+          break;
+        }
+      } else if (campo.tagName === 'TEXTAREA' || campo.tagName === 'INPUT') {
+        // Validar inputs y textareas
+        if (!campo.value || campo.value.trim() === '') {
+          todosCompletos = false;
+          break;
+        }
+        // Validar longitud mínima para descripción
+        if (key === 'descripcion' && campo.value.trim().length < 10) {
+          todosCompletos = false;
+          break;
+        }
+      }
+    }
+    
+    // Habilitar o deshabilitar botón
+    if (todosCompletos) {
+      btnGuardar.disabled = false;
+      btnGuardar.style.opacity = '1';
+      btnGuardar.style.cursor = 'pointer';
+    } else {
+      btnGuardar.disabled = true;
+      btnGuardar.style.opacity = '0.5';
+      btnGuardar.style.cursor = 'not-allowed';
+    }
+  }
+  
+  // Agregar listeners a todos los campos
+  for (let key in camposObligatorios) {
+    const campo = camposObligatorios[key];
+    if (!campo) continue;
+    
+    if (key === 'evidencias') {
+      campo.addEventListener('change', validarFormulario);
+    } else {
+      campo.addEventListener('input', validarFormulario);
+      campo.addEventListener('change', validarFormulario);
+    }
+  }
+  
+  // Validar al abrir el modal
+  const observer = new MutationObserver(function(mutations) {
+    mutations.forEach(function(mutation) {
+      if (mutation.target === modalCrear && modalCrear.style.display === 'flex') {
+        validarFormulario();
+      }
+    });
+  });
+  
+  observer.observe(modalCrear, { attributes: true, attributeFilter: ['style'] });
+  
+  // Agregar validación personalizada antes del submit
+  formCrear.addEventListener('submit', function(e) {
+    const fileEvidencias = document.getElementById('fileEvidencias');
+    
+    // Verificar si hay archivos seleccionados
+    if (!fileEvidencias || !fileEvidencias.files || fileEvidencias.files.length === 0) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Mostrar mensaje de error
+      alert('⚠️ Debes subir al menos 1 imagen de evidencia para crear el reporte.');
+      
+      // Hacer scroll al campo de evidencias
+      fileEvidencias.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Resaltar el campo
+      const fileLabel = fileEvidencias.closest('.file-upload-area');
+      if (fileLabel) {
+        fileLabel.style.border = '2px solid #ef4444';
+        setTimeout(() => {
+          fileLabel.style.border = '';
+        }, 3000);
+      }
+      
+      return false;
+    }
+    
+    // Si hay archivos, permitir el envío
+    return true;
+  });
+  
+  // Validación inicial
+  validarFormulario();
+});
+
+
+// ── AUTO-APERTURA DE MODAL DESDE URL ──
+// Detectar si hay parámetro ver_detalle en la URL y abrir el modal automáticamente
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const verDetalleId = urlParams.get('ver_detalle');
+  
+  if (verDetalleId) {
+    // Esperar un momento para que la página cargue completamente
+    setTimeout(function() {
+      // Verificar si la función verDetalle existe
+      if (typeof verDetalle === 'function') {
+        verDetalle(verDetalleId);
+      } else {
+        // Fallback manual si la función no está disponible
+        const url = DETALLE_URL_BASE + verDetalleId;
+        document.getElementById('detalleContent').innerHTML = '<div class="loading-state">Cargando...</div>';
+        document.getElementById('modalDetalle').style.display = 'flex';
+        fetch(url).then(r => r.json()).then(data => {
+          document.getElementById('detalleContent').innerHTML = buildDetalleHTML(data);
+          setTimeout(() => {
+            if (typeof feather !== 'undefined') {
+              feather.replace({ 'stroke-width': 1.2 });
+            }
+          }, 50);
+        });
+      }
+      
+      // Limpiar el parámetro de la URL sin recargar la página
+      const newUrl = window.location.pathname + (urlParams.toString().replace(/[?&]ver_detalle=[^&]*/g, '') ? '?' + urlParams.toString().replace(/[?&]ver_detalle=[^&]*/g, '').replace(/^&/, '') : '');
+      window.history.replaceState({}, '', newUrl);
+    }, 500);
+  }
+});

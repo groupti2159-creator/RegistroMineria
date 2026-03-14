@@ -96,7 +96,7 @@ CREATE TABLE IF NOT EXISTS Tbl_Registro (
     idEstado            CHAR(18) NOT NULL,
     IdUsuarioRolCreador CHAR(18) NOT NULL,
     PersonalResponsable VARCHAR(100),
-    CctaResponsable     VARCHAR(100),
+    CctaResponsable     CHAR(18) NULL,
     Archivado           TINYINT(1) DEFAULT 0,
     FechaArchivado      DATETIME NULL,
     IdUsuarioRolArchivador CHAR(18) NULL,
@@ -281,6 +281,7 @@ CREATE PROCEDURE SP_ListarRegistros(IN p_estado VARCHAR(50))
 BEGIN
     SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
            r.Descripcion, r.Accion, r.PersonalResponsable,
+           arc.AreaReportante AS CctaResponsable,
            e.Estado, e.idEstado,
            ar.AreaReportante, ars.AreaResponsable,
            ub.Ubicacion, ri.Riesgo, dt.DescripcionTipo,
@@ -617,5 +618,28 @@ BEGIN
     WHERE r.Archivado=0
     ORDER BY r.FechaCreacion DESC;
 END$$
+
+DELIMITER ;
+
+-- ═══════════════════════════════════════════════════════════
+--  SP: Estadísticas por Cuenta Responsable
+-- ═══════════════════════════════════════════════════════════
+DELIMITER $
+
+DROP PROCEDURE IF EXISTS SP_EstadisticasCcta$
+CREATE PROCEDURE SP_EstadisticasCcta()
+BEGIN
+    SELECT
+        IFNULL(r.CctaResponsable, 'Sin asignar') AS ccta_responsable,
+        COUNT(*) AS total,
+        SUM(CASE WHEN e.Estado = 'Culminado' THEN 1 ELSE 0 END) AS culminado,
+        SUM(CASE WHEN e.Estado = 'Pendiente' THEN 1 ELSE 0 END) AS pendiente,
+        SUM(CASE WHEN e.Estado IN ('En Proceso','Enviado','En Revisión') THEN 1 ELSE 0 END) AS proceso
+    FROM Tbl_Registro r
+    JOIN Tbl_Estado e ON e.idEstado = r.idEstado
+    WHERE r.Archivado = 0
+    GROUP BY r.CctaResponsable
+    ORDER BY total DESC;
+END$
 
 DELIMITER ;

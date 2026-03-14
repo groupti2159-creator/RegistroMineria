@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ecoSupervisor — Seleccionar Rol</title>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body class="login-body">
+  <button class="dark-toggle-login" onclick="toggleDark()" title="Cambiar tema">
+    <i data-feather="moon"></i>
+  </button>
+
+  <div class="login-wrapper">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-icon"><i data-feather="shield"></i></div>
+      </div>
+      <h1 class="login-title"><span class="title-eco">Eco</span><span class="title-sup">Supervisor</span></h1>
+      <p class="login-subtitle">Hola, <strong>{{ pending.nombrecompleto }}</strong></p>
+      <p style="text-align:center;color:#64748b;font-size:.9rem;margin-bottom:1.5rem">
+        Tu cuenta tiene múltiples roles. ¿Con cuál deseas ingresar?
+      </p>
+
+      {% if error %}
+      <div class="alert alert-error" style="margin-bottom:1rem">
+        <span><i data-feather="alert-circle"></i> {{ error }}</span>
+      </div>
+      {% endif %}
+
+      <form method="POST" action="{{ url_for('auth.seleccionar_rol') }}">
+        <div style="display:flex;flex-direction:column;gap:.75rem;margin-bottom:1.5rem">
+          {% for rol in pending.roles %}
+          <label class="rol-selector-card">
+            <input type="radio" name="idusuariorol" value="{{ rol.idusuariorol }}" required
+                   {% if loop.first %}checked{% endif %}>
+            <span class="rol-selector-content">
+              <span class="rol-selector-icon">
+                {% if rol.nombrerol == 'Administrador' %}
+                  <i data-feather="settings"></i>
+                {% elif rol.nombrerol == 'Supervisor' %}
+                  <i data-feather="eye"></i>
+                {% else %}
+                  <i data-feather="user"></i>
+                {% endif %}
+              </span>
+              <span class="rol-selector-info">
+                <strong>{{ rol.nombrerol }}</strong>
+              </span>
+              <span class="rol-selector-check"><i data-feather="check-circle"></i></span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary btn-block btn-lg">
+          <i data-feather="log-in"></i> Ingresar
+        </button>
+      </form>
+
+      <div style="text-align:center;margin-top:1rem">
+        <a href="{{ url_for('auth.login') }}" style="color:#64748b;font-size:.85rem;text-decoration:none">
+          <i data-feather="arrow-left" style="width:14px;height:14px;vertical-align:middle"></i>
+          Volver al login
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script>feather.replace({ 'stroke-width': 1.2 });</script>
+</body>
+</html>
