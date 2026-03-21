@@ -28,7 +28,7 @@ instance/
 .webassets-cache
 
 # Environment variables
-.env
+# .env  <-- no ignorar, contiene config de Railway para el equipo
 .env.local
 
 # IDE
