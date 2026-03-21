@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()  # Carga .env ANTES de leer Config
+
 from flask import Flask
 from extensions import mysql
 from config import Config
