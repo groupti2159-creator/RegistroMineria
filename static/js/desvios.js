@@ -27,9 +27,14 @@ async function eliminarRegistro(rid, codigo) {
 
 // ── DETALLE MODAL ──
 function buildDetalleHTML(data) {
-  const r  = data.registro || {};
-  const ev = data.evidencias || [];
-  const lv = data.levantamientos || [];
+  const raw  = data.registro || {};
+  // normalizar claves a minúsculas por si el servidor envía mixed-case
+  const r = {};
+  for (const k in raw) r[k.toLowerCase()] = raw[k];
+
+  const normalize = arr => (arr||[]).map(obj => { const n={}; for(const k in obj) n[k.toLowerCase()]=obj[k]; return n; });
+  const ev = normalize(data.evidencias);
+  const lv = normalize(data.levantamientos);
 
   const estadoColor = {
     'Pendiente':'#92400e','En Proceso':'#1e40af','Enviado':'#6b21a8',
@@ -37,7 +42,7 @@ function buildDetalleHTML(data) {
   };
   const color = estadoColor[r.estado] || '#475569';
 
-  const renderImgs = (imgs, showValidar, registroId) => {
+  const renderImgs = (imgs) => {
     if (!imgs.length) return '<p style="color:#94a3b8;font-size:.78rem">Sin imágenes</p>';
     return `<div class="img-gallery">${imgs.map(i => {
       const statusClass = i.estadoimagen === 'Aprobada' ? 'aprobada' : i.estadoimagen === 'Rechazada' ? 'rechazada' : 'pendiente';
@@ -130,9 +135,9 @@ function buildDetalleHTML(data) {
         <div class="detalle-section-title"><i data-feather="image"></i> Evidencias</div>
         <div class="detalle-body">
           <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin-bottom:.4rem;display:flex;align-items:center;gap:.3rem"><i data-feather="image" style="width:14px;height:14px"></i> Evidencias (${ev.length})</p>
-          ${renderImgs(ev, false, r.idregistro)}
+          ${renderImgs(ev)}
           <p style="font-size:.72rem;font-weight:600;color:#94a3b8;margin:.6rem 0 .4rem;display:flex;align-items:center;gap:.3rem"><i data-feather="file" style="width:14px;height:14px"></i> Levantamientos (${lv.length})</p>
-          ${renderImgs(lv, false, r.idregistro)}
+          ${renderImgs(lv)}
           ${canValidate && lv.filter(i => i.estadoimagen === 'Pendiente').length > 0 ? 
             `<button onclick="abrirValidarConjunto('${r.idregistro}', ${JSON.stringify(lv).replace(/"/g, '&quot;')})" 
                      style="width:100%;margin-top:.8rem;padding:.6rem;background:#059669;color:white;border:none;border-radius:6px;font-weight:600;cursor:pointer;font-size:.85rem;display:flex;align-items:center;justify-content:center;gap:.4rem">
@@ -171,7 +176,10 @@ function editarRegistro(rid) {
   imagenesEditarEliminar = [];
   
   fetch(url).then(r => r.json()).then(data => {
-    const r = data.registro || {};
+    const raw = data.registro || {};
+    // normalizar claves a minúsculas
+    const r = {};
+    for (const k in raw) r[k.toLowerCase()] = raw[k];
     const form = document.getElementById('formEditar');
     form.action = EDITAR_URL_BASE + rid;
 
@@ -197,22 +205,7 @@ function editarRegistro(rid) {
 }
 
 // Interceptar el submit del formulario de edición para agregar las imágenes a eliminar
-document.addEventListener('DOMContentLoaded', function() {
-  const formEditar = document.getElementById('formEditar');
-  if (formEditar) {
-    formEditar.addEventListener('submit', function(e) {
-      // Agregar campo hidden con las imágenes a eliminar
-      let inputEliminar = document.querySelector('input[name="imagenes_eliminar"]');
-      if (!inputEliminar) {
-        inputEliminar = document.createElement('input');
-        inputEliminar.type = 'hidden';
-        inputEliminar.name = 'imagenes_eliminar';
-        formEditar.appendChild(inputEliminar);
-      }
-      inputEliminar.value = imagenesEditarEliminar.join(',');
-    });
-  }
-});
+// (manejado por ajax_handler.js que lee imagenesEditarEliminar directamente)
 
 function renderEditImagenes(evidencias, levantamientos) {
   const section = document.getElementById('edit_imagenes_section');
@@ -220,52 +213,52 @@ function renderEditImagenes(evidencias, levantamientos) {
   
   const totalImagenes = evidencias.length + levantamientos.length;
   
+  let html = '';
+  
   if (totalImagenes === 0) {
-    section.innerHTML = '<p style="color:#94a3b8;font-size:.85rem">No hay imágenes cargadas por el administrador</p>';
-    return;
-  }
-  
-  let html = '<div style="margin-bottom:1rem">';
-  
-  // Evidencias
-  if (evidencias.length > 0) {
-    html += '<p style="font-size:.85rem;font-weight:600;color:#64748b;margin-bottom:.5rem">🖼️ Evidencias (' + evidencias.length + ')</p>';
-    html += '<div class="edit-images-grid">';
-    evidencias.forEach(img => {
-      html += `
-        <div class="edit-image-item" data-img-id="${img.idimagen}">
-          <img src="/static/${img.rutaimagen}" alt="${img.nombrearchivo || ''}">
-          <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${img.idimagen}')" title="Eliminar imagen">✕</button>
-          <div class="edit-image-name">${img.nombrearchivo || 'Imagen'}</div>
-        </div>
-      `;
-    });
+    html += '<p style="color:#94a3b8;font-size:.85rem;margin-bottom:1rem">No hay imágenes cargadas</p>';
+  } else {
+    html += '<div style="margin-bottom:1rem">';
+    
+    if (evidencias.length > 0) {
+      html += '<p style="font-size:.85rem;font-weight:600;color:#64748b;margin-bottom:.5rem">🖼️ Evidencias (' + evidencias.length + ')</p>';
+      html += '<div class="edit-images-grid">';
+      evidencias.forEach(img => {
+        const id = img.idimagen || img.IdImagen || '';
+        const ruta = img.rutaimagen || img.RutaImagen || '';
+        const nombre = img.nombrearchivo || img.NombreArchivo || 'Imagen';
+        html += `
+          <div class="edit-image-item" data-img-id="${id}">
+            <img src="/static/${ruta}" alt="${nombre}">
+            <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${id}')" title="Eliminar imagen">✕</button>
+            <div class="edit-image-name">${nombre}</div>
+          </div>`;
+      });
+      html += '</div>';
+    }
+    
+    if (levantamientos.length > 0) {
+      html += '<p style="font-size:.85rem;font-weight:600;color:#64748b;margin:.8rem 0 .5rem">✏️ Levantamientos (' + levantamientos.length + ')</p>';
+      html += '<div class="edit-images-grid">';
+      levantamientos.forEach(img => {
+        const id = img.idimagen || img.IdImagen || '';
+        const ruta = img.rutaimagen || img.RutaImagen || '';
+        const nombre = img.nombrearchivo || img.NombreArchivo || 'Imagen';
+        html += `
+          <div class="edit-image-item" data-img-id="${id}">
+            <img src="/static/${ruta}" alt="${nombre}">
+            <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${id}')" title="Eliminar imagen">✕</button>
+            <div class="edit-image-name">${nombre}</div>
+          </div>`;
+      });
+      html += '</div>';
+    }
     html += '</div>';
   }
   
-  // Levantamientos
-  if (levantamientos.length > 0) {
-    html += '<p style="font-size:.85rem;font-weight:600;color:#64748b;margin:.8rem 0 .5rem">✏️ Levantamientos (' + levantamientos.length + ')</p>';
-    html += '<div class="edit-images-grid">';
-    levantamientos.forEach(img => {
-      html += `
-        <div class="edit-image-item" data-img-id="${img.idimagen}">
-          <img src="/static/${img.rutaimagen}" alt="${img.nombrearchivo || ''}">
-          <button type="button" class="edit-image-delete" onclick="eliminarImagenEditar('${img.idimagen}')" title="Eliminar imagen">✕</button>
-          <div class="edit-image-name">${img.nombrearchivo || 'Imagen'}</div>
-        </div>
-      `;
-    });
-    html += '</div>';
-  }
-  
-  html += '</div>';
-  
-  // Agregar inputs para nuevas imágenes
   html += `
-    <div style="margin-top:1.5rem;padding-top:1rem;border-top:1px solid #e2e8f0">
+    <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid #e2e8f0">
       <p style="font-size:.85rem;font-weight:600;color:#64748b;margin-bottom:.8rem">➕ Agregar Nuevas Imágenes</p>
-      
       <div class="form-group" style="margin-bottom:1rem">
         <label class="form-label">🖼️ NUEVAS EVIDENCIAS</label>
         <div class="file-upload-area">
@@ -274,11 +267,10 @@ function renderEditImagenes(evidencias, levantamientos) {
             <span class="btn btn-outline-green">Elegir archivos</span>
             <span class="file-name" id="editNameEvidencias">Sin archivos seleccionados</span>
           </label>
-          <small class="form-hint">ℹ Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
+          <small class="form-hint">ℹ Máx 5 imágenes, 16MB cada una</small>
         </div>
         <div id="editPreviewEvidencias" class="image-preview-container" style="display:none"></div>
       </div>
-      
       <div class="form-group">
         <label class="form-label">✏️ NUEVOS LEVANTAMIENTOS</label>
         <div class="file-upload-area">
@@ -287,20 +279,17 @@ function renderEditImagenes(evidencias, levantamientos) {
             <span class="btn btn-outline-green">Elegir archivos</span>
             <span class="file-name" id="editNameLevantamientos">Sin archivos seleccionados</span>
           </label>
-          <small class="form-hint">ℹ Puedes seleccionar múltiples imágenes (Max 5, 16MB cada una)</small>
+          <small class="form-hint">ℹ Máx 5 imágenes, 16MB cada una</small>
         </div>
         <div id="editPreviewLevantamientos" class="image-preview-container" style="display:none"></div>
       </div>
-    </div>
-  `;
+    </div>`;
   
   section.innerHTML = html;
   
-  // Configurar previews para nuevas imágenes
-  setTimeout(() => {
-    setupImagePreviewEdit('editFileEvidencias', 'editPreviewEvidencias');
-    setupImagePreviewEdit('editFileLevantamientos', 'editPreviewLevantamientos');
-  }, 100);
+  // Configurar previews — llamar directamente, los elementos ya están en el DOM
+  setupImagePreviewEdit('editFileEvidencias', 'editPreviewEvidencias', 'editNameEvidencias');
+  setupImagePreviewEdit('editFileLevantamientos', 'editPreviewLevantamientos', 'editNameLevantamientos');
 }
 
 function eliminarImagenEditar(imagenId) {
@@ -318,73 +307,59 @@ function eliminarImagenEditar(imagenId) {
   }
 }
 
-function setupImagePreviewEdit(inputId, previewContainerId) {
+function setupImagePreviewEdit(inputId, previewContainerId, nameId) {
   const input = document.getElementById(inputId);
   if (!input) return;
   
   let selectedFiles = [];
   
-  input.addEventListener('change', function(e) {
-    const files = Array.from(e.target.files);
-    selectedFiles = files.slice(0, 5);
-    
-    renderPreviewEdit();
-    updateFileLabelEdit(inputId);
-  });
-  
-  function renderPreviewEdit() {
+  function renderPreview() {
     const container = document.getElementById(previewContainerId);
     if (!container) return;
-    
     if (selectedFiles.length === 0) {
       container.innerHTML = '';
       container.style.display = 'none';
       return;
     }
-    
     container.style.display = 'grid';
     container.innerHTML = '';
-    
     selectedFiles.forEach((file, index) => {
       const reader = new FileReader();
       reader.onload = function(e) {
         const div = document.createElement('div');
         div.className = 'image-preview-item';
+        div.dataset.index = index;
         div.innerHTML = `
           <img src="${e.target.result}" alt="${file.name}">
-          <button type="button" class="image-preview-remove" onclick="removePreviewImageEdit('${inputId}', '${previewContainerId}', ${index})">✕</button>
-          <div class="image-preview-name">${file.name}</div>
-        `;
+          <button type="button" class="image-preview-remove" title="Quitar">✕</button>
+          <div class="image-preview-name">${file.name}</div>`;
+        div.querySelector('.image-preview-remove').addEventListener('click', () => {
+          selectedFiles.splice(index, 1);
+          const dt = new DataTransfer();
+          selectedFiles.forEach(f => dt.items.add(f));
+          input.files = dt.files;
+          renderPreview();
+          updateLabel();
+        });
         container.appendChild(div);
       };
       reader.readAsDataURL(file);
     });
   }
   
-  window.removePreviewImageEdit = function(inputId, previewContainerId, index) {
-    const input = document.getElementById(inputId);
-    selectedFiles.splice(index, 1);
-    
-    const dt = new DataTransfer();
-    selectedFiles.forEach(file => dt.items.add(file));
-    input.files = dt.files;
-    
-    renderPreviewEdit();
-    updateFileLabelEdit(inputId);
-  };
-  
-  function updateFileLabelEdit(inputId) {
-    const nameEl = document.querySelector(`label[for="${inputId}"] .file-name`);
+  function updateLabel() {
+    const nameEl = document.getElementById(nameId);
     if (!nameEl) return;
-    
-    if (selectedFiles.length === 0) {
-      nameEl.textContent = 'Sin archivos seleccionados';
-    } else if (selectedFiles.length === 1) {
-      nameEl.textContent = selectedFiles[0].name;
-    } else {
-      nameEl.textContent = `${selectedFiles.length} archivos seleccionados`;
-    }
+    if (selectedFiles.length === 0) nameEl.textContent = 'Sin archivos seleccionados';
+    else if (selectedFiles.length === 1) nameEl.textContent = selectedFiles[0].name;
+    else nameEl.textContent = `${selectedFiles.length} archivos seleccionados`;
   }
+  
+  input.addEventListener('change', function() {
+    selectedFiles = Array.from(this.files).slice(0, 5);
+    renderPreview();
+    updateLabel();
+  });
 }
 
 // ── SUBIR MODAL (supervisor) ──
@@ -500,7 +475,6 @@ document.addEventListener('DOMContentLoaded', function() {
     riesgo: formCrear.querySelector('[name="riesgo"]'),
     tipo: formCrear.querySelector('[name="tipo"]'),
     area_responsable: formCrear.querySelector('[name="area_responsable"]'),
-    personal_responsable: formCrear.querySelector('[name="personal_responsable"]'),
     evidencias: document.getElementById('fileEvidencias')
   };
   

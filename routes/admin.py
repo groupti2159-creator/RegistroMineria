@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, send_file
+﻿from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify, send_file
 from functools import wraps
 from extensions import mysql
 from utils.helpers import gen_id, save_image, sp_exec, sp_one
@@ -202,24 +202,30 @@ def estadisticas():
 @admin_bp.route('/configuracion/usuarios')
 @admin_required
 def configuracion_usuarios():
-    cur = mysql.connection.cursor()
-    cur.execute("""
-        SELECT u.idusuario, u.dni, u.nombrecompleto, u.correo, u.activo,
-               GROUP_CONCAT(r.nombrerol ORDER BY r.nombrerol SEPARATOR ', ') AS roles,
-               GROUP_CONCAT(r.idroles ORDER BY r.nombrerol SEPARATOR ',') AS roles_ids
-        FROM tbl_usuario u
-        LEFT JOIN tbl_usuariorol ur ON ur.idusuario = u.idusuario
-        LEFT JOIN tbl_roles r ON r.idroles = ur.idroles
-        GROUP BY u.idusuario
-        ORDER BY u.nombrecompleto
-    """)
-    usuarios = cur.fetchall()
-    cur.execute("SELECT idroles, nombrerol FROM tbl_roles ORDER BY nombrerol")
-    roles = cur.fetchall()
-    cur.close()
-    return render_template('admin/configuracion_usuarios.html',
-                           usuarios=usuarios, roles=roles,
-                           notif_count=get_notif_count())
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT u.idusuario, u.nombrecompleto, u.correo,
+                   CAST(u.activo AS UNSIGNED) AS activo,
+                   GROUP_CONCAT(r.nombrerol ORDER BY r.nombrerol SEPARATOR ', ') AS roles,
+                   GROUP_CONCAT(r.idroles ORDER BY r.nombrerol SEPARATOR ',') AS roles_ids
+            FROM tbl_usuario u
+            LEFT JOIN tbl_usuariorol ur ON ur.idusuario = u.idusuario
+            LEFT JOIN tbl_roles r ON r.idroles = ur.idroles
+            GROUP BY u.idusuario, u.nombrecompleto, u.correo, u.activo
+            ORDER BY u.nombrecompleto
+        """)
+        usuarios = cur.fetchall()
+        cur.execute("SELECT idroles, nombrerol FROM tbl_roles ORDER BY nombrerol")
+        roles = cur.fetchall()
+        cur.close()
+        return render_template('admin/configuracion_usuarios.html',
+                               usuarios=usuarios, roles=roles,
+                               notif_count=get_notif_count())
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return f"<pre>Error: {str(e)}\n{traceback.format_exc()}</pre>", 500
 
 
 @admin_bp.route('/configuracion/usuarios/crear', methods=['POST'])
@@ -235,16 +241,15 @@ def usuarios_crear():
         if not dni or not nombre:
             return jsonify({'success': False, 'error': 'DNI y nombre son requeridos'}), 400
 
-        uid = gen_id()
         cur = mysql.connection.cursor()
         cur.execute(
-            "INSERT INTO tbl_usuario (idusuario, dni, nombrecompleto, correo, contrasena) VALUES (%s,%s,%s,%s,%s)",
-            (uid, dni, nombre, correo, md5('123456'))
+            "INSERT INTO tbl_usuario (idusuario, nombrecompleto, correo, contrasena) VALUES (%s,%s,%s,%s)",
+            (dni, nombre, correo, md5('123456'))
         )
         for rid in roles:
             cur.execute(
-                "INSERT INTO tbl_usuariorol (idusuariorol, idusuario, idroles) VALUES (%s,%s,%s)",
-                (gen_id(), uid, rid)
+                "INSERT INTO tbl_usuariorol (idusuario, idroles) VALUES (%s,%s)",
+                (dni, rid)
             )
         mysql.connection.commit()
         cur.close()
@@ -257,21 +262,20 @@ def usuarios_crear():
 @admin_required
 def usuarios_editar(uid):
     try:
-        dni    = request.form.get('dni','').strip()
         nombre = request.form.get('nombre','').strip()
         correo = request.form.get('correo','').strip() or None
         roles  = request.form.getlist('roles')
 
         cur = mysql.connection.cursor()
         cur.execute(
-            "UPDATE tbl_usuario SET dni=%s, nombrecompleto=%s, correo=%s WHERE idusuario=%s",
-            (dni, nombre, correo, uid)
+            "UPDATE tbl_usuario SET nombrecompleto=%s, correo=%s WHERE idusuario=%s",
+            (nombre, correo, uid)
         )
         cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario=%s", (uid,))
         for rid in roles:
             cur.execute(
-                "INSERT INTO tbl_usuariorol (idusuariorol, idusuario, idroles) VALUES (%s,%s,%s)",
-                (gen_id(), uid, rid)
+                "INSERT INTO tbl_usuariorol (idusuario, idroles) VALUES (%s,%s)",
+                (uid, rid)
             )
         mysql.connection.commit()
         cur.close()
@@ -328,68 +332,6 @@ def usuarios_password():
 @admin_required
 def desvios():
     return redirect(url_for('admin.registrar', **request.args))
-    estado_filter = request.args.get('estado','')
-    page = request.args.get('page', 1, type=int)
-    per_page = 10
-    
-    # Obtener TODOS los registros sin filtro para extraer estados únicos
-    cur = mysql.connection.cursor()
-    todos_registros = sp_exec(cur, 'sp_listarregistros', (None,))
-    cur.close()
-    
-    # Obtener estados únicos de TODOS los registros
-    estados_unicos = sorted(list(set([r.get('estado', '') for r in todos_registros if r.get('estado')])))
-    
-    # Ahora obtener registros con filtro si aplica
-    cur = mysql.connection.cursor()
-    registros = sp_exec(cur, 'sp_listarregistros', (estado_filter or None,))
-    cur.close()
-    
-    # Definir orden de prioridad de estados
-    orden_estados = {
-        'Pendiente': 1,
-        'En Proceso': 2,
-        'Enviado': 3,
-        'En Revisión': 4,
-        'Culminado': 5,
-        'Rechazado': 6,
-        'Cerrado': 7
-    }
-    
-    # Ordenar registros por prioridad de estado
-    registros_ordenados = sorted(
-        registros, 
-        key=lambda x: orden_estados.get(x.get('estado', ''), 999)
-    )
-    
-    # Calcular paginación
-    total = len(registros_ordenados)
-    total_pages = (total + per_page - 1) // per_page  # Redondeo hacia arriba
-    
-    # Validar página
-    if page < 1:
-        page = 1
-    if page > total_pages and total_pages > 0:
-        page = total_pages
-    
-    # Obtener registros de la página actual
-    start = (page - 1) * per_page
-    end = start + per_page
-    registros_pagina = registros_ordenados[start:end]
-    
-    areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
-    
-    return render_template('admin/desvios.html',
-        registros=registros_pagina,
-        areas_rep=areas_rep, areas_res=areas_res,
-        ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
-        estado_filter=estado_filter, 
-        notif_count=get_notif_count(),
-        page=page,
-        total_pages=total_pages,
-        total=total,
-        per_page=per_page,
-        estados_unicos=estados_unicos)
 
 @admin_bp.route('/desvios/crear', methods=['POST'])
 @admin_required
@@ -400,30 +342,30 @@ def crear_registro():
         cur.close()
         
         codigo = corr['correlativo'] if corr else '001-01'
-        rid = gen_id()
 
         cur = mysql.connection.cursor()
-        sp_exec(cur, 'sp_crearregistro', (
-            rid, codigo,
-            request.form['fecha_inicio'],
+        result = sp_one(cur, 'sp_crearregistro', (
+            codigo,
+            request.form.get('fecha_inicio') or datetime.now().strftime('%Y-%m-%d'),
             request.form.get('fecha_ejecucion') or None,
             request.form['descripcion'],
             request.form.get('accion',''),
-            request.form['area_reportante'], request.form['area_responsable'],
-            request.form['ubicacion'], request.form['riesgo'], request.form['tipo'],
-            'EST001', session['usuario_rol'],  # Siempre inicia en PENDIENTE
+            int(request.form['area_reportante']), int(request.form['area_responsable']),
+            int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
+            1, session['usuario_rol'],
             request.form.get('personal_responsable',''),
-            request.form.get('ccta_responsable','')
+            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable') else 0
         ))
         mysql.connection.commit()
         cur.close()
+        rid = result['idregistro'] if result else None
 
         for f in request.files.getlist('evidencias')[:5]:
             if f and f.filename:
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'evidencias')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM001','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (rid, session['usuario_rol'], 1, 1, ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
 
@@ -432,7 +374,7 @@ def crear_registro():
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (rid, session['usuario_rol'], 2, 1, ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
 
@@ -443,7 +385,7 @@ def crear_registro():
         
         for s in sups:
             cur = mysql.connection.cursor()
-            sp_exec(cur, 'sp_crearnotificacion', (gen_id(), s['idusuariorol'], f'Nuevo reporte {codigo} creado', 'info', rid))
+            sp_exec(cur, 'sp_crearnotificacion', (s['idusuariorol'], f'Nuevo reporte {codigo} creado', 'info', rid))
             mysql.connection.commit()
             cur.close()
 
@@ -458,13 +400,12 @@ def crear_registro():
         
         flash('Reporte creado exitosamente', 'success')
     except Exception as e:
+        import traceback
+        traceback.print_exc()
+        msg = f'Error al crear reporte: {str(e)}'
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({
-                'success': False,
-                'error': f'Error al crear reporte: {str(e)}'
-            }), 400
-        
-        flash(f'Error al crear reporte: {str(e)}', 'error')
+            return jsonify({'success': False, 'error': msg}), 400
+        flash(msg, 'error')
     return redirect(url_for('admin.registrar'))
 
 @admin_bp.route('/desvios/editar/<rid>', methods=['POST'])
@@ -474,14 +415,14 @@ def editar_registro(rid):
         cur = mysql.connection.cursor()
         sp_exec(cur, 'sp_actualizarregistro', (
             rid,
-            request.form['fecha_inicio'],
+            request.form.get('fecha_inicio') or datetime.now().strftime('%Y-%m-%d'),
             request.form.get('fecha_ejecucion') or None,
             request.form['descripcion'], request.form.get('accion',''),
-            request.form['area_reportante'], request.form['area_responsable'],
-            request.form['ubicacion'], request.form['riesgo'], request.form['tipo'],
-            request.form['estado'],
+            int(request.form['area_reportante']), int(request.form['area_responsable']),
+            int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
+            int(request.form['estado']),
             request.form.get('personal_responsable',''),
-            request.form.get('ccta_responsable','')
+            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable','').strip() not in ('', '0', 'None') else 0
         ))
         mysql.connection.commit()
         cur.close()
@@ -502,7 +443,7 @@ def editar_registro(rid):
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'evidencias')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM001','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (rid, session['usuario_rol'], 1, 1, ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
         
@@ -512,7 +453,7 @@ def editar_registro(rid):
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (rid, session['usuario_rol'], 2, 1, ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
         
@@ -526,11 +467,14 @@ def editar_registro(rid):
             })
             
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         # Soporte AJAX para errores
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({
                 'success': False,
-                'error': f'Error: {str(e)}'
+                'error': f'Error: {str(e)}',
+                'traceback': traceback.format_exc()
             }), 400
             
         flash(f'Error: {str(e)}', 'error')
@@ -590,28 +534,26 @@ def detalle_registro(rid):
         if obj is None: return {}
         out = {}
         for k, v in obj.items():
+            key = k.lower()  # normalizar a minúsculas para el JS
             if hasattr(v, 'strftime'):
-                out[k] = v.strftime('%Y-%m-%d')
+                out[key] = v.strftime('%Y-%m-%d')
             else:
-                out[k] = v if v is not None else ''
+                out[key] = v if v is not None else ''
         return out
 
     # Filtrar solo imágenes que NO estén rechazadas (EIM003)
     imgs_serial = []
     for i in imagenes:
-        # Usar get() case-insensitive
-        estado_img = i.get('idEstadoImagen') or i.get('idestadoimagen')
-        if estado_img != 'EIM003':  # Excluir rechazadas
+        if i.get('idEstadoImagen') != 3:
             imgs_serial.append(serialize(i))
 
-    # Separar por tipo usando get() case-insensitive
+    # Separar por tipo (claves ya en minúsculas tras serialize)
     evidencias = []
     levantamientos = []
     for img in imgs_serial:
-        tipo_img = img.get('idTipoImagen') or img.get('idtipoimagen')
-        if tipo_img == 'TIM001':
+        if img.get('idtipoimagen') == 1:
             evidencias.append(img)
-        elif tipo_img == 'TIM002':
+        elif img.get('idtipoimagen') == 2:
             levantamientos.append(img)
 
     result = {
@@ -654,7 +596,7 @@ def validar_levantamiento(rid):
             # Segundo: Aprobar las imágenes seleccionadas (esto cambia estado a COMPLETADO)
             for imagen_id in ids_list:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'sp_validarimagen', (gen_id(), imagen_id, rid, session['usuario_rol'], 'APROBADA', comentario))
+                sp_exec(cur, 'sp_validarimagen', (imagen_id, rid, session['usuario_rol'], 'APROBADA', comentario))
                 mysql.connection.commit()
                 cur.close()
             
@@ -673,7 +615,7 @@ def validar_levantamiento(rid):
             # Rechazar todas las imágenes originales (esto cambia estado a PENDIENTE)
             for imagen_id in ids_list:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'sp_validarimagen', (gen_id(), imagen_id, rid, session['usuario_rol'], 'RECHAZADA', comentario))
+                sp_exec(cur, 'sp_validarimagen', (imagen_id, rid, session['usuario_rol'], 'RECHAZADA', comentario))
                 mysql.connection.commit()
                 cur.close()
             
@@ -695,7 +637,7 @@ def validar_levantamiento(rid):
                 if comentario: 
                     msg += f': {comentario}'
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'sp_crearnotificacion', (gen_id(), usuario['idusuariorol'], msg,
+                sp_exec(cur, 'sp_crearnotificacion', (usuario['idusuariorol'], msg,
                         'success' if decision=='APROBADA' else 'warning', rid))
                 mysql.connection.commit()
                 cur.close()
@@ -773,10 +715,10 @@ def exportar_excel():
             evidencias = []
             levantamientos = []
             for img in imagenes:
-                if img.get('idEstadoImagen') != 'EIM003':  # Excluir rechazadas
-                    if img.get('idTipoImagen') == 'TIM001':
+                if img.get('idEstadoImagen') != 3:  # Excluir rechazadas
+                    if img.get('idTipoImagen') == 1:
                         evidencias.append(img.get('RutaImagen',''))
-                    elif img.get('idTipoImagen') == 'TIM002':
+                    elif img.get('idTipoImagen') == 2:
                         levantamientos.append(img.get('RutaImagen',''))
             
             # Calcular cuántas filas necesitamos
@@ -941,3 +883,4 @@ def leer_todas():
     mysql.connection.commit()
     cur.close()
     return jsonify({'ok': True})
+

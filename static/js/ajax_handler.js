@@ -223,6 +223,12 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     
     const formData = new FormData(this);
+    
+    // Agregar imágenes a eliminar (gestionadas por desvios.js)
+    if (typeof imagenesEditarEliminar !== 'undefined') {
+      formData.set('imagenes_eliminar', imagenesEditarEliminar.join(','));
+    }
+    
     const submitBtn = this.querySelector('button[type="submit"]');
     
     // Deshabilitar botón

@@ -34,7 +34,7 @@
           <td><span class="codigo-badge">{{ r.codigo }}</span></td>
           <td>{{ r.ubicacion }}</td>
           <td>{{ r.arearesponsable or '—' }}</td>
-          <td>{{ r.cctaresponsable or '—' }}</td>
+          <td>{{ r.nombrecctaresponsable or '—' }}</td>
           <td><span class="estado-badge estado-{{ r.estado|lower|replace(' ','-') }}">{{ r.estado|upper }}</span></td>
           <td>
             <div class="img-count-badges">

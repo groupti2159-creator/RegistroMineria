@@ -53,8 +53,8 @@
       </thead>
       <tbody id="tbodyUsuarios">
         {% for u in usuarios %}
-        <tr data-search="{{ u.nombrecompleto|lower }} {{ u.dni }}">
-          <td><strong>{{ u.dni }}</strong></td>
+        <tr data-search="{{ u.nombrecompleto|lower }} {{ u.idusuario }}">
+          <td><strong>{{ u.idusuario }}</strong></td>
           <td>{{ u.nombrecompleto }}</td>
           <td style="color:#64748b;font-size:.85rem">{{ u.correo or '—' }}</td>
           <td>
@@ -78,7 +78,7 @@
           <td>
             <div style="display:flex;gap:.5rem;align-items:center">
               <button class="btn-icon btn-icon-edit" title="Editar"
-                onclick="abrirModalEditar('{{ u.idusuario }}','{{ u.dni }}','{{ u.nombrecompleto }}','{{ u.correo or '' }}','{{ u.roles_ids or '' }}')">
+                onclick="abrirModalEditar('{{ u.idusuario }}','{{ u.nombrecompleto }}','{{ u.correo or '' }}','{{ u.roles_ids or '' }}')">
                 <i data-feather="edit-2"></i>
               </button>
               <button class="btn-icon {{ 'btn-icon-warning' if u.activo else 'btn-icon-success' }}" 
@@ -190,9 +190,10 @@
 
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">DNI *</label>
+            <label class="form-label">DNI</label>
             <input type="text" id="editar_dni" name="dni" class="form-input" 
-                   maxlength="12" required oninput="this.value=this.value.replace(/\D/g,'')">
+                   maxlength="12" readonly style="background:var(--bg);opacity:.7">
+            <small class="form-hint">El DNI no puede modificarse</small>
           </div>
           <div class="form-group">
             <label class="form-label">Nombre Completo *</label>
@@ -256,7 +257,7 @@
           <select id="pwd_usuario" name="usuario_id" class="form-select" required>
             <option value="">Seleccionar usuario...</option>
             {% for u in usuarios %}
-            <option value="{{ u.idusuario }}">{{ u.dni }} — {{ u.nombrecompleto }}</option>
+            <option value="{{ u.idusuario }}">{{ u.idusuario }} — {{ u.nombrecompleto }}</option>
             {% endfor %}
           </select>
         </div>
@@ -305,9 +306,9 @@ function cerrarModalCrear() {
   document.getElementById('modalCrearUsuario').style.display = 'none';
 }
 
-function abrirModalEditar(id, dni, nombre, correo, rolesIds) {
+function abrirModalEditar(id, nombre, correo, rolesIds) {
   document.getElementById('editar_id').value    = id;
-  document.getElementById('editar_dni').value   = dni;
+  document.getElementById('editar_dni').value   = id;  // idusuario ES el dni
   document.getElementById('editar_nombre').value = nombre;
   document.getElementById('editar_correo').value = correo;
   // Marcar roles actuales

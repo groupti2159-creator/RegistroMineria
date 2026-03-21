@@ -360,16 +360,15 @@ function resetFormCrear() {
   if (form) form.reset();
   ['fileEvidencias', 'fileLevantamientos'].forEach(function(inputId) {
     var previewId = inputId === 'fileEvidencias' ? 'previewEvidencias' : 'previewLevantamientos';
-    // Limpiar selectedFiles internos sin re-registrar listeners
     var instance = _previewInstances[inputId];
     if (instance) instance.reset();
-    // Limpiar contenedor visual
     var container = document.getElementById(previewId);
     if (container) { container.innerHTML = ''; container.style.display = 'none'; }
-    // Resetear label
     var nameEl = document.querySelector('label[for="' + inputId + '"] .file-name');
     if (nameEl) nameEl.textContent = 'Sin archivos seleccionados';
   });
+  // Re-setear fechas después del reset
+  setDefaultDate();
 }
 
 
@@ -393,8 +392,8 @@ function setDefaultDate() {
     fechaInput.value = dateString;
   }
   
-  // Establecer en el campo de fecha de ejecución
-  const fechaEjecInput = document.querySelector('input[name="fecha_ejecucion"]');
+  // Establecer en el campo de fecha de ejecución (solo del modal crear, no del editar)
+  const fechaEjecInput = document.querySelector('#modalCrear input[name="fecha_ejecucion"]');
   if (fechaEjecInput && !fechaEjecInput.value) {
     fechaEjecInput.value = dateString;
   }

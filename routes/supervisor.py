@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
+﻿from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
 from extensions import mysql
-from utils.helpers import gen_id, save_image, sp_exec, sp_one
+from utils.helpers import save_image, sp_exec, sp_one
 
 supervisor_bp = Blueprint('supervisor', __name__)
 
@@ -103,28 +103,26 @@ def detalle_registro(rid):
         if obj is None: return {}
         out = {}
         for k, v in obj.items():
+            key = k.lower()  # normalizar a minúsculas para el JS
             if hasattr(v, 'strftime'):
-                out[k] = v.strftime('%Y-%m-%d ')
+                out[key] = v.strftime('%Y-%m-%d ')
             else:
-                out[k] = v if v is not None else ''
+                out[key] = v if v is not None else ''
         return out
 
     # Filtrar solo imágenes que NO estén rechazadas (EIM003)
     imgs_serial = []
     for i in imagenes:
-        # Usar get() case-insensitive
-        estado_img = i.get('idEstadoImagen') or i.get('idestadoimagen')
-        if estado_img != 'EIM003':  # Excluir rechazadas
+        if i.get('idEstadoImagen') != 3:
             imgs_serial.append(serialize(i))
 
-    # Separar por tipo usando get() case-insensitive
+    # Separar por tipo (claves ya en minúsculas tras serialize)
     evidencias = []
     levantamientos = []
     for img in imgs_serial:
-        tipo_img = img.get('idTipoImagen') or img.get('idtipoimagen')
-        if tipo_img == 'TIM001':
+        if img.get('idtipoimagen') == 1:
             evidencias.append(img)
-        elif tipo_img == 'TIM002':
+        elif img.get('idtipoimagen') == 2:
             levantamientos.append(img)
 
     return jsonify({
@@ -151,7 +149,7 @@ def subir_levantamiento(rid):
         #     return redirect(url_for('supervisor.desvios'))
         
         cur = mysql.connection.cursor()
-        cur.execute("SELECT COUNT(*) AS cnt FROM tbl_imagenregistro WHERE idregistro=%s AND idtipoimagen='TIM002' AND idestadoimagen != 'EIM003'", (rid,))
+        cur.execute("SELECT COUNT(*) AS cnt FROM tbl_imagenregistro WHERE idregistro=%s AND idtipoimagen=2 AND idestadoimagen != 3", (rid,))
         cnt_row = cur.fetchone()
         existing = cnt_row['cnt'] if cnt_row else 0
         cur.close()
@@ -165,7 +163,7 @@ def subir_levantamiento(rid):
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
                 if ruta:
                     cur = mysql.connection.cursor()
-                    sp_exec(cur, 'sp_guardarimagen', (gen_id(), rid, session['usuario_rol'], 'TIM002','EIM001', ruta, nombre, kb))
+                    sp_exec(cur, 'sp_guardarimagen', (rid, session['usuario_rol'], 2, 1, ruta, nombre, kb))
                     mysql.connection.commit()
                     cur.close()
                     saved += 1
@@ -185,7 +183,7 @@ def subir_levantamiento(rid):
             codigo = reg['codigo'] if reg else rid
             for a in admins:
                 cur = mysql.connection.cursor()
-                sp_exec(cur, 'sp_crearnotificacion', (gen_id(), a['idusuariorol'],
+                sp_exec(cur, 'sp_crearnotificacion', (a['idusuariorol'],
                     f'Supervisor subió imágenes en reporte {codigo}. Pendiente de validación.', 'info', rid))
                 mysql.connection.commit()
                 cur.close()
@@ -227,3 +225,4 @@ def leer_todas():
     mysql.connection.commit()
     cur.close()
     return jsonify({'ok': True})
+

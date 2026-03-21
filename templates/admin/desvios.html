@@ -185,7 +185,7 @@
             <div class="form-group">
               <label class="form-label">ESTADO *</label>
               <select name="estado" class="form-select" disabled>
-                <option value="EST001">PENDIENTE</option>
+                <option value="1">PENDIENTE</option>
               </select>
               <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Los nuevos registros siempre inician en PENDIENTE</small>
             </div>
@@ -353,12 +353,9 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">ESTADO</label>
-              <select name="estado" id="edit_estado" class="form-select" style="pointer-events:none;background-color:var(--bg);opacity:0.7">
+              <select name="estado" id="edit_estado" class="form-select">
                 {% for e in estados %}
-                {# Solo mostrar los 3 estados principales: Pendiente, En Proceso, Culminado #}
-                {% if e.idestado in ['EST001', 'EST003', 'EST006'] %}
                 <option value="{{ e.idestado }}">{{ e.estado }}</option>
-                {% endif %}
                 {% endfor %}
               </select>
               <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> El estado se actualiza automáticamente según el flujo de trabajo</small>

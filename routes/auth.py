@@ -37,7 +37,7 @@ def sp_fetchall(cur):
 def set_session(user):
     session['user_id']        = user.get('idusuario')
     session['usuario_rol']    = user.get('idusuariorol')
-    session['dni']            = user.get('dni')
+    session['dni']            = user.get('idusuario')  # idusuario ahora ES el dni
     session['nombre']         = user.get('nombrecompleto')
     session['rol']            = user.get('nombrerol')
     session['rol_id']         = user.get('idroles')
@@ -76,7 +76,7 @@ def login():
                     cur2 = mysql.connection.cursor()
                     cur2.execute("""
                         SELECT ur.idusuariorol, r.idroles, r.nombrerol,
-                               u.idusuario, u.dni, u.nombrecompleto
+                               u.idusuario, u.nombrecompleto
                         FROM tbl_usuariorol ur
                         JOIN tbl_roles r ON r.idroles = ur.idroles
                         JOIN tbl_usuario u ON u.idusuario = ur.idusuario
@@ -86,10 +86,8 @@ def login():
                     cur2.close()
 
                     if len(roles) > 1:
-                        # Guardar datos temporales y mostrar selector de rol
                         session['_pending_user'] = {
-                            'idusuario':     user.get('idusuario'),
-                            'dni':           user.get('dni'),
+                            'idusuario':      user.get('idusuario'),
                             'nombrecompleto': user.get('nombrecompleto'),
                             'roles': [
                                 {'idusuariorol': r['idusuariorol'],
@@ -121,16 +119,20 @@ def seleccionar_rol():
         return redirect(url_for('auth.login'))
 
     if request.method == 'POST':
-        idusuariorol = request.form.get('idusuariorol')
-        # Buscar el rol seleccionado
-        rol_elegido = next((r for r in pending['roles'] if r['idusuariorol'] == idusuariorol), None)
+        idusuariorol_raw = request.form.get('idusuariorol')
+        # idusuariorol ahora es INT — comparar con cast
+        try:
+            idusuariorol_int = int(idusuariorol_raw)
+        except (TypeError, ValueError):
+            idusuariorol_int = None
+        rol_elegido = next((r for r in pending['roles'] if r['idusuariorol'] == idusuariorol_int), None)
         if not rol_elegido:
             return render_template('auth/seleccionar_rol.html', pending=pending,
                                    error='Selección inválida')
         session.pop('_pending_user', None)
         session['user_id']        = pending['idusuario']
         session['usuario_rol']    = rol_elegido['idusuariorol']
-        session['dni']            = pending['dni']
+        session['dni']            = pending['idusuario']  # idusuario ahora ES el dni
         session['nombre']         = pending['nombrecompleto']
         session['rol']            = rol_elegido['nombrerol']
         session['rol_id']         = rol_elegido['idroles']
