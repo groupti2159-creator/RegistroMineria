@@ -20,7 +20,7 @@ def get_notificaciones():
         def serialize(obj):
             out = {}
             for k,v in obj.items():
-                out[k] = v.strftime('%Y-%m-%d %H:%M') if hasattr(v,'strftime') else (v if v is not None else '')
+                out[k.lower()] = v.strftime('%Y-%m-%d %H:%M') if hasattr(v,'strftime') else (v if v is not None else '')
             return out
 
         return jsonify({

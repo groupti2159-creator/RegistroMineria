@@ -183,17 +183,18 @@ INSERT IGNORE INTO Tbl_Riesgo (riesgo) VALUES
 
 INSERT IGNORE INTO Tbl_DescripcionTipo (descripciontipo) VALUES
 ('Incumplimiento de IGA'),
-('Riesgo Electrico'),
+('Riesgo Eléctrico'),
 ('Riesgo Civil'),
-('Riesgo Mecanico'),
+('Riesgo Mecánico'),
 ('Seguridad Industrial'),
 ('Ambiental'),
-('POLVO'),
-('DISPOSICION RESIDUOS PELIGROSOS'),
-('Disposicion Desmonte - Escombros'),
-('Disposicion Residuos Peligrosos'),
+('Polvo'),
+('Disposición Residuos Peligrosos'),
+('Disposición Desmonte - Escombros'),
 ('Lixiviados'),
-('Lodo');
+('Lodo'),
+('RAEES - Residuos Electrónicos'),
+('NFU - Neumáticos Fuera de Uso');
 
 INSERT IGNORE INTO Tbl_AreaReportante (areareportante) VALUES
 ('Los Andes'),('Operaciones'),
@@ -270,15 +271,15 @@ DROP PROCEDURE IF EXISTS SP_ListarRegistros$
 CREATE PROCEDURE SP_ListarRegistros(IN p_estado VARCHAR(50))
 BEGIN
     SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
-           r.Descripcion, r.Accion, r.PersonalResponsable,
+           r.Descripcion, r.Accion, r.PersonalResponsable, r.DniResponsable,
            r.CctaResponsable,
            ccta.AreaReportante AS NombreCctaResponsable,
            e.Estado, e.idEstado,
            ar.AreaReportante, ars.AreaResponsable,
            ub.Ubicacion, ri.Riesgo, dt.DescripcionTipo,
            u.NombreCompleto AS Creador,
-           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=1) AS cnt_evidencias,
-           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=2) AS cnt_levantamientos
+           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=1 AND img.idEstadoImagen != 3) AS cnt_evidencias,
+           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=2 AND img.idEstadoImagen != 3) AS cnt_levantamientos
     FROM tbl_registro r
     JOIN tbl_estado e ON e.idEstado = r.idEstado
     JOIN tbl_areareportante ar ON ar.idAreaReportante = r.idAreaReportante
@@ -299,15 +300,15 @@ DROP PROCEDURE IF EXISTS SP_ListarRegistrosSupervisor$
 CREATE PROCEDURE SP_ListarRegistrosSupervisor(IN p_estado VARCHAR(50))
 BEGIN
     SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
-           r.Descripcion, r.Accion, r.PersonalResponsable,
+           r.Descripcion, r.Accion, r.PersonalResponsable, r.DniResponsable,
            r.CctaResponsable,
            ccta.AreaReportante AS NombreCctaResponsable,
            e.Estado, e.idEstado,
            ar.AreaReportante, ars.AreaResponsable,
            ub.Ubicacion, ri.Riesgo, dt.DescripcionTipo,
            u.NombreCompleto AS Creador,
-           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=1) AS cnt_evidencias,
-           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=2) AS cnt_levantamientos
+           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=1 AND img.idEstadoImagen != 3) AS cnt_evidencias,
+           (SELECT COUNT(*) FROM tbl_imagenregistro img WHERE img.IdRegistro = r.IdRegistro AND img.idTipoImagen=2 AND img.idEstadoImagen != 3) AS cnt_levantamientos
     FROM tbl_registro r
     JOIN tbl_estado e ON e.idEstado = r.idEstado
     JOIN tbl_areareportante ar ON ar.idAreaReportante = r.idAreaReportante
@@ -328,7 +329,7 @@ DROP PROCEDURE IF EXISTS SP_DetalleRegistro$
 CREATE PROCEDURE SP_DetalleRegistro(IN p_id INT)
 BEGIN
     SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
-           r.Descripcion, r.Accion, r.NotasLevantamiento, r.PersonalResponsable,
+           r.Descripcion, r.Accion, r.NotasLevantamiento, r.PersonalResponsable, r.DniResponsable,
            r.CctaResponsable,
            ccta.AreaReportante AS NombreCctaResponsable,
            e.Estado, e.idEstado,
@@ -380,19 +381,19 @@ CREATE PROCEDURE SP_CrearRegistro(
     IN p_ubic INT, IN p_riesgo INT,
     IN p_tipo INT, IN p_estado INT,
     IN p_creador INT, IN p_personal VARCHAR(100),
-    IN p_ccta INT
+    IN p_ccta INT, IN p_dni VARCHAR(20)
 )
 BEGIN
     INSERT INTO tbl_registro (
         Codigo, FechaInicio, FechaEjecucion, Descripcion, Accion,
         idAreaReportante, idAreaResponsable, idUbicacion, IdRiesgo,
         IdDescripcionTipo, idEstado, IdUsuarioRolCreador,
-        PersonalResponsable, CctaResponsable
+        PersonalResponsable, DniResponsable, CctaResponsable
     ) VALUES (
         p_codigo, p_fecha, p_fecha_ejec, p_desc, p_accion,
         p_area_rep, p_area_res, p_ubic, p_riesgo,
         p_tipo, p_estado, p_creador, p_personal,
-        NULLIF(p_ccta, 0)
+        NULLIF(p_dni, ''), NULLIF(p_ccta, 0)
     );
     SELECT LAST_INSERT_ID() AS idregistro;
 END$
@@ -405,7 +406,8 @@ CREATE PROCEDURE SP_ActualizarRegistro(
     IN p_area_rep INT, IN p_area_res INT,
     IN p_ubic INT, IN p_riesgo INT,
     IN p_tipo INT, IN p_estado INT,
-    IN p_personal VARCHAR(100), IN p_ccta INT
+    IN p_personal VARCHAR(100), IN p_ccta INT,
+    IN p_dni VARCHAR(20)
 )
 BEGIN
     UPDATE tbl_registro SET
@@ -415,6 +417,7 @@ BEGIN
         idUbicacion=p_ubic, IdRiesgo=p_riesgo,
         IdDescripcionTipo=p_tipo, idEstado=p_estado,
         PersonalResponsable=p_personal,
+        DniResponsable=NULLIF(p_dni, ''),
         CctaResponsable=NULLIF(p_ccta, 0)
     WHERE IdRegistro=p_id;
     SELECT ROW_COUNT() AS affected;

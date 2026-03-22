@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}Desvíos Pendientes por Tipo{% endblock %}
 {% block page_title %}Desvíos Pendientes por Tipo{% endblock %}
 
@@ -20,7 +20,7 @@
         <i data-feather="filter" style="width:14px;height:14px;margin-right:4px;"></i>Filtrar
       </button>
       {% if fecha_ini or fecha_fin %}
-      <a href="{{ url_for('admin.estadisticas_tipos') }}" class="btn btn-secondary" style="padding:0.5rem 1.25rem;">
+      <a href="{{ url_for('da.estadisticas_tipos') }}" class="btn btn-secondary" style="padding:0.5rem 1.25rem;">
         <i data-feather="x" style="width:14px;height:14px;margin-right:4px;"></i>Limpiar
       </a>
       {% endif %}

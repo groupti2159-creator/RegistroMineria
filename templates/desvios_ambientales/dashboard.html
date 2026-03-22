@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}Dashboard — ecoSupervisor{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 
@@ -47,14 +47,14 @@
   <div class="card">
     <h3 class="card-title"><i data-feather="zap"></i> Acciones Rápidas</h3>
     <div class="quick-actions">
-      <a href="{{ url_for('admin.desvios') }}" class="quick-btn" onclick="openModalFromDash()">
+      <a href="{{ url_for('da.desvios_redirect') }}" class="quick-btn" onclick="openModalFromDash()">
         <span class="qa-icon"><i data-feather="plus-circle"></i></span>
         <div>
           <p class="qa-title">Crear Nuevo Reporte</p>
           <p class="qa-sub">Registrar desvío ambiental</p>
         </div>
       </a>
-      <a href="{{ url_for('admin.desvios') }}" class="quick-btn">
+      <a href="{{ url_for('da.desvios_redirect') }}" class="quick-btn">
         <span class="qa-icon"><i data-feather="list"></i></span>
         <div>
           <p class="qa-title">Ver Todos los Reportes</p>
@@ -110,10 +110,10 @@
 
 {% block scripts %}
 <script>
-const DETALLE_URL_BASE = "{{ url_for('admin.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const DETALLE_URL_BASE = "{{ url_for('da.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = true;
 </script>
-<script src="{{ url_for('static', filename='js/desvios.js') }}"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}"></script>
 <script>
 // Funciones adicionales del dashboard (si las hay)
 </script>

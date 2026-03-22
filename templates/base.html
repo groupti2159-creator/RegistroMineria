@@ -25,17 +25,88 @@
       </div>
       <div class="brand-text">
         <span class="brand-eco">Eco</span><span class="brand-sup">Supervisor</span>
-        <small>DNI: {{ session.dni }}</small>
+        <small>{{ session.nombre or session.dni }}</small>
+        {% if session.cargo %}<small style="opacity:0.7">{{ session.cargo }}</small>{% endif %}
         <span class="rol-badge rol-{{ session.rol|lower|replace(' ','') }}">{{ session.rol|upper }}</span>
       </div>
     </div>
 
     <nav class="sidebar-nav" id="sidebarNav">
-      <!-- El contenido se carga dinámicamente -->
-      <div class="nav-loading">
-        <i data-feather="loader"></i>
-        <span>Cargando menú...</span>
-      </div>
+      {% set accesos = session.get('accesos', []) %}
+
+      {# ── Macro para grupo con submenú ── #}
+      {% macro nav_group(icono, nombre, hijos) %}
+        {% set ns = namespace(activo=false) %}
+        {% for h in hijos %}{% if request.path == h[1] or request.path.startswith(h[1]) %}{% set ns.activo = true %}{% endif %}{% endfor %}
+        <div class="nav-group">
+          <button class="nav-item nav-toggle {% if ns.activo %}active{% endif %}" onclick="toggleSubmenu(this)">
+            <span class="nav-icon"><i data-feather="{{ icono }}"></i></span>
+            <span>{{ nombre }}</span>
+            <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
+          </button>
+          <div class="nav-submenu {% if ns.activo %}open{% endif %}">
+            {% for h in hijos %}
+            <a href="{{ h[1] }}" class="nav-subitem {% if request.path == h[1] %}active{% endif %}">
+              <span class="nav-icon"><i data-feather="{{ h[2] }}"></i></span>
+              <span>{{ h[0] }}</span>
+            </a>
+            {% endfor %}
+          </div>
+        </div>
+      {% endmacro %}
+
+      {# ── DESVÍOS AMBIENTALES ── #}
+      {% if 'DASHBOARD' in accesos or 'DESVIOS' in accesos or 'ESTADISTICAS' in accesos or 'DESVIOS_AMB' in accesos %}
+        {% set hijos_da = [] %}
+        {% if 'DASHBOARD'   in accesos %}{% set _ = hijos_da.append(('Dashboard',         '/admin/dashboard',    'layout'))        %}{% endif %}
+        {% if 'DESVIOS'     in accesos %}{% set _ = hijos_da.append(('Registrar Reporte',  '/admin/registrar',    'file-plus'))     %}{% endif %}
+        {% if 'ESTADISTICAS'in accesos %}{% set _ = hijos_da.append(('Estadísticas',       '/admin/estadisticas', 'bar-chart-2'))   %}{% endif %}
+        {{ nav_group('alert-triangle', 'Desvíos Ambientales', hijos_da) }}
+      {% endif %}
+
+      {# ── GESTIÓN DE RESIDUOS ── #}
+      {% if 'GESTION_RESIDUOS' in accesos or 'GENERACION_DIARIA' in accesos %}
+        {% set hijos_gr = [] %}
+        {% if 'GR_DASHBOARD'      in accesos %}{% set _ = hijos_gr.append(('Dashboard',          '/admin/residuos/dashboard',     'layout'))        %}{% endif %}
+        {% if 'GENERACION_DIARIA' in accesos %}{% set _ = hijos_gr.append(('Generación Diaria',  '/admin/residuos/generacion',    'calendar'))      %}{% endif %}
+        {% if 'COMERCIALIZABLE'   in accesos %}{% set _ = hijos_gr.append(('Comercializable',    '/admin/residuos/comercializable','package'))      %}{% endif %}
+        {% if 'DISPOSICION_MATPEL'in accesos %}{% set _ = hijos_gr.append(('Disposición Matpel', '/admin/residuos/matpel',        'alert-octagon')) %}{% endif %}
+        {% if 'COMPOSTAJE'        in accesos %}{% set _ = hijos_gr.append(('Compostaje',          '/admin/residuos/compostaje',    'leaf'))          %}{% endif %}
+        {{ nav_group('trash-2', 'Gestión de Residuos', hijos_gr) }}
+      {% endif %}
+
+      {# ── COMPROMISOS ── #}
+      {% if 'COMPROMISOS' in accesos or 'COMPROMISOS_REG' in accesos or 'COMPROMISOS_DASH' in accesos %}
+        {% set hijos_co = [] %}
+        {% if 'COMPROMISOS_DASH' in accesos %}{% set _ = hijos_co.append(('Dashboard', '/admin/compromisos/dashboard', 'layout'))       %}{% endif %}
+        {% if 'COMPROMISOS_REG'  in accesos or 'COMPROMISOS' in accesos %}{% set _ = hijos_co.append(('Registro', '/admin/compromisos', 'check-square')) %}{% endif %}
+        {{ nav_group('check-square', 'Compromisos', hijos_co) }}
+      {% endif %}
+
+      {# ── DATA METEOROLÓGICA ── #}
+      {% if 'DATA_METEOROLOGICA' in accesos or 'DATA_METRO_INFO' in accesos or 'DATA_METRO_DASH' in accesos %}
+        {% set hijos_dm = [] %}
+        {% if 'DATA_METRO_DASH' in accesos %}{% set _ = hijos_dm.append(('Dashboard',    '/admin/meteorologia/dashboard', 'layout')) %}{% endif %}
+        {% if 'DATA_METRO_INFO' in accesos or 'DATA_METEOROLOGICA' in accesos %}{% set _ = hijos_dm.append(('Información', '/admin/meteorologia', 'cloud')) %}{% endif %}
+        {{ nav_group('cloud', 'Data Meteorológica', hijos_dm) }}
+      {% endif %}
+
+      {# ── CONFIGURACIÓN ── #}
+      {% if 'CONFIGURACION' in accesos or 'CONFIG_USUARIOS' in accesos or 'CONFIG_DASH' in accesos %}
+        {% set hijos_cfg = [] %}
+        {% if 'CONFIG_DASH'     in accesos %}{% set _ = hijos_cfg.append(('Dashboard',                  '/admin/configuracion/dashboard', 'layout')) %}{% endif %}
+        {% if 'CONFIG_USUARIOS' in accesos or 'CONFIGURACION' in accesos %}{% set _ = hijos_cfg.append(('Configuración de Usuarios', '/admin/configuracion/usuarios', 'users')) %}{% endif %}
+        {{ nav_group('settings', 'Configuración', hijos_cfg) }}
+      {% endif %}
+
+      {# ── MIS REPORTES (supervisor) ── #}
+      {% if 'MIS_REPORTES' in accesos %}
+        <a href="/supervisor/desvios" class="nav-item {% if request.path == '/supervisor/desvios' %}active{% endif %}">
+          <span class="nav-icon"><i data-feather="clipboard"></i></span>
+          <span>Mis Reportes</span>
+        </a>
+      {% endif %}
+
     </nav>
 
     <div class="sidebar-footer">
@@ -122,7 +193,7 @@
 {% endif %}
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/ajax_handler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>

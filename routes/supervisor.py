@@ -13,6 +13,18 @@ def sup_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def modulo_required(codigo):
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login'))
+            if codigo not in session.get('accesos', []):
+                return render_template('auth/sin_acceso.html'), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
 def get_notif_count():
     try:
         cur  = mysql.connection.cursor()
@@ -24,6 +36,7 @@ def get_notif_count():
 
 @supervisor_bp.route('/desvios')
 @sup_required
+@modulo_required('MIS_REPORTES')
 def desvios():
     estado_filter = request.args.get('estado','')
     page = request.args.get('page', 1, type=int)
@@ -47,7 +60,7 @@ def desvios():
         'Pendiente': 1,
         'En Proceso': 2,
         'Enviado': 3,
-        'En Revisión': 4,
+        'En Revision': 4,
         'Culminado': 5,
         'Rechazado': 6,
         'Cerrado': 7
@@ -78,7 +91,7 @@ def desvios():
     notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
     cur.close()
     
-    return render_template('supervisor/desvios.html',
+    return render_template('desvios_ambientales/supervisor_desvios.html',
         registros=registros_pagina, notifs=notifs,
         estado_filter=estado_filter, 
         notif_count=get_notif_count(),
@@ -90,6 +103,7 @@ def desvios():
 
 @supervisor_bp.route('/desvios/detalle/<rid>')
 @sup_required
+@modulo_required('MIS_REPORTES')
 def detalle_registro(rid):
     cur = mysql.connection.cursor()
     registro = sp_one(cur, 'sp_detalleregistro', (rid,))
@@ -133,6 +147,7 @@ def detalle_registro(rid):
 
 @supervisor_bp.route('/desvios/subir/<rid>', methods=['POST'])
 @sup_required
+@modulo_required('MIS_REPORTES')
 def subir_levantamiento(rid):
     try:
         # NOTA: Actualmente solo se permite subir imágenes cuando el estado es PENDIENTE

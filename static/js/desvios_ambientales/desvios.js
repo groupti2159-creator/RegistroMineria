@@ -128,6 +128,10 @@ function buildDetalleHTML(data) {
             <label>Personal Responsable</label>
             <p>${r.personalresponsable||'—'}</p>
           </div>
+          <div class="detalle-field">
+            <label>DNI Responsable</label>
+            <p>${r.dniresponsable||'—'}</p>
+          </div>
         </div>
       </div>
 
@@ -189,6 +193,7 @@ function editarRegistro(rid) {
     setVal('edit_descripcion', r.descripcion);
     setVal('edit_accion',      r.accion);
     setVal('edit_personal',    r.personalresponsable);
+    setVal('edit_dni',         r.dniresponsable);
     setVal('edit_ccta',        r.cctaresponsable);
     setVal('edit_area_rep',    r.idareareportante);
     setVal('edit_area_res',    r.idarearesponsable);
@@ -542,6 +547,16 @@ document.addEventListener('DOMContentLoaded', function() {
   const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
       if (mutation.target === modalCrear && modalCrear.style.display === 'flex') {
+        // Poner fecha de hoy del navegador si el campo está vacío
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm   = String(today.getMonth() + 1).padStart(2, '0');
+        const dd   = String(today.getDate()).padStart(2, '0');
+        const fechaHoy = yyyy + '-' + mm + '-' + dd;
+        const fInicio = formCrear.querySelector('[name="fecha_inicio"]');
+        const fEjec   = formCrear.querySelector('[name="fecha_ejecucion"]');
+        if (fInicio && !fInicio.value) fInicio.value = fechaHoy;
+        if (fEjec   && !fEjec.value)   fEjec.value   = fechaHoy;
         validarFormulario();
       }
     });
@@ -617,4 +632,80 @@ document.addEventListener('DOMContentLoaded', function() {
       window.history.replaceState({}, '', newUrl);
     }, 500);
   }
+});
+
+// ── VALIDACIÓN EN TIEMPO REAL ─────────────────────────────────────────────
+function validarCampo(el) {
+  const tag = el.tagName.toLowerCase();
+  let lleno = false;
+
+  if (tag === 'select') {
+    lleno = el.value !== '' && el.value !== '0';
+  } else if (tag === 'textarea') {
+    lleno = el.value.trim().length >= (parseInt(el.getAttribute('minlength') || 1));
+  } else {
+    lleno = el.value.trim() !== '';
+  }
+
+  // Solo aplicar si el campo es requerido o ya fue tocado
+  const requerido = el.hasAttribute('required');
+  if (!requerido && el.value.trim() === '') {
+    el.classList.remove('field-valid', 'field-invalid');
+    return;
+  }
+
+  el.classList.toggle('field-valid',   lleno);
+  el.classList.toggle('field-invalid', !lleno);
+}
+
+function activarValidacionTiempoReal(formId) {
+  const form = document.getElementById(formId);
+  if (!form) return;
+
+  const campos = form.querySelectorAll(
+    'input[type="text"], input[type="date"], input[type="email"], select, textarea'
+  );
+
+  campos.forEach(el => {
+    // Al perder el foco: validar siempre
+    el.addEventListener('blur', () => validarCampo(el));
+    // Al escribir/cambiar: validar solo si ya tiene clase (fue tocado)
+    el.addEventListener('input', () => {
+      if (el.classList.contains('field-valid') || el.classList.contains('field-invalid')) {
+        validarCampo(el);
+      }
+    });
+    el.addEventListener('change', () => validarCampo(el));
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Activar en modal crear
+  activarValidacionTiempoReal('modalCrear');
+
+  // Activar en modal editar cuando se abre (los campos se llenan dinámicamente)
+  const observer = new MutationObserver(() => {
+    const form = document.getElementById('formEditar');
+    if (form && !form.dataset.validacionActiva) {
+      form.dataset.validacionActiva = '1';
+      activarValidacionTiempoReal('formEditar');
+    }
+  });
+  const modalEditar = document.getElementById('modalEditar');
+  if (modalEditar) {
+    observer.observe(modalEditar, { attributes: true, attributeFilter: ['style'] });
+  }
+
+  // Limpiar clases al resetear el modal crear
+  const btnCancelar = document.querySelectorAll('[onclick*="modalCrear"]');
+  btnCancelar.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const form = document.querySelector('#modalCrear form');
+      if (form) {
+        form.querySelectorAll('.field-valid, .field-invalid').forEach(el => {
+          el.classList.remove('field-valid', 'field-invalid');
+        });
+      }
+    });
+  });
 });

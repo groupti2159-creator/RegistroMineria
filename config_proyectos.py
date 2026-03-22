@@ -74,10 +74,19 @@ def get_menu_proyecto_html(codigo_proyecto, rol, notif_count=0, request_endpoint
             </div>
             '''
             return html
-        else:  # Supervisor
+        elif rol == 'Supervisor':
             html = f'''
             <a href="/supervisor/desvios" class="nav-item {'active' if request_endpoint == 'supervisor.desvios' else ''}">
                 <span class="nav-icon"><i data-feather="alert-triangle"></i></span><span>Desvíos Ambientales</span>
+                {f'<span class="nav-badge">{notif_count}</span>' if notif_count > 0 else ''}
+            </a>
+            '''
+            return html
+
+        else:  # Trabajador
+            html = f'''
+            <a href="/supervisor/desvios" class="nav-item {'active' if request_endpoint == 'supervisor.desvios' else ''}">
+                <span class="nav-icon"><i data-feather="clipboard"></i></span><span>Mis Reportes</span>
                 {f'<span class="nav-badge">{notif_count}</span>' if notif_count > 0 else ''}
             </a>
             '''

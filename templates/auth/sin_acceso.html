@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Acceso Denegado - ecoSupervisor{% endblock %}
+{% block page_title %}Acceso Denegado{% endblock %}
+
+{% block content %}
+<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:60vh;text-align:center;gap:1.5rem">
+  <div style="width:80px;height:80px;border-radius:50%;background:var(--danger-light,#fee2e2);display:flex;align-items:center;justify-content:center">
+    <i data-feather="lock" style="width:36px;height:36px;color:#ef4444"></i>
+  </div>
+  <div>
+    <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:.5rem">Sin acceso</h2>
+    <p style="color:#64748b">No tienes permisos para ver esta sección.</p>
+  </div>
+  <a href="javascript:history.back()" class="btn btn-secondary">
+    <i data-feather="arrow-left"></i> Volver
+  </a>
+</div>
+{% endblock %}

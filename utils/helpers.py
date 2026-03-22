@@ -73,3 +73,52 @@ def sp_one(cur, sp_name, params=()):
     """Igual que sp_exec pero retorna solo la primera fila."""
     rows = sp_exec(cur, sp_name, params)
     return rows[0] if rows else None
+
+
+# ── Decoradores y helpers compartidos para blueprints ────────────────────────
+
+from functools import wraps
+from flask import session, redirect, url_for, render_template
+
+def admin_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session or session.get('rol') != 'Administrador':
+            return redirect(url_for('auth.login'))
+        return f(*args, **kwargs)
+    return decorated
+
+def modulo_required(codigo):
+    """Verifica que el usuario tenga acceso al modulo indicado."""
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login'))
+            if codigo not in session.get('accesos', []):
+                return render_template('auth/sin_acceso.html'), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
+def delete_image_file(ruta):
+    """Borra el archivo físico de una imagen dado su ruta relativa (ej: 'uploads/evidencias/xxx.jpg')."""
+    if not ruta:
+        return
+    base_dir = os.path.join(os.path.dirname(__file__), '..')
+    filepath = os.path.normpath(os.path.join(base_dir, 'static', ruta))
+    try:
+        if os.path.exists(filepath):
+            os.remove(filepath)
+    except Exception:
+        pass
+
+def get_notif_count():
+    from extensions import mysql
+    try:
+        cur = mysql.connection.cursor()
+        rows = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
+        cur.close()
+        return rows[0]['total'] if rows else 0
+    except:
+        return 0

@@ -680,6 +680,12 @@ body {
 .page-body {
   padding: 1.5rem 2rem;
   flex: 1;
+  animation: pageFadeIn .25s ease;
+}
+
+@keyframes pageFadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 /* ── NOTIFICATIONS ── */
@@ -3855,3 +3861,104 @@ body {
 .rol-selector-card:hover .rol-selector-content {
   border-color: var(--green);
 }
+
+/* ── VALIDACIÓN DE CAMPOS EN TIEMPO REAL ─────────────────────────────────── */
+.form-input.field-valid,
+.form-select.field-valid,
+.form-textarea.field-valid {
+  border-color: #22c55e;
+  box-shadow: 0 0 0 3px rgba(34,197,94,.12);
+}
+
+.form-input.field-invalid,
+.form-select.field-invalid,
+.form-textarea.field-invalid {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239,68,68,.10);
+}
+
+/* Icono de estado dentro del campo */
+.field-status-icon {
+  position: absolute;
+  right: .65rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  display: none;
+  width: 16px;
+  height: 16px;
+}
+.form-group.has-icon { position: relative; }
+.form-group.has-icon .form-input,
+.form-group.has-icon .form-select {
+  padding-right: 2.2rem;
+}
+.field-valid  ~ .field-status-icon { display: block; color: #22c55e; }
+.field-invalid ~ .field-status-icon { display: block; color: #ef4444; }
+
+[data-theme="dark"] .form-input.field-valid,
+[data-theme="dark"] .form-select.field-valid,
+[data-theme="dark"] .form-textarea.field-valid {
+  border-color: #4ade80;
+  box-shadow: 0 0 0 3px rgba(74,222,128,.15);
+}
+
+[data-theme="dark"] .form-input.field-invalid,
+[data-theme="dark"] .form-select.field-invalid,
+[data-theme="dark"] .form-textarea.field-invalid {
+  border-color: #f87171;
+  box-shadow: 0 0 0 3px rgba(248,113,113,.15);
+}
+
+/* ── Módulos checkboxes en gestión de usuarios ── */
+.modulos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: .5rem;
+}
+.modulo-checkbox-card {
+  cursor: pointer;
+  display: block;
+}
+.modulo-checkbox-card input[type="checkbox"] {
+  display: none;
+}
+.modulo-card-content {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  padding: .5rem .75rem;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: .82rem;
+  font-weight: 500;
+  color: var(--text);
+  background: var(--bg);
+  transition: all .15s;
+}
+.modulo-checkbox-card input:checked + .modulo-card-content {
+  border-color: var(--green);
+  background: var(--pastel-green);
+  color: var(--green-dark);
+}
+.modulo-checkbox-card:hover .modulo-card-content {
+  border-color: var(--green);
+}
+.modulo-grupo .modulo-card-content {
+  font-weight: 700;
+  background: var(--bg-alt);
+}
+
+/* Dashboard placeholder */
+.dashboard-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 80px 20px;
+  text-align: center;
+  color: var(--text-muted, #888);
+}
+.dashboard-placeholder h2 { font-size: 1.4rem; font-weight: 600; margin: 0; }
+.dashboard-placeholder p  { margin: 0; font-size: 0.95rem; }

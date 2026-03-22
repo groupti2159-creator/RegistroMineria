@@ -1,4 +1,4 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 {% block title %}Desvíos Ambientales — ecoSupervisor{% endblock %}
 {% block page_title %}Desvíos Ambientales{% endblock %}
 
@@ -17,7 +17,7 @@
   <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='flex'">
     <i data-feather="plus-circle"></i> <strong>Nuevo Reporte Ambiental</strong>
   </button>
-  <a href="{{ url_for('admin.exportar_excel') }}" class="btn btn-export">
+  <a href="{{ url_for('da.exportar_excel') }}" class="btn btn-export">
     <i data-feather="download"></i> Exportar <strong>.xlsx</strong>
   </a>
 </div>
@@ -37,7 +37,7 @@
   <div class="filter-badge">
     <i data-feather="user" style="width:14px;height:14px"></i>
     <span>Personal: <strong>{{ personal_filter }}</strong></span>
-    <a href="{{ url_for('admin.registrar') }}{% if estado_filter %}?estado={{ estado_filter }}{% endif %}" class="filter-badge-close">
+    <a href="{{ url_for('da.registrar') }}{% if estado_filter %}?estado={{ estado_filter }}{% endif %}" class="filter-badge-close">
       <i data-feather="x" style="width:14px;height:14px"></i>
     </a>
   </div>
@@ -65,7 +65,7 @@
         <i data-feather="x"></i>
       </button>
     </div>
-    <form method="POST" action="{{ url_for('admin.crear_registro') }}" enctype="multipart/form-data">
+    <form method="POST" action="{{ url_for('da.crear_registro') }}" enctype="multipart/form-data">
       <div class="modal-body">
         <p class="required-note"><i data-feather="alert-circle" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i> Los campos marcados con * son obligatorios</p>
 
@@ -74,8 +74,8 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA *</label>
-              <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-input" readonly required>
-              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha automática (zona horaria Perú)</small>
+              <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-input" required>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se completa con la fecha de hoy, editable</small>
             </div>
             <div class="form-group">
               <label class="form-label">ÁREA REPORTANTE *</label>
@@ -90,8 +90,8 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA EJECUCIÓN *</label>
-              <input type="date" name="fecha_ejecucion" class="form-input" readonly required>
-              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha automática (zona horaria Perú)</small>
+              <input type="date" name="fecha_ejecucion" class="form-input" required>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se completa con la fecha de hoy, editable</small>
             </div>
           </div>
         </div>
@@ -134,9 +134,21 @@
               <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" class="form-select" required>
                 <option value="">Seleccionar tipo...</option>
-                {% for t in tipos %}
-                <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                {% endfor %}
+                <optgroup label="── Residuos ──">
+                  {% for t in tipos if t.iddescripciontipo in [8,9,11,12,13,14] %}
+                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                  {% endfor %}
+                </optgroup>
+                <optgroup label="── Riesgos ──">
+                  {% for t in tipos if t.iddescripciontipo in [2,3,4,5] %}
+                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                  {% endfor %}
+                </optgroup>
+                <optgroup label="── Ambiental / Otros ──">
+                  {% for t in tipos if t.iddescripciontipo in [1,6,7] %}
+                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                  {% endfor %}
+                </optgroup>
               </select>
             </div>
           </div>
@@ -175,6 +187,10 @@
             <div class="form-group">
               <label class="form-label">PERSONAL RESPONSABLE</label>
               <input type="text" name="personal_responsable" class="form-input" placeholder="Nombre del responsable">
+            </div>
+            <div class="form-group">
+              <label class="form-label">DNI RESPONSABLE</label>
+              <input type="text" name="dni_responsable" class="form-input" placeholder="DNI del responsable" maxlength="20">
             </div>
           </div>
         </div>
@@ -254,8 +270,8 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA *</label>
-              <input type="date" name="fecha_inicio" id="edit_fecha" class="form-input" readonly required>
-              <small class="form-hint"><i data-feather="lock" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha de creación (no editable)</small>
+              <input type="date" name="fecha_inicio" id="edit_fecha" class="form-input" required>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Editable</small>
             </div>
             <div class="form-group">
               <label class="form-label">ÁREA REPORTANTE *</label>
@@ -269,8 +285,8 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA EJECUCIÓN</label>
-              <input type="date" name="fecha_ejecucion" id="edit_fecha_ejec" class="form-input" readonly>
-              <small class="form-hint"><i data-feather="lock" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha de ejecución (no editable)</small>
+              <input type="date" name="fecha_ejecucion" id="edit_fecha_ejec" class="form-input">
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Editable</small>
             </div>
           </div>
         </div>
@@ -307,9 +323,21 @@
             <div class="form-group">
               <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" id="edit_tipo" class="form-select" required>
-                {% for t in tipos %}
-                <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                {% endfor %}
+                <optgroup label="── Residuos ──">
+                  {% for t in tipos if t.iddescripciontipo in [8,9,11,12,13,14] %}
+                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                  {% endfor %}
+                </optgroup>
+                <optgroup label="── Riesgos ──">
+                  {% for t in tipos if t.iddescripciontipo in [2,3,4,5] %}
+                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                  {% endfor %}
+                </optgroup>
+                <optgroup label="── Ambiental / Otros ──">
+                  {% for t in tipos if t.iddescripciontipo in [1,6,7] %}
+                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                  {% endfor %}
+                </optgroup>
               </select>
             </div>
           </div>
@@ -345,6 +373,10 @@
             <div class="form-group">
               <label class="form-label">PERSONAL RESPONSABLE</label>
               <input type="text" name="personal_responsable" id="edit_personal" class="form-input">
+            </div>
+            <div class="form-group">
+              <label class="form-label">DNI RESPONSABLE</label>
+              <input type="text" name="dni_responsable" id="edit_dni" class="form-input" maxlength="20">
             </div>
           </div>
         </div>
@@ -429,11 +461,11 @@
 
 {% block scripts %}
 <script>
-const DETALLE_URL_BASE = "{{ url_for('admin.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
-const EDITAR_URL_BASE  = "{{ url_for('admin.editar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
-const VALIDAR_URL_BASE = "{{ url_for('admin.validar_levantamiento', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
-const ELIMINAR_URL_BASE = "{{ url_for('admin.eliminar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const DETALLE_URL_BASE = "{{ url_for('da.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const EDITAR_URL_BASE  = "{{ url_for('da.editar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const VALIDAR_URL_BASE = "{{ url_for('da.validar_levantamiento', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const ELIMINAR_URL_BASE = "{{ url_for('da.eliminar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = true;
 </script>
-<script src="{{ url_for('static', filename='js/desvios.js') }}"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}"></script>
 {% endblock %}

@@ -78,7 +78,7 @@
           <td>
             <div style="display:flex;gap:.5rem;align-items:center">
               <button class="btn-icon btn-icon-edit" title="Editar"
-                onclick="abrirModalEditar('{{ u.idusuario }}','{{ u.nombrecompleto }}','{{ u.correo or '' }}','{{ u.roles_ids or '' }}')">
+                onclick="abrirModalEditar('{{ u.idusuario }}','{{ u.nombrecompleto }}','{{ u.correo or '' }}','{{ u.roles_ids.split(',')[0] if u.roles_ids else '' }}','{{ u.idarea or '' }}','{{ u.cargo or '' }}')">
                 <i data-feather="edit-2"></i>
               </button>
               <button class="btn-icon {{ 'btn-icon-warning' if u.activo else 'btn-icon-success' }}" 
@@ -138,23 +138,48 @@
                  placeholder="correo@ejemplo.com">
         </div>
 
-        <div class="alert alert-info" style="margin:.5rem 0;font-size:.85rem">
-          <i data-feather="info" style="width:14px;height:14px;vertical-align:middle;margin-right:4px"></i>
-          La contraseña por defecto será: <strong>123456</strong>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Área</label>
+            <select id="crear_idarea" name="idarea" class="form-select">
+              <option value="">Sin área asignada</option>
+              {% for a in areas %}
+              <option value="{{ a.idarea }}">{{ a.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cargo</label>
+            <input type="text" id="crear_cargo" name="cargo" class="form-input"
+                   placeholder="Ej: Supervisor Ambiental">
+            <small class="form-hint">Solo informativo</small>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Contraseña</label>
+            <input type="password" id="crear_password" name="password" class="form-input"
+                   placeholder="Dejar vacío para usar 123456" minlength="6">
+            <small class="form-hint">Si no se ingresa, se usará <strong>123456</strong></small>
+          </div>
         </div>
 
         <div class="form-section" style="margin-top:1rem">
-          <h4 class="form-section-title"><i data-feather="shield"></i> Roles y Permisos</h4>
-          <div class="roles-grid">
-            {% for rol in roles %}
-            <label class="rol-checkbox-card">
-              <input type="checkbox" name="roles" value="{{ rol.idroles }}" class="rol-check">
-              <span class="rol-card-content">
-                <i data-feather="{{ 'settings' if 'Admin' in rol.nombrerol else ('eye' if 'Supervisor' in rol.nombrerol else 'user') }}"></i>
-                <span>{{ rol.nombrerol }}</span>
-              </span>
-            </label>
-            {% endfor %}
+          <h4 class="form-section-title"><i data-feather="shield"></i> Rol y Módulos</h4>
+          <div class="form-group">
+            <label class="form-label">Rol *</label>
+            <select id="crear_rol" name="rol" class="form-select" required
+                    onchange="cargarModulosRol(this.value, 'crear_modulos_container')">
+              <option value="">Seleccionar rol...</option>
+              {% for rol in roles %}
+              <option value="{{ rol.idroles }}">{{ rol.nombrerol }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div id="crear_modulos_container" style="margin-top:.75rem;display:none">
+            <label class="form-label" style="margin-bottom:.5rem">Módulos con acceso</label>
+            <div id="crear_modulos_grid" class="modulos-grid"></div>
           </div>
         </div>
 
@@ -206,19 +231,39 @@
           <input type="email" id="editar_correo" name="correo" class="form-input">
         </div>
 
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Área</label>
+            <select id="editar_idarea" name="idarea" class="form-select">
+              <option value="">Sin área asignada</option>
+              {% for a in areas %}
+              <option value="{{ a.idarea }}">{{ a.nombre }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Cargo</label>
+            <input type="text" id="editar_cargo" name="cargo" class="form-input"
+                   placeholder="Ej: Supervisor Ambiental">
+            <small class="form-hint">Solo informativo</small>
+          </div>
+        </div>
+
         <div class="form-section" style="margin-top:1rem">
-          <h4 class="form-section-title"><i data-feather="shield"></i> Roles y Permisos</h4>
-          <div class="roles-grid">
-            {% for rol in roles %}
-            <label class="rol-checkbox-card">
-              <input type="checkbox" name="roles" value="{{ rol.idroles }}" 
-                     class="rol-check editar-rol-check" id="editar_rol_{{ rol.idroles }}">
-              <span class="rol-card-content">
-                <i data-feather="{{ 'settings' if 'Admin' in rol.nombrerol else ('eye' if 'Supervisor' in rol.nombrerol else 'user') }}"></i>
-                <span>{{ rol.nombrerol }}</span>
-              </span>
-            </label>
-            {% endfor %}
+          <h4 class="form-section-title"><i data-feather="shield"></i> Rol y Módulos</h4>
+          <div class="form-group">
+            <label class="form-label">Rol *</label>
+            <select id="editar_rol" name="rol" class="form-select" required
+                    onchange="cargarModulosRol(this.value, 'editar_modulos_container')">
+              <option value="">Seleccionar rol...</option>
+              {% for rol in roles %}
+              <option value="{{ rol.idroles }}">{{ rol.nombrerol }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div id="editar_modulos_container" style="margin-top:.75rem;display:none">
+            <label class="form-label" style="margin-bottom:.5rem">Módulos con acceso</label>
+            <div id="editar_modulos_grid" class="modulos-grid"></div>
           </div>
         </div>
 
@@ -290,15 +335,65 @@
 {% block scripts %}
 <script>
 const URL_USUARIOS = {
-  crear:   "{{ url_for('admin.usuarios_crear') }}",
-  editar:  "{{ url_for('admin.usuarios_editar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
-  toggle:  "{{ url_for('admin.usuarios_toggle', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
-  eliminar:"{{ url_for('admin.usuarios_eliminar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
-  password:"{{ url_for('admin.usuarios_password') }}"
+  crear:        "{{ url_for('admin.usuarios_crear') }}",
+  editar:       "{{ url_for('admin.usuarios_editar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
+  toggle:       "{{ url_for('admin.usuarios_toggle', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
+  eliminar:     "{{ url_for('admin.usuarios_eliminar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
+  password:     "{{ url_for('admin.usuarios_password') }}",
+  modulos_rol:  "/admin/configuracion/roles/ROL_ID/modulos",
+  guardar_modulos: "/admin/configuracion/roles/ROL_ID/modulos/guardar"
 };
+
+// ── Carga módulos del rol seleccionado y los muestra como checkboxes ──
+async function cargarModulosRol(rolId, containerId, marcados = []) {
+  const container = document.getElementById(containerId);
+  const gridId = containerId.replace('_container', '_grid');
+  const grid = document.getElementById(gridId);
+  if (!rolId) { container.style.display = 'none'; return; }
+
+  grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">Cargando módulos...</p>';
+  container.style.display = 'block';
+
+  try {
+    const res = await fetch(URL_USUARIOS.modulos_rol.replace('ROL_ID', rolId));
+    const data = await res.json();
+    if (!data.success) { grid.innerHTML = '<p style="color:red">Error al cargar módulos</p>'; return; }
+
+    if (!data.modulos.length) {
+      grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">Sin módulos para este rol</p>';
+      return;
+    }
+
+    grid.innerHTML = data.modulos.map(m => `
+      <label class="modulo-checkbox-card ${!m.url ? 'modulo-grupo' : ''}">
+        <input type="checkbox" name="modulos" value="${m.idmodulo}"
+               ${marcados.includes(String(m.idmodulo)) || marcados.length === 0 ? 'checked' : ''}>
+        <span class="modulo-card-content">
+          <i data-feather="${m.icono}" style="width:16px;height:16px"></i>
+          <span>${m.nombre}</span>
+        </span>
+      </label>
+    `).join('');
+    feather.replace({ 'stroke-width': 1.5 });
+  } catch(e) {
+    grid.innerHTML = '<p style="color:red">Error de conexión</p>';
+  }
+}
+
+// ── Guardar módulos del rol (actualiza tbl_modulo_permiso) ──
+async function guardarModulosRol(rolId, modulosIds) {
+  const url = URL_USUARIOS.guardar_modulos.replace('ROL_ID', rolId);
+  await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    body: JSON.stringify({ modulos: modulosIds })
+  });
+}
 
 function abrirModalCrear() {
   document.getElementById('formCrearUsuario').reset();
+  document.getElementById('crear_modulos_container').style.display = 'none';
+  document.getElementById('crear_modulos_grid').innerHTML = '';
   document.getElementById('modalCrearUsuario').style.display = 'flex';
   feather.replace();
 }
@@ -306,15 +401,18 @@ function cerrarModalCrear() {
   document.getElementById('modalCrearUsuario').style.display = 'none';
 }
 
-function abrirModalEditar(id, nombre, correo, rolesIds) {
-  document.getElementById('editar_id').value    = id;
-  document.getElementById('editar_dni').value   = id;  // idusuario ES el dni
+function abrirModalEditar(id, nombre, correo, rolId, idarea, cargo) {
+  document.getElementById('editar_id').value     = id;
+  document.getElementById('editar_dni').value    = id;
   document.getElementById('editar_nombre').value = nombre;
   document.getElementById('editar_correo').value = correo;
-  // Marcar roles actuales
-  document.querySelectorAll('.editar-rol-check').forEach(cb => {
-    cb.checked = rolesIds.split(',').map(r=>r.trim()).includes(cb.value);
-  });
+  document.getElementById('editar_idarea').value = idarea || '';
+  document.getElementById('editar_cargo').value  = cargo || '';
+  // Seleccionar rol actual y cargar sus módulos
+  const rolSelect = document.getElementById('editar_rol');
+  rolSelect.value = rolId || '';
+  if (rolId) cargarModulosRol(rolId, 'editar_modulos_container');
+  else document.getElementById('editar_modulos_container').style.display = 'none';
   document.getElementById('modalEditarUsuario').style.display = 'flex';
   feather.replace();
 }
@@ -338,6 +436,11 @@ async function crearUsuario(e) {
   e.preventDefault();
   const form = e.target;
   const data = new FormData(form);
+  const rolId = document.getElementById('crear_rol').value;
+  // Guardar módulos seleccionados en el rol
+  const modulosIds = [...document.querySelectorAll('#crear_modulos_grid input[name="modulos"]:checked')]
+    .map(cb => cb.value);
+  if (rolId && modulosIds.length) await guardarModulosRol(rolId, modulosIds);
   try {
     const res = await fetch(URL_USUARIOS.crear, { method:'POST', body: data,
       headers:{'X-Requested-With':'XMLHttpRequest'} });
@@ -351,7 +454,12 @@ async function editarUsuario(e) {
   e.preventDefault();
   const form = e.target;
   const uid  = document.getElementById('editar_id').value;
+  const rolId = document.getElementById('editar_rol').value;
   const data = new FormData(form);
+  // Guardar módulos seleccionados en el rol
+  const modulosIds = [...document.querySelectorAll('#editar_modulos_grid input[name="modulos"]:checked')]
+    .map(cb => cb.value);
+  if (rolId && modulosIds.length) await guardarModulosRol(rolId, modulosIds);
   try {
     const res = await fetch(URL_USUARIOS.editar + uid, { method:'POST', body: data,
       headers:{'X-Requested-With':'XMLHttpRequest'} });
@@ -362,8 +470,7 @@ async function editarUsuario(e) {
 }
 
 async function toggleUsuario(uid, activo) {
-  const accion = activo ? 'desactivar' : 'activar';
-  if (!confirm(`¿Deseas ${accion} este usuario?`)) return;
+  if (!confirm(`¿Deseas ${activo ? 'desactivar' : 'activar'} este usuario?`)) return;
   try {
     const res = await fetch(URL_USUARIOS.toggle + uid, { method:'POST',
       headers:{'X-Requested-With':'XMLHttpRequest'} });
@@ -386,7 +493,7 @@ async function eliminarUsuario(uid, nombre) {
 
 async function cambiarPassword(e) {
   e.preventDefault();
-  const nueva    = document.getElementById('pwd_nueva').value;
+  const nueva     = document.getElementById('pwd_nueva').value;
   const confirmar = document.getElementById('pwd_confirmar').value;
   if (nueva !== confirmar) { showToast('Las contraseñas no coinciden', 'error'); return; }
   const data = new FormData(e.target);

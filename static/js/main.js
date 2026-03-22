@@ -562,56 +562,113 @@ function cargarSidebarProyecto(codigo) {
     });
 }
 
-// Cargar sidebar y nombre del proyecto al cargar la página
+// Cargar nombre del proyecto al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
-  // Cargar sidebar dinámico
-  cargarSidebarDinamico();
-  
   // Cargar nombre del proyecto (solo si existe el selector)
   const nombreEl = document.getElementById('proyectoNombre');
   if (nombreEl) {
-    console.log('Cargando nombre del proyecto...');
     fetch('/proyectos/api/proyectos-disponibles')
       .then(r => r.json())
       .then(data => {
-        console.log('Datos para nombre proyecto:', data);
         if (data.success && data.proyectos && data.proyectos.length > 0) {
-          // Buscar proyecto activo, si no hay usar el primero
           const proyectoActual = data.proyectos.find(p => p.activo) || data.proyectos[0];
           nombreEl.textContent = proyectoActual.nombre;
-          console.log('Nombre del proyecto actualizado:', proyectoActual.nombre);
         } else {
-          console.warn('No hay proyectos disponibles');
           nombreEl.textContent = 'Sin proyecto';
         }
       })
-      .catch(err => {
-        console.error('Error cargando nombre proyecto:', err);
-        nombreEl.textContent = 'Error';
-      });
+      .catch(() => { nombreEl.textContent = 'Error'; });
   }
 });
 
-// Función para cargar sidebar dinámicamente
-function cargarSidebarDinamico() {
-  const sidebarNav = document.getElementById('sidebarNav');
-  if (!sidebarNav) return;
-  
-  console.log('Cargando sidebar dinámico...');
-  
-  fetch('/proyectos/api/sidebar-proyecto')
-    .then(r => r.text())
-    .then(html => {
-      sidebarNav.innerHTML = html;
-      // Reinicializar iconos de Feather
-      if (typeof feather !== 'undefined') {
-        feather.replace();
-      }
-      console.log('Sidebar cargado correctamente');
-    })
-    .catch(err => {
-      console.error('Error cargando sidebar:', err);
-      sidebarNav.innerHTML = '<div class="nav-error">Error al cargar menú</div>';
-    });
-}
 
+
+// ── NAVEGACIÓN SPA (carga de módulos sin recargar página) ──
+(function initSpaNav() {
+  // URLs que se manejan con navegación SPA (no recargan la página)
+  const SPA_PATHS = [
+    '/admin/compromisos',
+    '/admin/meteorologia',
+    '/admin/residuos/generacion',
+    '/admin/residuos/comercializable',
+    '/admin/residuos/matpel',
+    '/admin/residuos/compostaje',
+  ];
+
+  // Títulos para el top-bar según la URL
+  const PAGE_TITLES = {
+    '/admin/compromisos': 'Compromisos',
+    '/admin/meteorologia': 'Data Meteorológica',
+    '/admin/residuos/generacion': 'Generación Diaria',
+    '/admin/residuos/comercializable': 'Comercializable',
+    '/admin/residuos/matpel': 'Disposición Matpel',
+    '/admin/residuos/compostaje': 'Compostaje',
+  };
+
+  function loadModule(url) {
+    const pageBody = document.querySelector('.page-body');
+    if (!pageBody) return;
+
+    // Mostrar loading
+    pageBody.innerHTML = '<div class="loading-state" style="padding:4rem;text-align:center"><i data-feather="loader" style="width:32px;height:32px;color:var(--text-muted)"></i><p style="margin-top:1rem;color:var(--text-muted)">Cargando...</p></div>';
+    if (typeof feather !== 'undefined') feather.replace({ 'stroke-width': 1.2 });
+
+    fetch(url, {
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(r => {
+        if (!r.ok) throw new Error('Error ' + r.status);
+        return r.text();
+      })
+      .then(html => {
+        pageBody.innerHTML = html;
+        // Actualizar título del top-bar
+        const titleEl = document.querySelector('.top-bar-title h1');
+        if (titleEl && PAGE_TITLES[url]) titleEl.textContent = PAGE_TITLES[url];
+        // Actualizar URL sin recargar
+        history.pushState({ spaUrl: url }, '', url);
+        // Reinicializar iconos feather
+        if (typeof feather !== 'undefined') feather.replace({ 'stroke-width': 1.2 });
+        // Marcar item activo en sidebar
+        updateSidebarActive(url);
+      })
+      .catch(() => {
+        pageBody.innerHTML = '<div class="empty-state" style="padding:4rem"><p style="color:var(--text-muted)">Error al cargar el módulo.</p></div>';
+      });
+  }
+
+  function updateSidebarActive(url) {
+    document.querySelectorAll('.nav-item, .nav-subitem').forEach(el => {
+      el.classList.remove('active');
+    });
+    const match = document.querySelector(`.nav-item[href="${url}"], .nav-subitem[href="${url}"]`);
+    if (match) {
+      match.classList.add('active');
+      // Abrir submenu padre si existe
+      const submenu = match.closest('.nav-submenu');
+      if (submenu) {
+        submenu.classList.add('open');
+        const toggle = submenu.previousElementSibling;
+        if (toggle) toggle.classList.add('active');
+      }
+    }
+  }
+
+  // Interceptar clics en links del sidebar que sean rutas SPA
+  document.addEventListener('click', function(e) {
+    const link = e.target.closest('a.nav-item, a.nav-subitem');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href || !SPA_PATHS.includes(href)) return;
+    e.preventDefault();
+    loadModule(href);
+    if (window.innerWidth <= 768) closeMobileMenu();
+  });
+
+  // Manejar botón atrás/adelante del navegador
+  window.addEventListener('popstate', function(e) {
+    if (e.state && e.state.spaUrl) {
+      loadModule(e.state.spaUrl);
+    }
+  });
+})();

@@ -16,6 +16,19 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated
 
+def modulo_required(codigo):
+    """Verifica que el usuario tenga acceso al modulo indicado."""
+    def decorator(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if 'user_id' not in session:
+                return redirect(url_for('auth.login'))
+            if codigo not in session.get('accesos', []):
+                return render_template('auth/sin_acceso.html'), 403
+            return f(*args, **kwargs)
+        return decorated
+    return decorator
+
 def get_notif_count():
     try:
         cur = mysql.connection.cursor()
@@ -51,6 +64,7 @@ def get_maestros():
 
 @admin_bp.route('/dashboard')
 @admin_required
+@modulo_required('DASHBOARD')
 def dashboard():
     cur = mysql.connection.cursor()
     stats = sp_one(cur, 'sp_dashboardstats')
@@ -68,7 +82,7 @@ def dashboard():
     registros_pendientes = [r for r in todos if r.get('estado') == 'Pendiente']
     total_pendientes = len(registros_pendientes)
     
-    return render_template('admin/dashboard.html',
+    return render_template('desvios_ambientales/dashboard.html',
         stats=stats or {'total':0,'culminados':0,'en_proceso':0,'pendientes':0},
         notifs=notifs,
         notif_count=get_notif_count(),
@@ -82,6 +96,7 @@ def dashboard():
 
 @admin_bp.route('/registrar')
 @admin_required
+@modulo_required('DESVIOS')
 def registrar():
     estado_filter = request.args.get('estado','')
     personal_filter = request.args.get('personal','')
@@ -139,7 +154,7 @@ def registrar():
     
     areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
     
-    return render_template('admin/desvios.html',
+    return render_template('desvios_ambientales/desvios.html',
         registros=registros_pagina,
         areas_rep=areas_rep, areas_res=areas_res,
         ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
@@ -152,55 +167,60 @@ def registrar():
         per_page=per_page,
         estados_unicos=estados_unicos)
 
+@admin_bp.route('/estadisticas')
+@admin_required
+@modulo_required('ESTADISTICAS')
+def estadisticas():
+    return render_template('desvios_ambientales/estadisticas.html', notif_count=get_notif_count())
+
 @admin_bp.route('/estadisticas/areas')
 @admin_required
+@modulo_required('ESTADISTICAS')
 def estadisticas_areas():
     fecha_ini = request.args.get('fecha_ini') or None
     fecha_fin = request.args.get('fecha_fin') or None
     cur = mysql.connection.cursor()
     stats = sp_exec(cur, 'sp_estadisticasareas', (fecha_ini, fecha_fin))
     cur.close()
-    return render_template('admin/estadisticas_areas.html',
-                         stats=stats,
-                         fecha_ini=fecha_ini or '',
-                         fecha_fin=fecha_fin or '',
-                         notif_count=get_notif_count())
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify([dict(r) for r in stats])
+    return redirect(url_for('admin.estadisticas'))
 
 @admin_bp.route('/estadisticas/ccta')
 @admin_required
+@modulo_required('ESTADISTICAS')
 def estadisticas_ccta():
     fecha_ini = request.args.get('fecha_ini') or None
     fecha_fin = request.args.get('fecha_fin') or None
     cur = mysql.connection.cursor()
     stats = sp_exec(cur, 'sp_estadisticasccta', (fecha_ini, fecha_fin))
     cur.close()
-    return render_template('admin/estadisticas_ccta.html',
-                         stats=stats,
-                         fecha_ini=fecha_ini or '',
-                         fecha_fin=fecha_fin or '',
-                         notif_count=get_notif_count())
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify([dict(r) for r in stats])
+    return redirect(url_for('admin.estadisticas'))
 
 @admin_bp.route('/estadisticas/tipos')
 @admin_required
+@modulo_required('ESTADISTICAS')
 def estadisticas_tipos():
     fecha_ini = request.args.get('fecha_ini') or None
     fecha_fin = request.args.get('fecha_fin') or None
     cur = mysql.connection.cursor()
     stats = sp_exec(cur, 'sp_estadisticas_tipos_pendientes', (fecha_ini, fecha_fin))
     cur.close()
-    return render_template('admin/estadisticas_tipos.html',
-                         stats=stats,
-                         fecha_ini=fecha_ini or '',
-                         fecha_fin=fecha_fin or '',
-                         notif_count=get_notif_count())
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify([dict(r) for r in stats])
+    return redirect(url_for('admin.estadisticas'))
 
-@admin_bp.route('/estadisticas')
+@admin_bp.route('/configuracion/dashboard')
 @admin_required
-def estadisticas():
-    return redirect(url_for('admin.estadisticas_areas'))
+@modulo_required('CONFIG_DASH')
+def configuracion_dashboard():
+    return render_template('configuracion/dashboard.html', notif_count=get_notif_count())
 
 @admin_bp.route('/configuracion/usuarios')
 @admin_required
+@modulo_required('CONFIGURACION')
 def configuracion_usuarios():
     try:
         cur = mysql.connection.cursor()
@@ -208,7 +228,9 @@ def configuracion_usuarios():
             SELECT u.idusuario, u.nombrecompleto, u.correo,
                    CAST(u.activo AS UNSIGNED) AS activo,
                    GROUP_CONCAT(r.nombrerol ORDER BY r.nombrerol SEPARATOR ', ') AS roles,
-                   GROUP_CONCAT(r.idroles ORDER BY r.nombrerol SEPARATOR ',') AS roles_ids
+                   GROUP_CONCAT(r.idroles ORDER BY r.nombrerol SEPARATOR ',') AS roles_ids,
+                   MAX(ur.idarea) AS idarea,
+                   MAX(ur.cargo) AS cargo
             FROM tbl_usuario u
             LEFT JOIN tbl_usuariorol ur ON ur.idusuario = u.idusuario
             LEFT JOIN tbl_roles r ON r.idroles = ur.idroles
@@ -218,9 +240,11 @@ def configuracion_usuarios():
         usuarios = cur.fetchall()
         cur.execute("SELECT idroles, nombrerol FROM tbl_roles ORDER BY nombrerol")
         roles = cur.fetchall()
+        cur.execute("SELECT DISTINCT idarea, nombre FROM tbl_area ORDER BY nombre")
+        areas = cur.fetchall()
         cur.close()
-        return render_template('admin/configuracion_usuarios.html',
-                               usuarios=usuarios, roles=roles,
+        return render_template('configuracion/usuarios.html',
+                               usuarios=usuarios, roles=roles, areas=areas,
                                notif_count=get_notif_count())
     except Exception as e:
         import traceback
@@ -230,26 +254,42 @@ def configuracion_usuarios():
 
 @admin_bp.route('/configuracion/usuarios/crear', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_crear():
     from utils.helpers import md5
     try:
-        dni    = request.form.get('dni','').strip()
-        nombre = request.form.get('nombre','').strip()
-        correo = request.form.get('correo','').strip() or None
-        roles  = request.form.getlist('roles')
+        dni     = request.form.get('dni','').strip()
+        nombre  = request.form.get('nombre','').strip()
+        correo  = request.form.get('correo','').strip() or None
+        rol     = request.form.get('rol','').strip()          # un solo rol
+        modulos = request.form.getlist('modulos')             # ids de módulos seleccionados
+        idarea  = request.form.get('idarea','').strip() or None
+        cargo   = request.form.get('cargo','').strip() or None
+        pwd_raw = request.form.get('password','').strip()
+        password = md5(pwd_raw) if pwd_raw else md5('123456')
 
-        if not dni or not nombre:
-            return jsonify({'success': False, 'error': 'DNI y nombre son requeridos'}), 400
+        if not dni or not nombre or not rol:
+            return jsonify({'success': False, 'error': 'DNI, nombre y rol son requeridos'}), 400
 
         cur = mysql.connection.cursor()
         cur.execute(
             "INSERT INTO tbl_usuario (idusuario, nombrecompleto, correo, contrasena) VALUES (%s,%s,%s,%s)",
-            (dni, nombre, correo, md5('123456'))
+            (dni, nombre, correo, password)
         )
-        for rid in roles:
+        cur.execute(
+            "INSERT INTO tbl_usuariorol (idusuario, idroles, idarea, cargo) VALUES (%s,%s,%s,%s)",
+            (dni, rol, idarea, cargo)
+        )
+        # Obtener el idusuariorol recién creado
+        cur.execute("SELECT LAST_INSERT_ID() AS id")
+        ur_id = cur.fetchone()['id']
+
+        # Guardar permisos de módulos personalizados para este usuario
+        # Usamos tbl_modulo_permiso con idusuariorol para permisos individuales
+        for mid in modulos:
             cur.execute(
-                "INSERT INTO tbl_usuariorol (idusuario, idroles) VALUES (%s,%s)",
-                (dni, rid)
+                "INSERT IGNORE INTO tbl_modulo_permiso (idmodulo, idroles, idarea) VALUES (%s,%s,%s)",
+                (mid, rol, idarea or 0)
             )
         mysql.connection.commit()
         cur.close()
@@ -260,11 +300,15 @@ def usuarios_crear():
 
 @admin_bp.route('/configuracion/usuarios/editar/<uid>', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_editar(uid):
     try:
-        nombre = request.form.get('nombre','').strip()
-        correo = request.form.get('correo','').strip() or None
-        roles  = request.form.getlist('roles')
+        nombre  = request.form.get('nombre','').strip()
+        correo  = request.form.get('correo','').strip() or None
+        rol     = request.form.get('rol','').strip()
+        modulos = request.form.getlist('modulos')
+        idarea  = request.form.get('idarea','').strip() or None
+        cargo   = request.form.get('cargo','').strip() or None
 
         cur = mysql.connection.cursor()
         cur.execute(
@@ -272,11 +316,72 @@ def usuarios_editar(uid):
             (nombre, correo, uid)
         )
         cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario=%s", (uid,))
-        for rid in roles:
+        if rol:
             cur.execute(
-                "INSERT INTO tbl_usuariorol (idusuario, idroles) VALUES (%s,%s)",
-                (uid, rid)
+                "INSERT INTO tbl_usuariorol (idusuario, idroles, idarea, cargo) VALUES (%s,%s,%s,%s)",
+                (uid, rol, idarea, cargo)
             )
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@admin_bp.route('/configuracion/roles/<int:rol_id>/modulos')
+@admin_required
+@modulo_required('CONFIGURACION')
+def modulos_por_rol(rol_id):
+    """Devuelve los módulos asignados a un rol para cargarlos dinámicamente."""
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT m.idmodulo, m.codigo, m.nombre, m.icono, m.url, m.orden
+            FROM tbl_modulo m
+            JOIN tbl_modulo_permiso mp ON mp.idmodulo = m.idmodulo
+            WHERE mp.idroles = %s AND m.activo = 1
+            ORDER BY m.orden ASC
+        """, (rol_id,))
+        modulos = cur.fetchall()
+        cur.close()
+        return jsonify({'success': True, 'modulos': [
+            {'idmodulo': m['idmodulo'], 'codigo': m['codigo'],
+             'nombre': m['nombre'], 'icono': m['icono'] or 'circle',
+             'url': m['url']}
+            for m in modulos
+        ]})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@admin_bp.route('/configuracion/roles/<int:rol_id>/modulos/guardar', methods=['POST'])
+@admin_required
+@modulo_required('CONFIGURACION')
+def guardar_modulos_rol(rol_id):
+    """Actualiza los módulos permitidos para un rol en tbl_modulo_permiso."""
+    try:
+        data = request.get_json()
+        modulos_ids = [int(m) for m in data.get('modulos', [])]
+
+        cur = mysql.connection.cursor()
+        # Obtener todos los módulos activos para saber cuáles quitar
+        cur.execute("SELECT idmodulo FROM tbl_modulo WHERE activo = 1")
+        todos = [r['idmodulo'] for r in cur.fetchall()]
+
+        for mid in todos:
+            if mid in modulos_ids:
+                # Asegurar que existe el permiso
+                cur.execute("""
+                    INSERT IGNORE INTO tbl_modulo_permiso (idmodulo, idroles, idarea)
+                    VALUES (%s, %s, 0)
+                """, (mid, rol_id))
+            else:
+                # Quitar el permiso
+                cur.execute("""
+                    DELETE FROM tbl_modulo_permiso
+                    WHERE idmodulo = %s AND idroles = %s
+                """, (mid, rol_id))
+
         mysql.connection.commit()
         cur.close()
         return jsonify({'success': True})
@@ -286,6 +391,7 @@ def usuarios_editar(uid):
 
 @admin_bp.route('/configuracion/usuarios/toggle/<uid>', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_toggle(uid):
     try:
         cur = mysql.connection.cursor()
@@ -299,6 +405,7 @@ def usuarios_toggle(uid):
 
 @admin_bp.route('/configuracion/usuarios/eliminar/<uid>', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_eliminar(uid):
     try:
         cur = mysql.connection.cursor()
@@ -312,6 +419,7 @@ def usuarios_eliminar(uid):
 
 @admin_bp.route('/configuracion/usuarios/password', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_password():
     from utils.helpers import md5
     try:
@@ -335,6 +443,7 @@ def desvios():
 
 @admin_bp.route('/desvios/crear', methods=['POST'])
 @admin_required
+@modulo_required('DESVIOS')
 def crear_registro():
     try:
         cur = mysql.connection.cursor()
@@ -354,7 +463,8 @@ def crear_registro():
             int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
             1, session['usuario_rol'],
             request.form.get('personal_responsable',''),
-            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable') else 0
+            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable') else 0,
+            request.form.get('dni_responsable','').strip()
         ))
         mysql.connection.commit()
         cur.close()
@@ -410,6 +520,7 @@ def crear_registro():
 
 @admin_bp.route('/desvios/editar/<rid>', methods=['POST'])
 @admin_required
+@modulo_required('DESVIOS')
 def editar_registro(rid):
     try:
         cur = mysql.connection.cursor()
@@ -422,7 +533,8 @@ def editar_registro(rid):
             int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
             int(request.form['estado']),
             request.form.get('personal_responsable',''),
-            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable','').strip() not in ('', '0', 'None') else 0
+            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable','').strip() not in ('', '0', 'None') else 0,
+            request.form.get('dni_responsable','').strip()
         ))
         mysql.connection.commit()
         cur.close()
@@ -483,6 +595,7 @@ def editar_registro(rid):
 
 @admin_bp.route('/desvios/eliminar/<rid>', methods=['POST'])
 @admin_required
+@modulo_required('DESVIOS')
 def eliminar_registro(rid):
     try:
         cur = mysql.connection.cursor()
@@ -521,6 +634,7 @@ def eliminar_registro(rid):
 
 @admin_bp.route('/desvios/detalle/<rid>')
 @admin_required
+@modulo_required('DESVIOS')
 def detalle_registro(rid):
     cur = mysql.connection.cursor()
     registro = sp_one(cur, 'sp_detalleregistro', (rid,))
@@ -566,6 +680,7 @@ def detalle_registro(rid):
 
 @admin_bp.route('/desvios/validar/<rid>', methods=['POST'])
 @admin_required
+@modulo_required('DESVIOS')
 def validar_levantamiento(rid):
     try:
         decision = request.form.get('decision')
@@ -663,6 +778,7 @@ def validar_levantamiento(rid):
 
 @admin_bp.route('/exportar')
 @admin_required
+@modulo_required('DESVIOS')
 def exportar_excel():
     try:
         import openpyxl
@@ -866,6 +982,21 @@ def exportar_excel():
         flash(f'Error al exportar: {str(e)}','error')
         return redirect(url_for('admin.registrar'))
 
+@admin_bp.route('/debug/modulos')
+@admin_required
+def debug_modulos():
+    """Endpoint temporal para ver qué módulos devuelve la BD para el rol actual."""
+    from routes.auth import _query_modulos, cargar_modulos
+    rol_id = session.get('rol_id')
+    rows = _query_modulos(rol_id)
+    modulos_sidebar = cargar_modulos(rol_id)
+    return jsonify({
+        'rol_id': rol_id,
+        'rol': session.get('rol'),
+        'raw_desde_bd': [{'codigo': r['codigo'], 'orden': r['orden'], 'url': r['url']} for r in rows],
+        'sidebar_final': [{'codigo': m['codigo'], 'orden': m['orden'], 'hijos': [h['codigo'] for h in m['hijos']]} for m in modulos_sidebar]
+    })
+
 @admin_bp.route('/notificaciones/leer/<nid>', methods=['POST'])
 @admin_required
 def leer_notificacion(nid):
@@ -884,3 +1015,57 @@ def leer_todas():
     cur.close()
     return jsonify({'ok': True})
 
+
+# ── Gestión de Residuos ──────────────────────────────────────────────────────
+
+@admin_bp.route('/residuos/generacion')
+@admin_required
+@modulo_required('GENERACION_DIARIA')
+def residuos_generacion():
+    return render_template('shared/en_construccion.html',
+        titulo='Generación Diaria', icono='calendar',
+        notif_count=get_notif_count())
+
+@admin_bp.route('/residuos/comercializable')
+@admin_required
+@modulo_required('COMERCIALIZABLE')
+def residuos_comercializable():
+    return render_template('shared/en_construccion.html',
+        titulo='Comercializable', icono='package',
+        notif_count=get_notif_count())
+
+@admin_bp.route('/residuos/matpel')
+@admin_required
+@modulo_required('DISPOSICION_MATPEL')
+def residuos_matpel():
+    return render_template('shared/en_construccion.html',
+        titulo='Disposición Matpel', icono='alert-octagon',
+        notif_count=get_notif_count())
+
+@admin_bp.route('/residuos/compostaje')
+@admin_required
+@modulo_required('COMPOSTAJE')
+def residuos_compostaje():
+    return render_template('shared/en_construccion.html',
+        titulo='Compostaje', icono='leaf',
+        notif_count=get_notif_count())
+
+# ── Compromisos ──────────────────────────────────────────────────────────────
+
+@admin_bp.route('/compromisos')
+@admin_required
+@modulo_required('COMPROMISOS')
+def compromisos():
+    return render_template('shared/en_construccion.html',
+        titulo='Compromisos', icono='check-square',
+        notif_count=get_notif_count())
+
+# ── Data Meteorológica ───────────────────────────────────────────────────────
+
+@admin_bp.route('/meteorologia')
+@admin_required
+@modulo_required('DATA_METEOROLOGICA')
+def meteorologia():
+    return render_template('shared/en_construccion.html',
+        titulo='Data Meteorológica', icono='cloud',
+        notif_count=get_notif_count())

@@ -1,565 +1,370 @@
 {% extends 'base.html' %}
-
-{% block title %}Estadísticas - ecoSupervisor{% endblock %}
-{% block page_title %}Estadísticas{% endblock %}
+{% block title %}Estadisticas - ecoSupervisor{% endblock %}
+{% block page_title %}Estadisticas{% endblock %}
 
 {% block content %}
-<!-- Filtro de fechas -->
-<div class="card" style="margin-bottom: 1.5rem;">
-  <div class="card-body">
-    <form method="GET" action="" style="display:flex; gap:1rem; align-items:flex-end; flex-wrap:wrap;">
-      <div style="display:flex; flex-direction:column; gap:0.25rem;">
-        <label style="font-size:0.85rem; font-weight:500; color:var(--text-secondary);">Desde</label>
-        <input type="date" name="fecha_ini" value="{{ fecha_ini }}"
-               style="padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-input, var(--bg)); color:var(--text);">
+
+<div class="stats-cards-row">
+
+  <div class="stat-card" onclick="abrirModal('areas')" tabindex="0">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">
+        <i data-feather="users" style="width:36px;height:36px;color:#fff"></i>
       </div>
-      <div style="display:flex; flex-direction:column; gap:0.25rem;">
-        <label style="font-size:0.85rem; font-weight:500; color:var(--text-secondary);">Hasta</label>
-        <input type="date" name="fecha_fin" value="{{ fecha_fin }}"
-               style="padding:0.5rem 0.75rem; border:1px solid var(--border); border-radius:6px; background:var(--bg-input, var(--bg)); color:var(--text);">
-      </div>
-      <button type="submit" class="btn btn-primary" style="padding:0.5rem 1.25rem;">
-        <i data-feather="filter" style="width:14px;height:14px;margin-right:4px;"></i>
-        Filtrar
-      </button>
-      {% if fecha_ini or fecha_fin %}
-      <a href="{{ url_for('admin.estadisticas') }}" class="btn btn-secondary" style="padding:0.5rem 1.25rem;">
-        <i data-feather="x" style="width:14px;height:14px;margin-right:4px;"></i>
-        Limpiar
-      </a>
-      {% endif %}
-    </form>
+      <div class="stat-card-title">Areas Responsables</div>
+    </div>
+    <div class="stat-card-hover" style="background:linear-gradient(135deg,rgba(59,130,246,.88),rgba(29,78,216,.97))">
+      <canvas id="previewAreas" width="210" height="110"></canvas>
+      <div class="stat-card-hover-title">Areas Responsables</div>
+      <div class="mini-loading" id="loadingAreas"><i data-feather="loader"></i></div>
+    </div>
   </div>
+
+  <div class="stat-card" onclick="abrirModal('ccta')" tabindex="0">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#10b981,#065f46)">
+        <i data-feather="user-check" style="width:36px;height:36px;color:#fff"></i>
+      </div>
+      <div class="stat-card-title">Ccta Responsables</div>
+    </div>
+    <div class="stat-card-hover" style="background:linear-gradient(135deg,rgba(16,185,129,.88),rgba(6,95,70,.97))">
+      <canvas id="previewCcta" width="210" height="110"></canvas>
+      <div class="stat-card-hover-title">Ccta Responsables</div>
+      <div class="mini-loading" id="loadingCcta"><i data-feather="loader"></i></div>
+    </div>
+  </div>
+
+  <div class="stat-card" onclick="abrirModal('tipos')" tabindex="0">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#b45309)">
+        <i data-feather="alert-triangle" style="width:36px;height:36px;color:#fff"></i>
+      </div>
+      <div class="stat-card-title">Tipos de Desvio</div>
+    </div>
+    <div class="stat-card-hover" style="background:linear-gradient(135deg,rgba(245,158,11,.88),rgba(180,83,9,.97))">
+      <canvas id="previewTipos" width="210" height="110"></canvas>
+      <div class="stat-card-hover-title">Tipos de Desvio</div>
+      <div class="mini-loading" id="loadingTipos"><i data-feather="loader"></i></div>
+    </div>
+  </div>
+
 </div>
-<div class="card">
-  <div class="card-title">
-    <i data-feather="bar-chart-2"></i>
-    Estadísticas por Área Responsable
-  </div>
-  
-  <div class="card-body">
-    {% if stats_areas %}
-      <!-- Gráfico de barras -->
-      <div class="chart-card" style="margin-bottom: 2rem;">
-        <h3 class="chart-title">
-          <i data-feather="bar-chart"></i>
-          Reportes por Área Responsable
-        </h3>
-        <div class="chart-container" style="height: 400px;">
-          <canvas id="areasChart"></canvas>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="modalEstadisticas" style="display:none;align-items:flex-start;padding-top:2rem">
+  <div class="modal-box" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="bar-chart-2"></i></span>
+        <div>
+          <h3 id="modalTitulo">Estadisticas</h3>
+          <p id="modalSubtitulo"></p>
         </div>
       </div>
-      
-      <!-- Tabla de datos -->
-      <div class="data-table-wrapper">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Área Responsable</th>
-              <th>Total</th>
-              <th>Culminados</th>
-              <th>Pendientes</th>
-              <th>En Proceso</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for area in stats_areas %}
-            <tr>
-              <td>{{ area.area_responsable }}</td>
-              <td><strong>{{ area.total }}</strong></td>
-              <td><span class="estado-badge estado-culminado">{{ area.culminado }}</span></td>
-              <td><span class="estado-badge estado-pendiente">{{ area.pendiente }}</span></td>
-              <td><span class="estado-badge estado-en-proceso">{{ area.proceso }}</span></td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <div class="module-placeholder">
-        <div class="module-placeholder-icon">
-          <i data-feather="bar-chart-2"></i>
+      <button class="modal-close" onclick="cerrarModal()"><i data-feather="x"></i></button>
+    </div>
+    <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border)">
+      <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label style="font-size:.85rem;font-weight:500;color:var(--text-secondary)">Desde</label>
+          <input type="date" id="filtroFechaIni" class="form-input" style="width:160px">
         </div>
-        <h2>No hay datos disponibles</h2>
-        <p>Aún no se han registrado desvíos ambientales</p>
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label style="font-size:.85rem;font-weight:500;color:var(--text-secondary)">Hasta</label>
+          <input type="date" id="filtroFechaFin" class="form-input" style="width:160px">
+        </div>
+        <button class="btn btn-primary" onclick="aplicarFiltro()">
+          <i data-feather="filter" style="width:14px;height:14px"></i> Filtrar
+        </button>
+        <button class="btn btn-secondary" onclick="limpiarFiltro()">
+          <i data-feather="x" style="width:14px;height:14px"></i> Limpiar
+        </button>
       </div>
-    {% endif %}
+    </div>
+    <div class="modal-body" id="modalContenido">
+      <div style="text-align:center;padding:3rem;color:var(--text-secondary)">Cargando...</div>
+    </div>
   </div>
 </div>
 
-<!-- Sección: Estadísticas por Cuenta Responsable -->
-{% if stats_ccta %}
-<div class="card" style="margin-top: 1.5rem;">
-  <div class="card-title">
-    <i data-feather="user-check"></i>
-    Estadísticas por Cuenta Responsable
-  </div>
+<style>
+.stats-cards-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.75rem;
+  justify-content: center;
+  align-items: center;
+  min-height: 65vh;
+}
+.stat-card {
+  width: 240px;
+  height: 200px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--card-bg, var(--bg));
+  box-shadow: 0 2px 10px rgba(0,0,0,.07);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: transform .2s, box-shadow .2s;
+  outline: none;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 30px rgba(0,0,0,.16);
+}
+.stat-card-default {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: opacity .3s ease;
+}
+.stat-card:hover .stat-card-default { opacity: 0; }
+.stat-icon-wrap {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,.2);
+}
+.stat-card-title {
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--text);
+}
+.stat-card-hover {
+  position: absolute;
+  inset: 0;
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  padding: .75rem;
+  opacity: 0;
+  transition: opacity .3s ease;
+}
+.stat-card:hover .stat-card-hover { opacity: 1; }
+.stat-card-hover-title {
+  font-weight: 600;
+  font-size: .82rem;
+  color: rgba(255,255,255,.95);
+}
+.mini-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 14px;
+}
+.mini-loading i {
+  animation: spin 1s linear infinite;
+  width: 22px; height: 22px;
+  color: rgba(255,255,255,.8);
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+{% endblock %}
 
-  <div class="card-body">
-    <!-- Gráfico de barras -->
-    <div class="chart-card" style="margin-bottom: 2rem;">
-      <h3 class="chart-title">
-        <i data-feather="bar-chart"></i>
-        Reportes por Cuenta Responsable
-      </h3>
-      <div class="chart-container" style="height: 400px;">
-        <canvas id="cctaChart"></canvas>
-      </div>
-    </div>
-
-    <!-- Tabla de datos -->
-    <div class="data-table-wrapper">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Cuenta Responsable</th>
-            <th>Total</th>
-            <th>Culminados</th>
-            <th>Pendientes</th>
-            <th>En Proceso</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for ccta in stats_ccta %}
-          <tr>
-            <td>{{ ccta.ccta_responsable }}</td>
-            <td><strong>{{ ccta.total }}</strong></td>
-            <td><span class="estado-badge estado-culminado">{{ ccta.culminado }}</span></td>
-            <td><span class="estado-badge estado-pendiente">{{ ccta.pendiente }}</span></td>
-            <td><span class="estado-badge estado-en-proceso">{{ ccta.proceso }}</span></td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-<!-- Nueva sección: Estadísticas por Tipo de Descripción (Pendientes) -->
-{% if stats_tipos %}
-<div class="card" style="margin-top: 1.5rem;">
-  <div class="card-title">
-    <i data-feather="alert-triangle"></i>
-    Desvíos Pendientes por Tipo
-  </div>
-  
-  <div class="card-body">
-    <!-- Gráfico de barras horizontales -->
-    <div class="chart-card" style="margin-bottom: 2rem;">
-      <h3 class="chart-title">
-        <i data-feather="bar-chart-2"></i>
-        Distribución de Desvíos Pendientes
-      </h3>
-      <div class="chart-container" style="height: {{ [stats_tipos|length * 40 + 100, 600]|min }}px;">
-        <canvas id="tiposChart"></canvas>
-      </div>
-    </div>
-    
-    <!-- Tabla de datos -->
-    <div class="data-table-wrapper">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th><i data-feather="tag"></i> TIPO DE DESCRIPCIÓN</th>
-            <th style="text-align:center"><i data-feather="hash"></i> CANTIDAD PENDIENTE</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% set total_pendientes = 0 %}
-          {% for tipo in stats_tipos %}
-          <tr>
-            <td>
-              <span style="font-weight:500">{{ tipo.tipo_descripcion }}</span>
-            </td>
-            <td style="text-align:center">
-              <span class="cantidad-badge">{{ tipo.cantidad_pendiente }}</span>
-            </td>
-          </tr>
-          {% set total_pendientes = total_pendientes + tipo.cantidad_pendiente %}
-          {% endfor %}
-          <tr style="background:var(--gray-100);font-weight:700;border-top:2px solid var(--border)">
-            <td>TOTAL GENERAL</td>
-            <td style="text-align:center">
-              <span class="cantidad-badge total">{{ total_pendientes }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-{% endif %}
-
-{% if stats_areas %}
+{% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
-// Detectar tema actual
-const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+const URLS = {
+  areas: "{{ url_for('admin.estadisticas_areas') }}",
+  ccta:  "{{ url_for('admin.estadisticas_ccta') }}",
+  tipos: "{{ url_for('admin.estadisticas_tipos') }}"
+};
 
-// Configuración global adaptada al tema
-Chart.defaults.font.family = "'Inter', sans-serif";
-Chart.defaults.color = isDarkMode ? '#e5e5e5' : '#404040';
-
-// Datos del gráfico
-const areas = {{ stats_areas | map(attribute='area_responsable') | list | tojson }};
-const totales = {{ stats_areas | map(attribute='total') | list | tojson }};
-
-// Colores vibrantes para cada barra (adaptados para ambos temas)
-const colores = isDarkMode ? [
-  '#60a5fa', // Azul más claro
-  '#34d399', // Verde más claro
-  '#fbbf24', // Naranja más claro
-  '#f87171', // Rojo más claro
-  '#a78bfa', // Púrpura más claro
-  '#f472b6', // Rosa más claro
-  '#22d3ee', // Cyan más claro
-  '#a3e635', // Lima más claro
-  '#fb923c', // Naranja oscuro más claro
-  '#818cf8'  // Índigo más claro
-] : [
-  '#3b82f6', // Azul
-  '#10b981', // Verde
-  '#f59e0b', // Naranja
-  '#ef4444', // Rojo
-  '#8b5cf6', // Púrpura
-  '#ec4899', // Rosa
-  '#06b6d4', // Cyan
-  '#84cc16', // Lima
-  '#f97316', // Naranja oscuro
-  '#6366f1'  // Índigo
-];
-
-// Crear gráfico
-const ctx = document.getElementById('areasChart').getContext('2d');
-const chart = new Chart(ctx, {
-  type: 'bar',
-  data: {
-    labels: areas,
-    datasets: [{
-      label: 'Total de Reportes',
-      data: totales,
-      backgroundColor: colores.slice(0, areas.length),
-      borderRadius: 8,
-      borderSkipped: false,
-    }]
+const CONFIG = {
+  areas: {
+    titulo: 'Areas Responsables', subtitulo: 'Reportes por area responsable',
+    labelKey: 'area_responsable', valorKey: 'total', isHoriz: false,
+    cols: ['Area Responsable','Total','Culminados','Pendientes','En Proceso'],
+    rowFn: r => `<td>${r.area_responsable}</td><td><strong>${r.total}</strong></td>
+      <td><span class="estado-badge estado-culminado">${r.culminado}</span></td>
+      <td><span class="estado-badge estado-pendiente">${r.pendiente}</span></td>
+      <td><span class="estado-badge estado-en-proceso">${r.proceso}</span></td>`
   },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleFont: {
-          size: 14,
-          weight: 'bold'
-        },
-        bodyFont: {
-          size: 13
-        },
-        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-        displayColors: false,
-        callbacks: {
-          label: function(context) {
-            return 'Total: ' + context.parsed.y + ' reportes';
-          }
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          font: {
-            size: 12
-          },
-          color: isDarkMode ? '#a3a3a3' : '#525252'
-        },
-        grid: {
-          color: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-          drawBorder: false
-        }
-      },
-      x: {
-        ticks: {
-          font: {
-            size: 12
-          },
-          maxRotation: 45,
-          minRotation: 45,
-          color: isDarkMode ? '#a3a3a3' : '#525252'
-        },
-        grid: {
-          display: false
-        }
-      }
-    },
-    animation: {
-      duration: 1000,
-      easing: 'easeInOutQuart'
-    }
+  ccta: {
+    titulo: 'Ccta Responsables', subtitulo: 'Reportes por cuenta responsable',
+    labelKey: 'ccta_responsable', valorKey: 'total', isHoriz: false,
+    cols: ['Cuenta Responsable','Total','Culminados','Pendientes','En Proceso'],
+    rowFn: r => `<td>${r.ccta_responsable}</td><td><strong>${r.total}</strong></td>
+      <td><span class="estado-badge estado-culminado">${r.culminado}</span></td>
+      <td><span class="estado-badge estado-pendiente">${r.pendiente}</span></td>
+      <td><span class="estado-badge estado-en-proceso">${r.proceso}</span></td>`
+  },
+  tipos: {
+    titulo: 'Tipos de Desvio', subtitulo: 'Desvios pendientes por tipo',
+    labelKey: 'tipo_descripcion', valorKey: 'cantidad_pendiente', isHoriz: true,
+    cols: ['Tipo de Descripcion','Cantidad Pendiente'],
+    rowFn: r => `<td>${r.tipo_descripcion}</td>
+      <td style="text-align:center"><span class="cantidad-badge">${r.cantidad_pendiente}</span></td>`
   }
-});
+};
 
-// Actualizar gráfico cuando cambie el tema
-const observer = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.attributeName === 'data-theme') {
-      const newIsDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      
-      // Actualizar colores del gráfico
-      chart.data.datasets[0].backgroundColor = newIsDark ? [
-        '#60a5fa', '#34d399', '#fbbf24', '#f87171', '#a78bfa',
-        '#f472b6', '#22d3ee', '#a3e635', '#fb923c', '#818cf8'
-      ].slice(0, areas.length) : [
-        '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6',
-        '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1'
-      ].slice(0, areas.length);
-      
-      // Actualizar colores de texto y grid
-      Chart.defaults.color = newIsDark ? '#e5e5e5' : '#404040';
-      chart.options.scales.y.ticks.color = newIsDark ? '#a3a3a3' : '#525252';
-      chart.options.scales.x.ticks.color = newIsDark ? '#a3a3a3' : '#525252';
-      chart.options.scales.y.grid.color = newIsDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
-      chart.options.plugins.tooltip.backgroundColor = newIsDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(0, 0, 0, 0.8)';
-      chart.options.plugins.tooltip.borderColor = newIsDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)';
-      
-      chart.update();
+const previewCache = {};
+
+async function cargarPreview(tipo) {
+  const loadIds = { areas:'loadingAreas', ccta:'loadingCcta', tipos:'loadingTipos' };
+  try {
+    const res  = await fetch(URLS[tipo], { headers:{ 'X-Requested-With':'XMLHttpRequest' } });
+    const data = await res.json();
+    previewCache[tipo] = data;
+    const el = document.getElementById(loadIds[tipo]);
+    if (el) el.style.display = 'none';
+    renderMiniChart(tipo, data);
+  } catch(e) {}
+}
+
+function renderMiniChart(tipo, data) {
+  const ids = { areas:'previewAreas', ccta:'previewCcta', tipos:'previewTipos' };
+  const cfg = CONFIG[tipo];
+  new Chart(document.getElementById(ids[tipo]).getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: data.map(r => r[cfg.labelKey]),
+      datasets: [{ data: data.map(r => r[cfg.valorKey]), backgroundColor: 'rgba(255,255,255,0.8)', borderRadius: 3, borderSkipped: false }]
+    },
+    options: {
+      indexAxis: cfg.isHoriz ? 'y' : 'x',
+      responsive: false, animation: false,
+      plugins: { legend:{ display:false }, tooltip:{ enabled:false } },
+      scales: { x:{ display:false }, y:{ display:false } }
     }
   });
-});
+}
 
-observer.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ['data-theme']
-});
-</script>
-{% endif %}
+['areas','ccta','tipos'].forEach(cargarPreview);
 
-<!-- Script para gráfico de tipos pendientes -->
-{% if stats_tipos %}
-<script>
-// Datos del gráfico de tipos pendientes
-const tipos = {{ stats_tipos | map(attribute='tipo_descripcion') | list | tojson }};
-const cantidades = {{ stats_tipos | map(attribute='cantidad_pendiente') | list | tojson }};
+// ---- Modal ----
+let tipoActual = null;
+let chartModal = null;
 
-// Detectar tema actual
-const isDarkModeTipos = document.documentElement.getAttribute('data-theme') === 'dark';
+function abrirModal(tipo) {
+  tipoActual = tipo;
+  const cfg = CONFIG[tipo];
+  document.getElementById('modalTitulo').textContent    = cfg.titulo;
+  document.getElementById('modalSubtitulo').textContent = cfg.subtitulo;
+  document.getElementById('filtroFechaIni').value = '';
+  document.getElementById('filtroFechaFin').value = '';
+  document.getElementById('modalEstadisticas').style.display = 'flex';
+  feather.replace();
+  if (previewCache[tipo]) renderModalContenido(cfg, previewCache[tipo]);
+  else cargarModal();
+}
 
-// Gradiente de colores de rojo (más intenso) a amarillo (menos intenso)
-// Los valores más altos serán más rojos, los más bajos más amarillos
-const coloresTipos = isDarkModeTipos ? [
-  '#f87171', // Rojo claro
-  '#fb923c', // Naranja-rojo
-  '#fbbf24', // Naranja
-  '#fde047', // Amarillo
-  '#a3e635', // Lima
-  '#4ade80', // Verde claro
-  '#22d3ee', // Cyan
-  '#60a5fa', // Azul
-  '#a78bfa', // Púrpura
-  '#f472b6'  // Rosa
-] : [
-  '#ef4444', // Rojo
-  '#f97316', // Naranja-rojo
-  '#f59e0b', // Naranja
-  '#eab308', // Amarillo
-  '#84cc16', // Lima
-  '#22c55e', // Verde
-  '#06b6d4', // Cyan
-  '#3b82f6', // Azul
-  '#8b5cf6', // Púrpura
-  '#ec4899'  // Rosa
-];
+function cerrarModal() {
+  document.getElementById('modalEstadisticas').style.display = 'none';
+  if (chartModal) { chartModal.destroy(); chartModal = null; }
+  tipoActual = null;
+}
 
-// Crear gráfico de barras horizontales
-const ctxTipos = document.getElementById('tiposChart').getContext('2d');
-const chartTipos = new Chart(ctxTipos, {
-  type: 'bar',
-  data: {
-    labels: tipos,
-    datasets: [{
-      label: 'Cantidad Pendiente',
-      data: cantidades,
-      backgroundColor: coloresTipos.slice(0, tipos.length),
-      borderRadius: 6,
-      borderSkipped: false,
-    }]
-  },
-  options: {
-    indexAxis: 'y', // Barras horizontales
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: isDarkModeTipos ? 'rgba(30, 30, 30, 0.95)' : 'rgba(0, 0, 0, 0.8)',
-        padding: 12,
-        titleFont: {
-          size: 13,
-          weight: 'bold'
-        },
-        bodyFont: {
-          size: 12
-        },
-        borderColor: isDarkModeTipos ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)',
-        borderWidth: 1,
-        displayColors: false,
-        callbacks: {
-          label: function(context) {
-            return 'Pendientes: ' + context.parsed.x + ' reportes';
-          }
-        }
-      }
-    },
-    scales: {
-      x: {
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          font: {
-            size: 11
-          },
-          color: isDarkModeTipos ? '#a3a3a3' : '#525252'
-        },
-        grid: {
-          color: isDarkModeTipos ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
-          drawBorder: false
-        }
-      },
-      y: {
-        ticks: {
-          font: {
-            size: 11
-          },
-          color: isDarkModeTipos ? '#a3a3a3' : '#525252',
-          autoSkip: false
-        },
-        grid: {
-          display: false
-        }
-      }
-    },
-    animation: {
-      duration: 1200,
-      easing: 'easeInOutQuart'
-    }
+function aplicarFiltro() { cargarModal(); }
+function limpiarFiltro() {
+  document.getElementById('filtroFechaIni').value = '';
+  document.getElementById('filtroFechaFin').value = '';
+  cargarModal();
+}
+
+async function cargarModal() {
+  if (!tipoActual) return;
+  const fi = document.getElementById('filtroFechaIni').value;
+  const ff = document.getElementById('filtroFechaFin').value;
+  let url  = URLS[tipoActual];
+  const p  = new URLSearchParams();
+  if (fi) p.set('fecha_ini', fi);
+  if (ff) p.set('fecha_fin', ff);
+  if (p.toString()) url += '?' + p.toString();
+  document.getElementById('modalContenido').innerHTML =
+    `<div style="text-align:center;padding:3rem;color:var(--text-secondary)">Cargando...</div>`;
+  try {
+    const res  = await fetch(url, { headers:{ 'X-Requested-With':'XMLHttpRequest' } });
+    const data = await res.json();
+    renderModalContenido(CONFIG[tipoActual], data);
+  } catch(e) {
+    document.getElementById('modalContenido').innerHTML =
+      `<div class="alert alert-error">Error: ${e.message}</div>`;
   }
-});
+}
 
-// Actualizar gráfico de tipos cuando cambie el tema
-const observerTipos = new MutationObserver((mutations) => {
-  mutations.forEach((mutation) => {
-    if (mutation.attributeName === 'data-theme') {
-      const newIsDark = document.documentElement.getAttribute('data-theme') === 'dark';
-      
-      // Actualizar colores del gráfico
-      chartTipos.data.datasets[0].backgroundColor = newIsDark ? [
-        '#f87171', '#fb923c', '#fbbf24', '#fde047', '#a3e635',
-        '#4ade80', '#22d3ee', '#60a5fa', '#a78bfa', '#f472b6'
-      ].slice(0, tipos.length) : [
-        '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16',
-        '#22c55e', '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899'
-      ].slice(0, tipos.length);
-      
-      // Actualizar colores de texto y grid
-      chartTipos.options.scales.x.ticks.color = newIsDark ? '#a3a3a3' : '#525252';
-      chartTipos.options.scales.y.ticks.color = newIsDark ? '#a3a3a3' : '#525252';
-      chartTipos.options.scales.x.grid.color = newIsDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
-      chartTipos.options.plugins.tooltip.backgroundColor = newIsDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(0, 0, 0, 0.8)';
-      chartTipos.options.plugins.tooltip.borderColor = newIsDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.1)';
-      
-      chartTipos.update();
+function renderModalContenido(cfg, data) {
+  if (chartModal) { chartModal.destroy(); chartModal = null; }
+  if (!data || data.length === 0) {
+    document.getElementById('modalContenido').innerHTML =
+      `<div style="text-align:center;padding:3rem;color:var(--text-secondary)"><p>Sin datos para el rango seleccionado</p></div>`;
+    return;
+  }
+  const isDark  = document.documentElement.getAttribute('data-theme') === 'dark';
+  const palette = isDark
+    ? ['#60a5fa','#34d399','#fbbf24','#f87171','#a78bfa','#f472b6','#22d3ee','#a3e635','#fb923c','#818cf8']
+    : ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#ec4899','#06b6d4','#84cc16','#f97316','#6366f1'];
+  const colores = palette.slice(0, data.length);
+  const labels  = data.map(r => r[cfg.labelKey]);
+  const valores = data.map(r => r[cfg.valorKey]);
+  const chartH  = cfg.isHoriz ? Math.max(data.length * 44 + 60, 200) : 300;
+
+  const thCols = cfg.cols.map(c => `<th>${c}</th>`).join('');
+  const rows   = data.map(r => `<tr>${cfg.rowFn(r)}</tr>`).join('');
+  let totalRow = '';
+  if (cfg.isHoriz) {
+    const tot = data.reduce((s,r) => s + (r.cantidad_pendiente||0), 0);
+    totalRow = `<tr style="font-weight:700;border-top:2px solid var(--border)">
+      <td>TOTAL GENERAL</td>
+      <td style="text-align:center"><span class="cantidad-badge total">${tot}</span></td></tr>`;
+  }
+
+  document.getElementById('modalContenido').innerHTML = `
+    <div style="padding:1rem 0">
+      <div style="height:${chartH}px;margin-bottom:1.5rem"><canvas id="chartModal"></canvas></div>
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead><tr>${thCols}</tr></thead>
+          <tbody>${rows}${totalRow}</tbody>
+        </table>
+      </div>
+    </div>`;
+
+  chartModal = new Chart(document.getElementById('chartModal').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ data: valores, backgroundColor: colores, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      indexAxis: cfg.isHoriz ? 'y' : 'x',
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { displayColors: false, callbacks: {
+          label: c => (cfg.isHoriz ? 'Pendientes: ' : 'Total: ') + (cfg.isHoriz ? c.parsed.x : c.parsed.y) + ' reportes'
+        }}
+      },
+      scales: {
+        [cfg.isHoriz ? 'x' : 'y']: {
+          beginAtZero: true,
+          ticks: { stepSize:1, color: isDark ? '#a3a3a3' : '#525252' },
+          grid:  { color: isDark ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.05)' }
+        },
+        [cfg.isHoriz ? 'y' : 'x']: {
+          ticks: { autoSkip:false, maxRotation: cfg.isHoriz ? 0 : 40, color: isDark ? '#a3a3a3' : '#525252' },
+          grid:  { display: false }
+        }
+      },
+      animations: {
+        [cfg.isHoriz ? 'x' : 'y']: { from:0, duration:900, easing:'easeOutQuart' }
+      }
     }
   });
-});
+}
 
-observerTipos.observe(document.documentElement, {
-  attributes: true,
-  attributeFilter: ['data-theme']
+document.getElementById('modalEstadisticas').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
 });
 </script>
-{% endif %}
-
-{% if stats_ccta %}
-<script>
-const cctaLabels = {{ stats_ccta | map(attribute='ccta_responsable') | list | tojson }};
-const cctaTotales = {{ stats_ccta | map(attribute='total') | list | tojson }};
-const isDarkModeCcta = document.documentElement.getAttribute('data-theme') === 'dark';
-
-const coloresCcta = isDarkModeCcta ? [
-  '#60a5fa','#34d399','#fbbf24','#f87171','#a78bfa',
-  '#f472b6','#22d3ee','#a3e635','#fb923c','#818cf8'
-] : [
-  '#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6',
-  '#ec4899','#06b6d4','#84cc16','#f97316','#6366f1'
-];
-
-const ctxCcta = document.getElementById('cctaChart').getContext('2d');
-const chartCcta = new Chart(ctxCcta, {
-  type: 'bar',
-  data: {
-    labels: cctaLabels,
-    datasets: [{
-      label: 'Total de Reportes',
-      data: cctaTotales,
-      backgroundColor: coloresCcta.slice(0, cctaLabels.length),
-      borderRadius: 8,
-      borderSkipped: false,
-    }]
-  },
-  options: {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false },
-      tooltip: {
-        backgroundColor: isDarkModeCcta ? 'rgba(30,30,30,0.95)' : 'rgba(0,0,0,0.8)',
-        padding: 12,
-        displayColors: false,
-        callbacks: {
-          label: ctx => 'Total: ' + ctx.parsed.y + ' reportes'
-        }
-      }
-    },
-    scales: {
-      y: {
-        beginAtZero: true,
-        ticks: { stepSize: 1, color: isDarkModeCcta ? '#a3a3a3' : '#525252' },
-        grid: { color: isDarkModeCcta ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' }
-      },
-      x: {
-        ticks: { maxRotation: 45, minRotation: 45, color: isDarkModeCcta ? '#a3a3a3' : '#525252' },
-        grid: { display: false }
-      }
-    },
-    animation: { duration: 1000, easing: 'easeInOutQuart' }
-  }
-});
-
-const observerCcta = new MutationObserver(() => {
-  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
-  chartCcta.data.datasets[0].backgroundColor = (dark ? [
-    '#60a5fa','#34d399','#fbbf24','#f87171','#a78bfa',
-    '#f472b6','#22d3ee','#a3e635','#fb923c','#818cf8'
-  ] : [
-    '#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6',
-    '#ec4899','#06b6d4','#84cc16','#f97316','#6366f1'
-  ]).slice(0, cctaLabels.length);
-  chartCcta.options.scales.y.ticks.color = dark ? '#a3a3a3' : '#525252';
-  chartCcta.options.scales.x.ticks.color = dark ? '#a3a3a3' : '#525252';
-  chartCcta.options.scales.y.grid.color = dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
-  chartCcta.update();
-});
-observerCcta.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
-</script>
-{% endif %}
 {% endblock %}
