@@ -183,7 +183,12 @@ def estadisticas_areas():
     stats = sp_exec(cur, 'sp_estadisticasareas', (fecha_ini, fecha_fin))
     cur.close()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify([dict(r) for r in stats])
+        data = [{'area_responsable': r.get('AreaReportante') or r.get('areareportante',''),
+                 'total':     r.get('total', 0),
+                 'culminado': r.get('culminado', 0),
+                 'pendiente': r.get('pendiente', 0),
+                 'proceso':   r.get('proceso', 0)} for r in stats]
+        return jsonify(data)
     return redirect(url_for('admin.estadisticas'))
 
 @admin_bp.route('/estadisticas/ccta')
@@ -196,7 +201,12 @@ def estadisticas_ccta():
     stats = sp_exec(cur, 'sp_estadisticasccta', (fecha_ini, fecha_fin))
     cur.close()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify([dict(r) for r in stats])
+        data = [{'ccta_responsable': str(r.get('ccta_responsable') or r.get('CctaResponsable') or 'Sin asignar'),
+                 'total':     r.get('total', 0),
+                 'culminado': r.get('culminado', 0),
+                 'pendiente': r.get('pendiente', 0),
+                 'proceso':   r.get('proceso', 0)} for r in stats]
+        return jsonify(data)
     return redirect(url_for('admin.estadisticas'))
 
 @admin_bp.route('/estadisticas/tipos')
@@ -209,7 +219,9 @@ def estadisticas_tipos():
     stats = sp_exec(cur, 'sp_estadisticas_tipos_pendientes', (fecha_ini, fecha_fin))
     cur.close()
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        return jsonify([dict(r) for r in stats])
+        data = [{'tipo_descripcion':   r.get('DescripcionTipo') or r.get('descripciontipo',''),
+                 'cantidad_pendiente': r.get('pendiente') or r.get('total', 0)} for r in stats]
+        return jsonify(data)
     return redirect(url_for('admin.estadisticas'))
 
 @admin_bp.route('/configuracion/dashboard')

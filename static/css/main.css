@@ -2043,6 +2043,10 @@ body {
   padding: 1rem;
 }
 
+.modal-overlay.open {
+  display: flex;
+}
+
 [data-theme="dark"] .modal-overlay {
   background: rgba(0,0,0,.7);
 }
