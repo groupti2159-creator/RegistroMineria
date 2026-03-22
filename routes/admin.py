@@ -1030,3 +1030,21 @@ def leer_todas():
 
 
 
+@admin_bp.route('/aguas')
+@admin_required
+def gestion_aguas():
+    return render_template('admin/gestion_aguas.html',
+        registros_efluentes=[],
+        registros_ptard=[],
+        registros_ptap=[],
+        efluentes=[],
+        supervisores=[],
+        notif_count=get_notif_count())
+
+@admin_bp.route('/ana')
+@admin_required
+def reporte_ana():
+    return render_template('admin/reporte_ana.html',
+        registros=[],
+        notif_count=get_notif_count()
+    )

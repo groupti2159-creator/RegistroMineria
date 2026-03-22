@@ -41,6 +41,22 @@ def get_menu_proyecto_html(codigo_proyecto, rol, notif_count=0, request_endpoint
                 </div>
             </div>
 
+           <div class="nav-group">
+                <button class="nav-item nav-toggle {'active' if request_endpoint in ['admin.gestion_aguas', 'admin.reporte_ana'] else ''}" onclick="toggleSubmenu(this)">
+                    <span class="nav-icon"><i data-feather="droplet"></i></span>
+                    <span>Gestión de Aguas</span>
+                    <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
+                </button>
+                <div class="nav-submenu {'open' if request_endpoint in ['admin.gestion_aguas', 'admin.reporte_ana'] else ''}">
+                    <a href="/admin/aguas" class="nav-subitem {'active' if request_endpoint == 'admin.gestion_aguas' else ''}">
+                        <span class="nav-icon"><i data-feather="activity"></i></span><span>Monitoreo Ambiental</span>
+                    </a>
+                    <a href="/admin/ana" class="nav-subitem {'active' if request_endpoint == 'admin.reporte_ana' else ''}">
+                        <span class="nav-icon"><i data-feather="clipboard"></i></span><span>Reportes ANA</span>
+                    </a>
+                </div>
+            </div>
+            
             <div class="nav-group">
                 <button class="nav-item nav-toggle {'active' if request_endpoint in ['admin.estadisticas_areas', 'admin.estadisticas_ccta', 'admin.estadisticas_tipos', 'admin.estadisticas'] else ''}" onclick="toggleSubmenu(this)">
                     <span class="nav-icon"><i data-feather="bar-chart-2"></i></span>
