@@ -1030,10 +1030,18 @@ def leer_todas():
 
 
 
+@admin_bp.route('/aguas/dashboard')
+@admin_required
+def aguas_dashboard():
+    return render_template('gestion_aguas/aguas_dashboard.html',
+        stats={'total_efluentes': 0, 'total_ptard': 0, 'total_ptap': 0, 'total_ana': 0},
+        ultimos_registros=[],
+        notif_count=get_notif_count())
+
 @admin_bp.route('/aguas')
 @admin_required
 def gestion_aguas():
-    return render_template('admin/gestion_aguas.html',
+    return render_template('gestion_aguas/monitoreo_ambiental.html',
         registros_efluentes=[],
         registros_ptard=[],
         registros_ptap=[],
@@ -1044,7 +1052,7 @@ def gestion_aguas():
 @admin_bp.route('/ana')
 @admin_required
 def reporte_ana():
-    return render_template('admin/reporte_ana.html',
+    return render_template('gestion_aguas/reporte_ana.html',
         registros=[],
         notif_count=get_notif_count()
     )

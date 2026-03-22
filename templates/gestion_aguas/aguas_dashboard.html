@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard — Gestión de Aguas{% endblock %}
+{% block page_title %}Gestión de Aguas{% endblock %}
+
+{% block content %}
+<div class="dashboard-intro">
+  <h2 class="section-title">Dashboard — <span class="text-green">Gestión de Aguas</span></h2>
+  <p class="section-sub">Resumen del monitoreo ambiental hídrico</p>
+</div>
+
+<!-- TARJETAS DE ESTADÍSTICAS -->
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-info">
+      <p class="stat-label">Total Efluentes</p>
+      <h2 class="stat-value">{{ stats.total_efluentes or 0 }}</h2>
+      <p class="stat-desc">Registros totales</p>
+    </div>
+    <div class="stat-icon"><i data-feather="activity"></i></div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-info">
+      <p class="stat-label">Total PTARD</p>
+      <h2 class="stat-value">{{ stats.total_ptard or 0 }}</h2>
+      <p class="stat-desc">Registros totales</p>
+    </div>
+    <div class="stat-icon"><i data-feather="filter"></i></div>
+  </div>
+  <div class="stat-card stat-yellow">
+    <div class="stat-info">
+      <p class="stat-label">Total PTAP</p>
+      <h2 class="stat-value">{{ stats.total_ptap or 0 }}</h2>
+      <p class="stat-desc">Registros totales</p>
+    </div>
+    <div class="stat-icon"><i data-feather="droplet"></i></div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-info">
+      <p class="stat-label">Reportes ANA</p>
+      <h2 class="stat-value">{{ stats.total_ana or 0 }}</h2>
+      <p class="stat-desc">Registros totales</p>
+    </div>
+    <div class="stat-icon"><i data-feather="clipboard"></i></div>
+  </div>
+</div>
+
+<!-- ACCIONES RÁPIDAS + ACTIVIDAD RECIENTE -->
+<div class="dashboard-grid">
+  <div class="card">
+    <h3 class="card-title"><i data-feather="zap"></i> Acciones Rápidas</h3>
+    <div class="quick-actions">
+      <a href="/admin/aguas" class="quick-btn">
+        <span class="qa-icon"><i data-feather="activity"></i></span>
+        <div>
+          <p class="qa-title">Monitoreo Ambiental</p>
+          <p class="qa-sub">Ver efluentes, PTARD y PTAP</p>
+        </div>
+      </a>
+      <a href="/admin/ana" class="quick-btn">
+        <span class="qa-icon"><i data-feather="clipboard"></i></span>
+        <div>
+          <p class="qa-title">Reportes ANA</p>
+          <p class="qa-sub">Ver registros de captación</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><i data-feather="activity"></i> Últimos Registros</h3>
+    <div class="activity-list">
+      {% if ultimos_registros %}
+        {% for r in ultimos_registros %}
+        <div class="activity-item">
+          <span class="activity-dot dot-info"></span>
+          <div class="activity-text">
+            <p><strong>{{ r.tipo }}</strong> — {{ r.efluente }}</p>
+            <small>{{ r.fecha }} · {{ r.supervisor }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <i data-feather="inbox" style="width:48px;height:48px;color:var(--text-muted)"></i>
+          <p>No hay registros recientes</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

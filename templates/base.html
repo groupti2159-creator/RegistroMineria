@@ -91,6 +91,16 @@
         {{ nav_group('cloud', 'Data Meteorológica', hijos_dm) }}
       {% endif %}
 
+      {# ── GESTIÓN DE AGUAS ── #}
+      {% if 'GESTION_AGUAS' in accesos or 'MONITOREO_AMBIENTAL' in accesos or 'REPORTE_ANA' in accesos or 'AGUAS_DASHBOARD' in accesos %}
+        {% set hijos_ga = [] %}
+        {% if 'AGUAS_DASHBOARD'     in accesos %}{% set _ = hijos_ga.append(('Dashboard',          '/admin/aguas/dashboard', 'layout'))    %}{% endif %}
+        {% if 'MONITOREO_AMBIENTAL' in accesos %}{% set _ = hijos_ga.append(('Monitoreo Ambiental', '/admin/aguas',           'activity')) %}{% endif %}
+        {% if 'REPORTE_ANA'         in accesos %}{% set _ = hijos_ga.append(('Reportes ANA',        '/admin/ana',             'clipboard'))%}{% endif %}
+        {{ nav_group('droplet', 'Gestión de Aguas', hijos_ga) }}
+      {% endif %}
+
+
       {# ── CONFIGURACIÓN ── #}
       {% if 'CONFIGURACION' in accesos or 'CONFIG_USUARIOS' in accesos or 'CONFIG_DASH' in accesos %}
         {% set hijos_cfg = [] %}
