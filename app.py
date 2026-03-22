@@ -25,6 +25,7 @@ from routes.gestion_residuos    import gr_bp
 from routes.gestion_generacion  import gen_bp
 from routes.compromisos         import compromisos_bp
 from routes.meteorologia        import meteorologia_bp
+from routes.gestion_aguas       import gestion_aguas_bp
 from routes.supervisor import supervisor_bp
 from routes.shared     import shared_bp
 from routes.proyectos  import proyectos_bp
@@ -36,6 +37,7 @@ app.register_blueprint(gr_bp,           url_prefix='/admin')
 app.register_blueprint(gen_bp,          url_prefix='/admin')
 app.register_blueprint(compromisos_bp,  url_prefix='/admin')
 app.register_blueprint(meteorologia_bp, url_prefix='/admin')
+app.register_blueprint(gestion_aguas_bp, url_prefix='/admin')
 app.register_blueprint(supervisor_bp,   url_prefix='/supervisor')
 app.register_blueprint(shared_bp,       url_prefix='/api')
 app.register_blueprint(proyectos_bp,    url_prefix='/proyectos')

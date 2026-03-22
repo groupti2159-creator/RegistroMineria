@@ -13,4 +13,4 @@ def dashboard():
 @admin_required
 @modulo_required('COMPROMISOS')
 def index():
-    return render_template('compromisos/index.html', notif_count=get_notif_count())
+    return render_template('compromisos/registro.html', notif_count=get_notif_count())
