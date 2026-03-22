@@ -22,6 +22,7 @@ from routes.auth       import auth_bp
 from routes.admin      import admin_bp
 from routes.desvios_ambientales import da_bp
 from routes.gestion_residuos    import gr_bp
+from routes.gestion_generacion  import gen_bp
 from routes.compromisos         import compromisos_bp
 from routes.meteorologia        import meteorologia_bp
 from routes.supervisor import supervisor_bp
@@ -32,6 +33,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp,        url_prefix='/admin')
 app.register_blueprint(da_bp,           url_prefix='/admin')
 app.register_blueprint(gr_bp,           url_prefix='/admin')
+app.register_blueprint(gen_bp,          url_prefix='/admin')
 app.register_blueprint(compromisos_bp,  url_prefix='/admin')
 app.register_blueprint(meteorologia_bp, url_prefix='/admin')
 app.register_blueprint(supervisor_bp,   url_prefix='/supervisor')
@@ -45,9 +47,22 @@ from routes.auth import cargar_accesos, cargar_modulos
 def refresh_accesos():
     """Recarga accesos y módulos desde BD en cada request."""
     if session.get('user_id') and session.get('rol_id'):
-        rol_id = session['rol_id']
-        session['accesos'] = cargar_accesos(rol_id)
-        session['modulos'] = cargar_modulos(rol_id)
+        try:
+            rol_id = session['rol_id']
+            session['accesos'] = cargar_accesos(rol_id)
+            session['modulos'] = cargar_modulos(rol_id)
+        except Exception as e:
+            print(f"[refresh_accesos] error: {e}")
+            # No limpiar sesión si falla la BD
+
+@app.after_request
+def no_cache(response):
+    """Evita que el browser cachee respuestas HTML."""
+    if 'text/html' in response.content_type:
+        response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+        response.headers['Pragma'] = 'no-cache'
+        response.headers['Expires'] = '0'
+    return response
 
 if __name__ == '__main__':
     # Railway inyecta PORT automáticamente

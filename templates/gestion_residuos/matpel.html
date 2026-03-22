@@ -1,7 +1,292 @@
 ﻿{% extends 'base.html' %}
-{% block title %}Disposicion Matpel{% endblock %}
-{% block page_title %}Disposicion Matpel{% endblock %}
+{% block title %}Disposición MATPEL — ecoSupervisor{% endblock %}
+{% block page_title %}Disposición MATPEL{% endblock %}
 {% block content %}
-<div class='page-header-section'><div class='page-header-icon'><i data-feather='alert-octagon'></i></div><div><h2 class='section-title'>Disposicion <span class='text-green'>Matpel</span></h2><p class='section-sub'>Control de materiales peligrosos</p></div></div>
-<div class='table-card' style='margin-top:1.5rem'><div class='table-header'><div class='table-title-row'><span class='table-icon'><i data-feather='alert-octagon'></i></span><div><h3>Disposicion Matpel</h3><p>Modulo en desarrollo</p></div></div></div><div class='empty-state' style='padding:4rem'><i data-feather='alert-octagon' style='width:64px;height:64px;color:var(--text-muted)'></i><p style='margin-top:1rem;font-weight:600'>Modulo en desarrollo</p></div></div>
+
+<div class="page-header-section">
+  <div class="page-header-icon"><i data-feather="alert-triangle"></i></div>
+  <div>
+    <h2 class="section-title">Disposición <span class="text-green">MATPEL</span></h2>
+    <p class="section-sub">Registro de disposición de materiales peligrosos</p>
+  </div>
+</div>
+
+<div class="action-bar">
+  <button class="btn btn-primary" id="btn-open-mat">
+    <i data-feather="plus-circle"></i> <strong>Nuevo Registro</strong>
+  </button>
+</div>
+
+<!-- ── TABLA ── -->
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon"><i data-feather="list"></i></span>
+      <div><h3>Registros MATPEL</h3><p id="mat-count">0 registro(s)</p></div>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="gen-table">
+      <thead>
+        <tr>
+          <th class="col-sticky">Fecha</th>
+          <th>Supervisor</th>
+          <th>Tipo de Residuo</th>
+          <th>Costo de Viaje</th>
+          <th>Precio (S/)</th>
+          <th>N° Guía</th>
+          <th>Factura</th>
+          <th>Volumen (m³)</th>
+          <th>Peso (Kg)</th>
+          <th>Observación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="mat-tbody">
+        <tr id="mat-empty">
+          <td colspan="11">
+            <div class="empty-state" style="padding:3rem">
+              <i data-feather="alert-triangle" style="width:48px;height:48px;color:var(--text-muted)"></i>
+              <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
+              <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem">
+                Usa el botón "Nuevo Registro" para agregar el primero
+              </p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL REGISTRO MATPEL
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-mat-overlay">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Gestión de residuos</p>
+        <h2 class="modal-title" id="mat-modal-title">Nuevo registro MATPEL</h2>
+      </div>
+      <div class="modal-header__controls">
+        <button class="btn-close" id="btn-close-mat" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-fecha">Fecha</label>
+        <input class="date-input" type="date" id="mat-fecha">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-supervisor">Supervisor que registra</label>
+        <input class="plant-input" type="text" id="mat-supervisor" placeholder="Nombre del supervisor">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
+        <label class="date-label" for="mat-tipo">Tipo de Residuo</label>
+        <select class="plant-input" id="mat-tipo">
+          <option value="">— Seleccionar —</option>
+          <option>Aceites usados</option>
+          <option>Baterías</option>
+          <option>Borras</option>
+          <option>Copelas</option>
+          <option>Envases contaminados</option>
+          <option>Filtros usados</option>
+          <option>Reactivos vencidos</option>
+          <option>Tierra contaminada</option>
+          <option>Trapos contaminados</option>
+          <option>Otros MATPEL</option>
+        </select>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-costo-viaje">Costo de Viaje (S/)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="mat-costo-viaje" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-precio">Precio (S/)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="mat-precio" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-guia">N° Guía</label>
+        <input class="plant-input" type="text" id="mat-guia" placeholder="Ej: G-001-2025">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-factura">Factura</label>
+        <input class="plant-input" type="text" id="mat-factura" placeholder="Ej: F001-00123">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-volumen">Volumen (m³)</label>
+        <input class="plant-input" type="number" min="0" step="0.001" id="mat-volumen" placeholder="0.000">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="mat-peso">Peso (Kg)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="mat-peso" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
+        <label class="date-label" for="mat-obs">Observación</label>
+        <textarea class="plant-input" id="mat-obs" rows="2"
+          style="resize:vertical;font-family:inherit;font-size:.85rem"
+          placeholder="Observaciones adicionales..."></textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <div class="modal-footer__summary">
+        <span class="footer-label">Peso registrado</span>
+        <span class="footer-total" id="mat-peso-preview">0.00 Kg</span>
+      </div>
+      <div class="modal-footer__actions">
+        <button class="btn-cancel" id="btn-cancel-mat">Cancelar</button>
+        <button class="btn-save" id="btn-save-mat">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let registros = [];
+  let editIdx   = null;
+
+  const $ = id => document.getElementById(id);
+  const fmtFecha = iso => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+  const fmtNum = (v, dec=2) => parseFloat(v||0).toLocaleString('es-PE',{minimumFractionDigits:dec});
+
+  function openModal(idx = null) {
+    editIdx = idx;
+    $('mat-modal-title').textContent = idx === null ? 'Nuevo registro MATPEL' : 'Editar registro';
+    const r = idx !== null ? registros[idx] : {};
+    $('mat-fecha').value        = r.fecha        || new Date().toISOString().slice(0,10);
+    $('mat-supervisor').value   = r.supervisor   || '';
+    $('mat-tipo').value         = r.tipo         || '';
+    $('mat-costo-viaje').value  = r.costo_viaje  || '';
+    $('mat-precio').value       = r.precio       || '';
+    $('mat-guia').value         = r.guia         || '';
+    $('mat-factura').value      = r.factura      || '';
+    $('mat-volumen').value      = r.volumen      || '';
+    $('mat-peso').value         = r.peso         || '';
+    $('mat-obs').value          = r.obs          || '';
+    updatePesoPreview();
+    $('modal-mat-overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    $('modal-mat-overlay').classList.remove('open');
+    editIdx = null;
+  }
+
+  function updatePesoPreview() {
+    $('mat-peso-preview').textContent = fmtNum($('mat-peso').value) + ' Kg';
+  }
+
+  function guardar() {
+    const fecha      = $('mat-fecha').value;
+    const supervisor = $('mat-supervisor').value.trim();
+    const tipo       = $('mat-tipo').value;
+    if (!fecha || !supervisor || !tipo) {
+      alert('Fecha, supervisor y tipo de residuo son obligatorios.');
+      return;
+    }
+    const reg = {
+      fecha,
+      supervisor,
+      tipo,
+      costo_viaje: $('mat-costo-viaje').value || '—',
+      precio:      $('mat-precio').value      || '—',
+      guia:        $('mat-guia').value        || '—',
+      factura:     $('mat-factura').value     || '—',
+      volumen:     parseFloat($('mat-volumen').value) || 0,
+      peso:        parseFloat($('mat-peso').value)    || 0,
+      obs:         $('mat-obs').value         || '',
+    };
+    if (editIdx !== null) {
+      registros[editIdx] = reg;
+    } else {
+      registros.push(reg);
+    }
+    closeModal();
+    renderTabla();
+  }
+
+  function eliminar(idx) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    registros.splice(idx, 1);
+    renderTabla();
+  }
+
+  function renderTabla() {
+    const tbody = $('mat-tbody');
+    $('mat-count').textContent = registros.length + ' registro(s)';
+
+    if (registros.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="11">
+          <div class="empty-state" style="padding:3rem">
+            <p style="font-weight:600">Sin registros aún</p>
+          </div>
+        </td></tr>`;
+      if (window.feather) feather.replace();
+      return;
+    }
+
+    tbody.innerHTML = registros.map((r, i) => `
+      <tr>
+        <td class="col-sticky">${fmtFecha(r.fecha)}</td>
+        <td>${r.supervisor}</td>
+        <td>${r.tipo}</td>
+        <td style="text-align:right">${r.costo_viaje}</td>
+        <td style="text-align:right">${r.precio}</td>
+        <td>${r.guia}</td>
+        <td>${r.factura}</td>
+        <td style="text-align:right">${fmtNum(r.volumen,3)} m³</td>
+        <td style="text-align:right;font-weight:600;color:var(--green)">${fmtNum(r.peso)} Kg</td>
+        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.obs}">${r.obs || '—'}</td>
+        <td class="col-acciones">
+          <button class="btn-accion btn-edit" onclick="MAT.editar(${i})" title="Editar">
+            <i data-feather="edit-2"></i>
+          </button>
+          <button class="btn-accion btn-del" onclick="MAT.eliminar(${i})" title="Eliminar">
+            <i data-feather="trash-2"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    if (window.feather) feather.replace();
+  }
+
+  $('btn-open-mat').addEventListener('click',   () => openModal());
+  $('btn-close-mat').addEventListener('click',  closeModal);
+  $('btn-cancel-mat').addEventListener('click', closeModal);
+  $('btn-save-mat').addEventListener('click',   guardar);
+  $('mat-peso').addEventListener('input',       updatePesoPreview);
+  $('modal-mat-overlay').addEventListener('click', e => {
+    if (e.target === $('modal-mat-overlay')) closeModal();
+  });
+
+  window.MAT = { editar: openModal, eliminar };
+  renderTabla();
+})();
+</script>
+
 {% endblock %}

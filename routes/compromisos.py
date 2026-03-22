@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request
+from flask import Blueprint, render_template
 from utils.helpers import admin_required, modulo_required, get_notif_count
 
 compromisos_bp = Blueprint('compromisos', __name__)
@@ -7,14 +7,10 @@ compromisos_bp = Blueprint('compromisos', __name__)
 @admin_required
 @modulo_required('COMPROMISOS_DASH')
 def dashboard():
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    tmpl = 'compromisos/dashboard_fragment.html' if is_ajax else 'compromisos/dashboard.html'
-    return render_template(tmpl, notif_count=get_notif_count())
+    return render_template('compromisos/dashboard.html', notif_count=get_notif_count())
 
 @compromisos_bp.route('/compromisos')
 @admin_required
-@modulo_required('COMPROMISOS_REG')
+@modulo_required('COMPROMISOS')
 def index():
-    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
-    tmpl = 'compromisos/index_fragment.html' if is_ajax else 'compromisos/index.html'
-    return render_template(tmpl, notif_count=get_notif_count())
+    return render_template('compromisos/index.html', notif_count=get_notif_count())

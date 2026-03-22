@@ -1016,56 +1016,5 @@ def leer_todas():
     return jsonify({'ok': True})
 
 
-# ── Gestión de Residuos ──────────────────────────────────────────────────────
 
-@admin_bp.route('/residuos/generacion')
-@admin_required
-@modulo_required('GENERACION_DIARIA')
-def residuos_generacion():
-    return render_template('shared/en_construccion.html',
-        titulo='Generación Diaria', icono='calendar',
-        notif_count=get_notif_count())
 
-@admin_bp.route('/residuos/comercializable')
-@admin_required
-@modulo_required('COMERCIALIZABLE')
-def residuos_comercializable():
-    return render_template('shared/en_construccion.html',
-        titulo='Comercializable', icono='package',
-        notif_count=get_notif_count())
-
-@admin_bp.route('/residuos/matpel')
-@admin_required
-@modulo_required('DISPOSICION_MATPEL')
-def residuos_matpel():
-    return render_template('shared/en_construccion.html',
-        titulo='Disposición Matpel', icono='alert-octagon',
-        notif_count=get_notif_count())
-
-@admin_bp.route('/residuos/compostaje')
-@admin_required
-@modulo_required('COMPOSTAJE')
-def residuos_compostaje():
-    return render_template('shared/en_construccion.html',
-        titulo='Compostaje', icono='leaf',
-        notif_count=get_notif_count())
-
-# ── Compromisos ──────────────────────────────────────────────────────────────
-
-@admin_bp.route('/compromisos')
-@admin_required
-@modulo_required('COMPROMISOS')
-def compromisos():
-    return render_template('shared/en_construccion.html',
-        titulo='Compromisos', icono='check-square',
-        notif_count=get_notif_count())
-
-# ── Data Meteorológica ───────────────────────────────────────────────────────
-
-@admin_bp.route('/meteorologia')
-@admin_required
-@modulo_required('DATA_METEOROLOGICA')
-def meteorologia():
-    return render_template('shared/en_construccion.html',
-        titulo='Data Meteorológica', icono='cloud',
-        notif_count=get_notif_count())

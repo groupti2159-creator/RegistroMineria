@@ -1,7 +1,283 @@
 ﻿{% extends 'base.html' %}
-{% block title %}Comercializable{% endblock %}
+{% block title %}Comercializable — ecoSupervisor{% endblock %}
 {% block page_title %}Comercializable{% endblock %}
 {% block content %}
-<div class='page-header-section'><div class='page-header-icon'><i data-feather='package'></i></div><div><h2 class='section-title'>Residuos <span class='text-green'>Comercializables</span></h2><p class='section-sub'>Gestion de residuos con valor comercial</p></div></div>
-<div class='table-card' style='margin-top:1.5rem'><div class='table-header'><div class='table-title-row'><span class='table-icon'><i data-feather='package'></i></span><div><h3>Comercializable</h3><p>Modulo en desarrollo</p></div></div></div><div class='empty-state' style='padding:4rem'><i data-feather='package' style='width:64px;height:64px;color:var(--text-muted)'></i><p style='margin-top:1rem;font-weight:600'>Modulo en desarrollo</p></div></div>
+
+<div class="page-header-section">
+  <div class="page-header-icon"><i data-feather="package"></i></div>
+  <div>
+    <h2 class="section-title">Residuos <span class="text-green">Comercializables</span></h2>
+    <p class="section-sub">Registro de residuos con valor comercial</p>
+  </div>
+</div>
+
+<div class="action-bar">
+  <button class="btn btn-primary" id="btn-open-com">
+    <i data-feather="plus-circle"></i> <strong>Nuevo Registro</strong>
+  </button>
+</div>
+
+<!-- ── TABLA ── -->
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon"><i data-feather="list"></i></span>
+      <div><h3>Registros Comercializables</h3><p id="com-count">0 registro(s)</p></div>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="gen-table">
+      <thead>
+        <tr>
+          <th class="col-sticky">Fecha</th>
+          <th>Supervisor</th>
+          <th>Tipo de Residuo</th>
+          <th>Precio (S/)</th>
+          <th>N° Guía</th>
+          <th>Factura</th>
+          <th>Peso (Kg)</th>
+          <th>Observación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="com-tbody">
+        <tr id="com-empty">
+          <td colspan="9">
+            <div class="empty-state" style="padding:3rem">
+              <i data-feather="package" style="width:48px;height:48px;color:var(--text-muted)"></i>
+              <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
+              <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem">
+                Usa el botón "Nuevo Registro" para agregar el primero
+              </p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL REGISTRO COMERCIALIZABLE
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-com-overlay">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Gestión de residuos</p>
+        <h2 class="modal-title" id="com-modal-title">Nuevo registro comercializable</h2>
+      </div>
+      <div class="modal-header__controls">
+        <button class="btn-close" id="btn-close-com" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-fecha">Fecha</label>
+        <input class="date-input" type="date" id="com-fecha">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-supervisor">Supervisor que registra</label>
+        <input class="plant-input" type="text" id="com-supervisor" placeholder="Nombre del supervisor">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-tipo">Tipo de Residuo</label>
+        <select class="plant-input" id="com-tipo">
+          <option value="">— Seleccionar —</option>
+          <option>RRSS Papel y cartón</option>
+          <option>RRSS Plástico</option>
+          <option>RRSS Vidrio</option>
+          <option>RRSS Madera</option>
+          <option>Chatarra mayor</option>
+          <option>Copelas</option>
+          <option>Borras</option>
+          <option>Aceites</option>
+          <option>Varios</option>
+        </select>
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-precio">Precio (S/)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="com-precio" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-guia">N° Guía</label>
+        <input class="plant-input" type="text" id="com-guia" placeholder="Ej: G-001-2025">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-factura">Factura</label>
+        <input class="plant-input" type="text" id="com-factura" placeholder="Ej: F001-00123">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="com-peso">Peso (Kg)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="com-peso" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
+        <label class="date-label" for="com-obs">Observación</label>
+        <textarea class="plant-input" id="com-obs" rows="2"
+          style="resize:vertical;font-family:inherit;font-size:.85rem"
+          placeholder="Observaciones adicionales..."></textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <div class="modal-footer__summary">
+        <span class="footer-label">Peso registrado</span>
+        <span class="footer-total" id="com-peso-preview">0.00 Kg</span>
+      </div>
+      <div class="modal-footer__actions">
+        <button class="btn-cancel" id="btn-cancel-com">Cancelar</button>
+        <button class="btn-save" id="btn-save-com">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  // ── Estado ──────────────────────────────────────────────
+  let registros = [];
+  let editIdx   = null;
+
+  // ── Helpers ─────────────────────────────────────────────
+  const $ = id => document.getElementById(id);
+  const fmtFecha = iso => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+
+  // ── Modal open/close ────────────────────────────────────
+  function openModal(idx = null) {
+    editIdx = idx;
+    $('com-modal-title').textContent = idx === null ? 'Nuevo registro comercializable' : 'Editar registro';
+    const r = idx !== null ? registros[idx] : {};
+    $('com-fecha').value      = r.fecha      || new Date().toISOString().slice(0,10);
+    $('com-supervisor').value = r.supervisor || '';
+    $('com-tipo').value       = r.tipo       || '';
+    $('com-precio').value     = r.precio     || '';
+    $('com-guia').value       = r.guia       || '';
+    $('com-factura').value    = r.factura    || '';
+    $('com-peso').value       = r.peso       || '';
+    $('com-obs').value        = r.obs        || '';
+    updatePesoPreview();
+    $('modal-com-overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    $('modal-com-overlay').classList.remove('open');
+    editIdx = null;
+  }
+
+  function updatePesoPreview() {
+    const p = parseFloat($('com-peso').value) || 0;
+    $('com-peso-preview').textContent = p.toLocaleString('es-PE', {minimumFractionDigits:2}) + ' Kg';
+  }
+
+  // ── Guardar ─────────────────────────────────────────────
+  function guardar() {
+    const fecha = $('com-fecha').value;
+    const supervisor = $('com-supervisor').value.trim();
+    const tipo  = $('com-tipo').value;
+    if (!fecha || !supervisor || !tipo) {
+      alert('Fecha, supervisor y tipo de residuo son obligatorios.');
+      return;
+    }
+    const reg = {
+      fecha,
+      supervisor,
+      tipo,
+      precio:  $('com-precio').value  || '—',
+      guia:    $('com-guia').value    || '—',
+      factura: $('com-factura').value || '—',
+      peso:    parseFloat($('com-peso').value) || 0,
+      obs:     $('com-obs').value     || '',
+    };
+    if (editIdx !== null) {
+      registros[editIdx] = reg;
+    } else {
+      registros.push(reg);
+    }
+    closeModal();
+    renderTabla();
+  }
+
+  // ── Eliminar ─────────────────────────────────────────────
+  function eliminar(idx) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    registros.splice(idx, 1);
+    renderTabla();
+  }
+
+  // ── Render tabla ─────────────────────────────────────────
+  function renderTabla() {
+    const tbody = $('com-tbody');
+    $('com-count').textContent = registros.length + ' registro(s)';
+
+    if (registros.length === 0) {
+      tbody.innerHTML = `
+        <tr id="com-empty"><td colspan="9">
+          <div class="empty-state" style="padding:3rem">
+            <p style="font-weight:600">Sin registros aún</p>
+          </div>
+        </td></tr>`;
+      if (window.feather) feather.replace();
+      return;
+    }
+
+    tbody.innerHTML = registros.map((r, i) => `
+      <tr>
+        <td class="col-sticky">${fmtFecha(r.fecha)}</td>
+        <td>${r.supervisor}</td>
+        <td>${r.tipo}</td>
+        <td style="text-align:right">${r.precio}</td>
+        <td>${r.guia}</td>
+        <td>${r.factura}</td>
+        <td style="text-align:right;font-weight:600;color:var(--green)">${parseFloat(r.peso).toLocaleString('es-PE',{minimumFractionDigits:2})} Kg</td>
+        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.obs}">${r.obs || '—'}</td>
+        <td class="col-acciones">
+          <button class="btn-accion btn-edit" onclick="COM.editar(${i})" title="Editar">
+            <i data-feather="edit-2"></i>
+          </button>
+          <button class="btn-accion btn-del" onclick="COM.eliminar(${i})" title="Eliminar">
+            <i data-feather="trash-2"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    if (window.feather) feather.replace();
+  }
+
+  // ── Eventos ──────────────────────────────────────────────
+  $('btn-open-com').addEventListener('click',   () => openModal());
+  $('btn-close-com').addEventListener('click',  closeModal);
+  $('btn-cancel-com').addEventListener('click', closeModal);
+  $('btn-save-com').addEventListener('click',   guardar);
+  $('com-peso').addEventListener('input',       updatePesoPreview);
+  $('modal-com-overlay').addEventListener('click', e => {
+    if (e.target === $('modal-com-overlay')) closeModal();
+  });
+
+  // ── API pública ──────────────────────────────────────────
+  window.COM = { editar: openModal, eliminar };
+
+  // ── Init ─────────────────────────────────────────────────
+  renderTabla();
+})();
+</script>
+
 {% endblock %}

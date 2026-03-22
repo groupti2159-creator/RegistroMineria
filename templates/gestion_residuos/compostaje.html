@@ -1,7 +1,278 @@
 ﻿{% extends 'base.html' %}
-{% block title %}Compostaje{% endblock %}
+{% block title %}Compostaje — ecoSupervisor{% endblock %}
 {% block page_title %}Compostaje{% endblock %}
 {% block content %}
-<div class='page-header-section'><div class='page-header-icon'><i data-feather='leaf'></i></div><div><h2 class='section-title'>Gestion de <span class='text-green'>Compostaje</span></h2><p class='section-sub'>Control del proceso de compostaje</p></div></div>
-<div class='table-card' style='margin-top:1.5rem'><div class='table-header'><div class='table-title-row'><span class='table-icon'><i data-feather='leaf'></i></span><div><h3>Compostaje</h3><p>Modulo en desarrollo</p></div></div></div><div class='empty-state' style='padding:4rem'><i data-feather='leaf' style='width:64px;height:64px;color:var(--text-muted)'></i><p style='margin-top:1rem;font-weight:600'>Modulo en desarrollo</p></div></div>
+
+<div class="page-header-section">
+  <div class="page-header-icon"><i data-feather="leaf"></i></div>
+  <div>
+    <h2 class="section-title">Gestión de <span class="text-green">Compostaje</span></h2>
+    <p class="section-sub">Control del proceso de compostaje</p>
+  </div>
+</div>
+
+<div class="action-bar">
+  <button class="btn btn-primary" id="btn-open-comp">
+    <i data-feather="plus-circle"></i> <strong>Nuevo Registro</strong>
+  </button>
+</div>
+
+<!-- ── TABLA ── -->
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon"><i data-feather="list"></i></span>
+      <div><h3>Registros de Compostaje</h3><p id="comp-count">0 registro(s)</p></div>
+    </div>
+  </div>
+  <div style="overflow-x:auto;">
+    <table class="gen-table">
+      <thead>
+        <tr>
+          <th class="col-sticky">Fecha</th>
+          <th>Preparación (Kg)</th>
+          <th>Cosecha (Kg)</th>
+          <th>Costo de Viaje (S/)</th>
+          <th>Precio (S/)</th>
+          <th>N° Guía</th>
+          <th>Factura</th>
+          <th>Volumen (m³)</th>
+          <th>Peso (Kg)</th>
+          <th>Observación</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="comp-tbody">
+        <tr>
+          <td colspan="11">
+            <div class="empty-state" style="padding:3rem">
+              <i data-feather="leaf" style="width:48px;height:48px;color:var(--text-muted)"></i>
+              <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
+              <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem">
+                Usa el botón "Nuevo Registro" para agregar el primero
+              </p>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════
+     MODAL REGISTRO COMPOSTAJE
+══════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-comp-overlay">
+  <div class="modal" style="max-width:580px">
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Gestión de residuos</p>
+        <h2 class="modal-title" id="comp-modal-title">Nuevo registro de compostaje</h2>
+      </div>
+      <div class="modal-header__controls">
+        <button class="btn-close" id="btn-close-comp" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-fecha">Fecha</label>
+        <input class="date-input" type="date" id="comp-fecha">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-preparacion">Preparación (Kg)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="comp-preparacion" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-cosecha">Cosecha (Kg)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="comp-cosecha" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-costo-viaje">Costo de Viaje (S/)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="comp-costo-viaje" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-precio">Precio (S/)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="comp-precio" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-guia">N° Guía</label>
+        <input class="plant-input" type="text" id="comp-guia" placeholder="Ej: G-001-2025">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-factura">Factura</label>
+        <input class="plant-input" type="text" id="comp-factura" placeholder="Ej: F001-00123">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-volumen">Volumen (m³)</label>
+        <input class="plant-input" type="number" min="0" step="0.001" id="comp-volumen" placeholder="0.000">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem">
+        <label class="date-label" for="comp-peso">Peso (Kg)</label>
+        <input class="plant-input" type="number" min="0" step="0.01" id="comp-peso" placeholder="0.00">
+      </div>
+
+      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
+        <label class="date-label" for="comp-obs">Observación</label>
+        <textarea class="plant-input" id="comp-obs" rows="2"
+          style="resize:vertical;font-family:inherit;font-size:.85rem"
+          placeholder="Observaciones adicionales..."></textarea>
+      </div>
+
+    </div>
+
+    <div class="modal-footer">
+      <div class="modal-footer__summary">
+        <span class="footer-label">Peso registrado</span>
+        <span class="footer-total" id="comp-peso-preview">0.00 Kg</span>
+      </div>
+      <div class="modal-footer__actions">
+        <button class="btn-cancel" id="btn-cancel-comp">Cancelar</button>
+        <button class="btn-save" id="btn-save-comp">Guardar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  let registros = [];
+  let editIdx   = null;
+
+  const $ = id => document.getElementById(id);
+  const fmtFecha = iso => {
+    if (!iso) return '—';
+    const [y, m, d] = iso.split('-');
+    return `${d}/${m}/${y}`;
+  };
+  const fmtNum = (v, dec=2) => parseFloat(v||0).toLocaleString('es-PE', {minimumFractionDigits: dec});
+
+  function openModal(idx = null) {
+    editIdx = idx;
+    $('comp-modal-title').textContent = idx === null ? 'Nuevo registro de compostaje' : 'Editar registro';
+    const r = idx !== null ? registros[idx] : {};
+    $('comp-fecha').value        = r.fecha        || new Date().toISOString().slice(0,10);
+    $('comp-preparacion').value  = r.preparacion  || '';
+    $('comp-cosecha').value      = r.cosecha      || '';
+    $('comp-costo-viaje').value  = r.costo_viaje  || '';
+    $('comp-precio').value       = r.precio       || '';
+    $('comp-guia').value         = r.guia         || '';
+    $('comp-factura').value      = r.factura      || '';
+    $('comp-volumen').value      = r.volumen      || '';
+    $('comp-peso').value         = r.peso         || '';
+    $('comp-obs').value          = r.obs          || '';
+    updatePesoPreview();
+    $('modal-comp-overlay').classList.add('open');
+  }
+
+  function closeModal() {
+    $('modal-comp-overlay').classList.remove('open');
+    editIdx = null;
+  }
+
+  function updatePesoPreview() {
+    $('comp-peso-preview').textContent = fmtNum($('comp-peso').value) + ' Kg';
+  }
+
+  function guardar() {
+    const fecha = $('comp-fecha').value;
+    if (!fecha) {
+      alert('La fecha es obligatoria.');
+      return;
+    }
+    const reg = {
+      fecha,
+      preparacion: parseFloat($('comp-preparacion').value) || 0,
+      cosecha:     parseFloat($('comp-cosecha').value)     || 0,
+      costo_viaje: $('comp-costo-viaje').value || '—',
+      precio:      $('comp-precio').value      || '—',
+      guia:        $('comp-guia').value        || '—',
+      factura:     $('comp-factura').value     || '—',
+      volumen:     parseFloat($('comp-volumen').value) || 0,
+      peso:        parseFloat($('comp-peso').value)    || 0,
+      obs:         $('comp-obs').value         || '',
+    };
+    if (editIdx !== null) {
+      registros[editIdx] = reg;
+    } else {
+      registros.push(reg);
+    }
+    closeModal();
+    renderTabla();
+  }
+
+  function eliminar(idx) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    registros.splice(idx, 1);
+    renderTabla();
+  }
+
+  function renderTabla() {
+    const tbody = $('comp-tbody');
+    $('comp-count').textContent = registros.length + ' registro(s)';
+
+    if (registros.length === 0) {
+      tbody.innerHTML = `
+        <tr><td colspan="11">
+          <div class="empty-state" style="padding:3rem">
+            <p style="font-weight:600">Sin registros aún</p>
+          </div>
+        </td></tr>`;
+      if (window.feather) feather.replace();
+      return;
+    }
+
+    tbody.innerHTML = registros.map((r, i) => `
+      <tr>
+        <td class="col-sticky">${fmtFecha(r.fecha)}</td>
+        <td style="text-align:right">${fmtNum(r.preparacion)} Kg</td>
+        <td style="text-align:right">${fmtNum(r.cosecha)} Kg</td>
+        <td style="text-align:right">${r.costo_viaje}</td>
+        <td style="text-align:right">${r.precio}</td>
+        <td>${r.guia}</td>
+        <td>${r.factura}</td>
+        <td style="text-align:right">${fmtNum(r.volumen,3)} m³</td>
+        <td style="text-align:right;font-weight:600;color:var(--green)">${fmtNum(r.peso)} Kg</td>
+        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.obs}">${r.obs || '—'}</td>
+        <td class="col-acciones">
+          <button class="btn-accion btn-edit" onclick="COMP.editar(${i})" title="Editar">
+            <i data-feather="edit-2"></i>
+          </button>
+          <button class="btn-accion btn-del" onclick="COMP.eliminar(${i})" title="Eliminar">
+            <i data-feather="trash-2"></i>
+          </button>
+        </td>
+      </tr>
+    `).join('');
+
+    if (window.feather) feather.replace();
+  }
+
+  $('btn-open-comp').addEventListener('click',   () => openModal());
+  $('btn-close-comp').addEventListener('click',  closeModal);
+  $('btn-cancel-comp').addEventListener('click', closeModal);
+  $('btn-save-comp').addEventListener('click',   guardar);
+  $('comp-peso').addEventListener('input',       updatePesoPreview);
+  $('modal-comp-overlay').addEventListener('click', e => {
+    if (e.target === $('modal-comp-overlay')) closeModal();
+  });
+
+  window.COMP = { editar: openModal, eliminar };
+  renderTabla();
+})();
+</script>
+
 {% endblock %}

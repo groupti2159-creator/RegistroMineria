@@ -67,7 +67,7 @@
       {# ── GESTIÓN DE RESIDUOS ── #}
       {% if 'GESTION_RESIDUOS' in accesos or 'GENERACION_DIARIA' in accesos %}
         {% set hijos_gr = [] %}
-        {% if 'GR_DASHBOARD'      in accesos %}{% set _ = hijos_gr.append(('Dashboard',          '/admin/residuos/dashboard',     'layout'))        %}{% endif %}
+        {% set _ = hijos_gr.append(('Dashboard', '/admin/residuos/dashboard', 'layout')) %}
         {% if 'GENERACION_DIARIA' in accesos %}{% set _ = hijos_gr.append(('Generación Diaria',  '/admin/residuos/generacion',    'calendar'))      %}{% endif %}
         {% if 'COMERCIALIZABLE'   in accesos %}{% set _ = hijos_gr.append(('Comercializable',    '/admin/residuos/comercializable','package'))      %}{% endif %}
         {% if 'DISPOSICION_MATPEL'in accesos %}{% set _ = hijos_gr.append(('Disposición Matpel', '/admin/residuos/matpel',        'alert-octagon')) %}{% endif %}
@@ -192,8 +192,8 @@
 {% block auth_content %}{% endblock %}
 {% endif %}
 
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
-<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}?v=2"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
