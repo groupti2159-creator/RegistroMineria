@@ -477,15 +477,6 @@
 
 {% block scripts %}
 <style>
-/* ── Fix scroll: solo la tabla scrollea, no la página ── */
-.main-content {
-  overflow-x: hidden;
-  min-width: 0;
-}
-.page-body {
-  overflow-x: hidden;
-  min-width: 0;
-}
 .card {
   overflow: hidden;
   min-width: 0;
@@ -545,7 +536,7 @@ function abrirModal(tipo) {
   document.getElementById('selectTipo').value = tipo;
   cambiarTipo(tipo);
   document.getElementById('modal-'+tipo).style.display = 'flex';
-  feather.replace();
+  try { feather.replace(); } catch(e) {}
 }
 
 function cerrarModal(id) {

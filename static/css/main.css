@@ -3991,49 +3991,12 @@ input[type=number]                          { -moz-appearance: textfield; }
 input[type=number]::-webkit-inner-spin-button,
 input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 
-/* ─── Demo page (solo para mostrar el botón de apertura) ─── */
+/* ─── Demo page ─── */
 .demo-page {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-}
-
-/* ─── Botón abrir ─── */
-.btn-open {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--text);
-  color: #fff;
-  border: none;
-  border-radius: var(--r);
-  padding: 10px 20px;
-  font-family: var(--font);
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: opacity .15s;
-}
-.btn-open:hover { opacity: .82; }
-
-/* ─── Overlay ─── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17,17,16,.42);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  z-index: 100;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s ease;
-}
-.modal-overlay.open {
-  opacity: 1;
-  pointer-events: all;
 }
 
 /* ─── Modal ─── */

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}ecoSupervisor{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -71,7 +71,7 @@
         {% if 'GENERACION_DIARIA' in accesos %}{% set _ = hijos_gr.append(('Generación Diaria',  '/admin/residuos/generacion',    'calendar'))      %}{% endif %}
         {% if 'COMERCIALIZABLE'   in accesos %}{% set _ = hijos_gr.append(('Comercializable',    '/admin/residuos/comercializable','package'))      %}{% endif %}
         {% if 'DISPOSICION_MATPEL'in accesos %}{% set _ = hijos_gr.append(('Disposición Matpel', '/admin/residuos/matpel',        'alert-octagon')) %}{% endif %}
-        {% if 'COMPOSTAJE'        in accesos %}{% set _ = hijos_gr.append(('Compostaje',          '/admin/residuos/compostaje',    'leaf'))          %}{% endif %}
+        {% if 'COMPOSTAJE'        in accesos %}{% set _ = hijos_gr.append(('Compostaje',          '/admin/residuos/compostaje',    'wind'))          %}{% endif %}
         {{ nav_group('trash-2', 'Gestión de Residuos', hijos_gr) }}
       {% endif %}
 
@@ -202,7 +202,7 @@
 {% block auth_content %}{% endblock %}
 {% endif %}
 
-<script src="{{ url_for('static', filename='js/main.js') }}?v=2"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}?v=3"></script>
 <script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}?v=2"></script>
 {% block scripts %}{% endblock %}
 </body>
