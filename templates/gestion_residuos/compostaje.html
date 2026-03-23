@@ -4,7 +4,7 @@
 {% block content %}
 
 <div class="page-header-section">
-  <div class="page-header-icon"><i data-feather="leaf"></i></div>
+  <div class="page-header-icon"><i data-feather="layers"></i></div>
   <div>
     <h2 class="section-title">Gestión de <span class="text-green">Compostaje</span></h2>
     <p class="section-sub">Control del proceso de compostaje</p>
@@ -17,12 +17,27 @@
   </button>
 </div>
 
-<!-- ── TABLA ── -->
+<!-- TABLA -->
 <div class="table-card">
   <div class="table-header">
-    <div class="table-title-row">
-      <span class="table-icon"><i data-feather="list"></i></span>
-      <div><h3>Registros de Compostaje</h3><p id="comp-count">0 registro(s)</p></div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;align-items:flex-start">
+      <div class="table-title-row">
+        <span class="table-icon"><i data-feather="list"></i></span>
+        <div><h3>Registros de Compostaje</h3><p id="comp-count">{{ registros|length }} registro(s)</p></div>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label class="date-label" style="font-size:.75rem">Desde</label>
+          <input class="date-input" type="date" id="comp-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label class="date-label" style="font-size:.75rem">Hasta</label>
+          <input class="date-input" type="date" id="comp-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
+        </div>
+        <button class="btn btn-secondary" id="comp-f-aplicar" style="padding:.38rem .9rem;font-size:.82rem">Filtrar</button>
+        <button class="btn" id="comp-f-limpiar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
+        <button class="btn" id="comp-f-exportar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;gap:.4rem"><i data-feather="download" style="width:14px;height:14px"></i> Excel</button>
+      </div>
     </div>
   </div>
   <div style="overflow-x:auto;">
@@ -32,7 +47,7 @@
           <th class="col-sticky">Fecha</th>
           <th>Preparación (Kg)</th>
           <th>Cosecha (Kg)</th>
-          <th>Costo de Viaje (S/)</th>
+          <th>Costo Viaje (S/)</th>
           <th>Precio (S/)</th>
           <th>N° Guía</th>
           <th>Factura</th>
@@ -43,25 +58,54 @@
         </tr>
       </thead>
       <tbody id="comp-tbody">
-        <tr>
-          <td colspan="11">
-            <div class="empty-state" style="padding:3rem">
-              <i data-feather="leaf" style="width:48px;height:48px;color:var(--text-muted)"></i>
-              <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
-              <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem">
-                Usa el botón "Nuevo Registro" para agregar el primero
-              </p>
-            </div>
+        {% for r in registros %}
+        <tr data-fecha="{{ r.fecha[:10] if r.fecha else '' }}">
+          <td class="col-sticky">
+            {% if r.fecha %}{{ r.fecha[:10].split('-')[2] }}/{{ r.fecha[:10].split('-')[1] }}/{{ r.fecha[:10].split('-')[0] }}{% endif %}
+          </td>
+          <td style="text-align:right">{{ '%.2f'|format(r.preparacion or 0) }}</td>
+          <td style="text-align:right">{{ '%.2f'|format(r.cosecha or 0) }}</td>
+          <td style="text-align:right">{{ '%.2f'|format(r.costo_viaje or 0) }}</td>
+          <td style="text-align:right">{{ '%.2f'|format(r.precio or 0) }}</td>
+          <td>{{ r.nro_guia or '—' }}</td>
+          <td>{{ r.factura or '—' }}</td>
+          <td style="text-align:right">{{ '%.3f'|format(r.volumen or 0) }}</td>
+          <td style="text-align:right;font-weight:600;color:var(--green)">{{ '%.2f'|format(r.peso or 0) }} Kg</td>
+          <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.observacion }}">{{ r.observacion or '—' }}</td>
+          <td class="col-acciones">
+            <button class="btn-accion btn-edit"
+              data-id="{{ r.id }}"
+              data-fecha="{{ r.fecha[:10] if r.fecha else '' }}"
+              data-preparacion="{{ r.preparacion or '' }}"
+              data-cosecha="{{ r.cosecha or '' }}"
+              data-costo-viaje="{{ r.costo_viaje or '' }}"
+              data-precio="{{ r.precio or '' }}"
+              data-guia="{{ r.nro_guia or '' }}"
+              data-factura="{{ r.factura or '' }}"
+              data-volumen="{{ r.volumen or '' }}"
+              data-peso="{{ r.peso or '' }}"
+              data-obs="{{ (r.observacion or '')|replace('"', '&quot;') }}"
+              title="Editar"><i data-feather="edit-2"></i></button>
+            <button class="btn-accion btn-del" onclick="COMP.eliminar({{ r.id }})" title="Eliminar"><i data-feather="trash-2"></i></button>
           </td>
         </tr>
+        {% else %}
+        <tr id="comp-empty"><td colspan="11">
+          <div class="empty-state" style="padding:3rem">
+            <i data-feather="layers" style="width:48px;height:48px;color:var(--text-muted)"></i>
+            <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
+            <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem">Usa el botón "Nuevo Registro" para agregar el primero</p>
+          </div>
+        </td></tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
+  <div id="comp-pagination" style="display:flex;justify-content:center;align-items:center;gap:.5rem;padding:1rem;flex-wrap:wrap"></div>
+</div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODAL REGISTRO COMPOSTAJE
-══════════════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-comp-overlay">
   <div class="modal" style="max-width:580px">
     <div class="modal-header">
@@ -77,63 +121,51 @@
         </button>
       </div>
     </div>
-
     <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
-
+      <input type="hidden" id="comp-id">
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-fecha">Fecha</label>
+        <label class="date-label">Fecha</label>
         <input class="date-input" type="date" id="comp-fecha">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-preparacion">Preparación (Kg)</label>
+        <label class="date-label">Preparación (Kg)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="comp-preparacion" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-cosecha">Cosecha (Kg)</label>
+        <label class="date-label">Cosecha (Kg)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="comp-cosecha" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-costo-viaje">Costo de Viaje (S/)</label>
+        <label class="date-label">Costo de Viaje (S/)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="comp-costo-viaje" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-precio">Precio (S/)</label>
+        <label class="date-label">Precio (S/)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="comp-precio" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-guia">N° Guía</label>
+        <label class="date-label">N° Guía</label>
         <input class="plant-input" type="text" id="comp-guia" placeholder="Ej: G-001-2025">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-factura">Factura</label>
+        <label class="date-label">Factura</label>
         <input class="plant-input" type="text" id="comp-factura" placeholder="Ej: F001-00123">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-volumen">Volumen (m³)</label>
+        <label class="date-label">Volumen (m³)</label>
         <input class="plant-input" type="number" min="0" step="0.001" id="comp-volumen" placeholder="0.000">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="comp-peso">Peso (Kg)</label>
+        <label class="date-label">Peso (Kg)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="comp-peso" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
-        <label class="date-label" for="comp-obs">Observación</label>
+        <label class="date-label">Observación</label>
         <textarea class="plant-input" id="comp-obs" rows="2"
           style="resize:vertical;font-family:inherit;font-size:.85rem"
           placeholder="Observaciones adicionales..."></textarea>
       </div>
-
     </div>
-
     <div class="modal-footer">
       <div class="modal-footer__summary">
         <span class="footer-label">Peso registrado</span>
@@ -149,129 +181,138 @@
 
 <script>
 (function () {
-  let registros = [];
-  let editIdx   = null;
-
   const $ = id => document.getElementById(id);
-  const fmtFecha = iso => {
-    if (!iso) return '—';
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  };
-  const fmtNum = (v, dec=2) => parseFloat(v||0).toLocaleString('es-PE', {minimumFractionDigits: dec});
+  const PAGE_SIZE = 10;
+  let currentPage = 1;
+  let filteredRows = [];
 
-  function openModal(idx = null) {
-    editIdx = idx;
-    $('comp-modal-title').textContent = idx === null ? 'Nuevo registro de compostaje' : 'Editar registro';
-    const r = idx !== null ? registros[idx] : {};
-    $('comp-fecha').value        = r.fecha        || new Date().toISOString().slice(0,10);
-    $('comp-preparacion').value  = r.preparacion  || '';
-    $('comp-cosecha').value      = r.cosecha      || '';
-    $('comp-costo-viaje').value  = r.costo_viaje  || '';
-    $('comp-precio').value       = r.precio       || '';
-    $('comp-guia').value         = r.guia         || '';
-    $('comp-factura').value      = r.factura      || '';
-    $('comp-volumen').value      = r.volumen      || '';
-    $('comp-peso').value         = r.peso         || '';
-    $('comp-obs').value          = r.obs          || '';
-    updatePesoPreview();
-    $('modal-comp-overlay').classList.add('open');
+  const allRows = Array.from(document.querySelectorAll('#comp-tbody tr[data-fecha]'));
+
+  function applyFilter() {
+    const desde = $('comp-f-desde').value;
+    const hasta = $('comp-f-hasta').value;
+    filteredRows = allRows.filter(function(tr) {
+      const f = tr.dataset.fecha;
+      if (desde && f < desde) return false;
+      if (hasta && f > hasta) return false;
+      return true;
+    });
+    currentPage = 1;
+    render();
   }
 
-  function closeModal() {
-    $('modal-comp-overlay').classList.remove('open');
-    editIdx = null;
-  }
-
-  function updatePesoPreview() {
-    $('comp-peso-preview').textContent = fmtNum($('comp-peso').value) + ' Kg';
-  }
-
-  function guardar() {
-    const fecha = $('comp-fecha').value;
-    if (!fecha) {
-      alert('La fecha es obligatoria.');
-      return;
-    }
-    const reg = {
-      fecha,
-      preparacion: parseFloat($('comp-preparacion').value) || 0,
-      cosecha:     parseFloat($('comp-cosecha').value)     || 0,
-      costo_viaje: $('comp-costo-viaje').value || '—',
-      precio:      $('comp-precio').value      || '—',
-      guia:        $('comp-guia').value        || '—',
-      factura:     $('comp-factura').value     || '—',
-      volumen:     parseFloat($('comp-volumen').value) || 0,
-      peso:        parseFloat($('comp-peso').value)    || 0,
-      obs:         $('comp-obs').value         || '',
-    };
-    if (editIdx !== null) {
-      registros[editIdx] = reg;
-    } else {
-      registros.push(reg);
-    }
-    closeModal();
-    renderTabla();
-  }
-
-  function eliminar(idx) {
-    if (!confirm('¿Eliminar este registro?')) return;
-    registros.splice(idx, 1);
-    renderTabla();
-  }
-
-  function renderTabla() {
-    const tbody = $('comp-tbody');
-    $('comp-count').textContent = registros.length + ' registro(s)';
-
-    if (registros.length === 0) {
-      tbody.innerHTML = `
-        <tr><td colspan="11">
-          <div class="empty-state" style="padding:3rem">
-            <p style="font-weight:600">Sin registros aún</p>
-          </div>
-        </td></tr>`;
-      if (window.feather) feather.replace();
-      return;
-    }
-
-    tbody.innerHTML = registros.map((r, i) => `
-      <tr>
-        <td class="col-sticky">${fmtFecha(r.fecha)}</td>
-        <td style="text-align:right">${fmtNum(r.preparacion)} Kg</td>
-        <td style="text-align:right">${fmtNum(r.cosecha)} Kg</td>
-        <td style="text-align:right">${r.costo_viaje}</td>
-        <td style="text-align:right">${r.precio}</td>
-        <td>${r.guia}</td>
-        <td>${r.factura}</td>
-        <td style="text-align:right">${fmtNum(r.volumen,3)} m³</td>
-        <td style="text-align:right;font-weight:600;color:var(--green)">${fmtNum(r.peso)} Kg</td>
-        <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.obs}">${r.obs || '—'}</td>
-        <td class="col-acciones">
-          <button class="btn-accion btn-edit" onclick="COMP.editar(${i})" title="Editar">
-            <i data-feather="edit-2"></i>
-          </button>
-          <button class="btn-accion btn-del" onclick="COMP.eliminar(${i})" title="Eliminar">
-            <i data-feather="trash-2"></i>
-          </button>
-        </td>
-      </tr>
-    `).join('');
-
+  function render() {
+    const total = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
+    const start = (currentPage - 1) * PAGE_SIZE;
+    allRows.forEach(function(tr) { tr.style.display = 'none'; });
+    filteredRows.slice(start, start + PAGE_SIZE).forEach(function(tr) { tr.style.display = ''; });
+    const empty = document.getElementById('comp-empty');
+    if (empty) empty.style.display = total === 0 ? '' : 'none';
+    $('comp-count').textContent = total + ' registro(s)';
+    renderPagination(totalPages);
     if (window.feather) feather.replace();
   }
 
-  $('btn-open-comp').addEventListener('click',   () => openModal());
+  function renderPagination(totalPages) {
+    const container = $('comp-pagination');
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+    const btnStyle = 'style="min-width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;font-size:.82rem;padding:0 .5rem"';
+    const activeStyle = 'style="min-width:32px;height:32px;border-radius:6px;border:1px solid var(--green);background:var(--green);color:#fff;cursor:pointer;font-size:.82rem;padding:0 .5rem;font-weight:600"';
+    let html = '<button ' + btnStyle + ' onclick="COMP.goPage(' + (currentPage-1) + ')" ' + (currentPage===1?'disabled':'') + '>‹</button>';
+    for (var i = 1; i <= totalPages; i++) {
+      html += '<button ' + (i===currentPage ? activeStyle : btnStyle) + ' onclick="COMP.goPage(' + i + ')">' + i + '</button>';
+    }
+    html += '<button ' + btnStyle + ' onclick="COMP.goPage(' + (currentPage+1) + ')" ' + (currentPage===totalPages?'disabled':'') + '>›</button>';
+    container.innerHTML = html;
+  }
+
+  function openModal(r) {
+    r = r || null;
+    $('comp-modal-title').textContent = r ? 'Editar registro' : 'Nuevo registro de compostaje';
+    $('comp-id').value          = r ? r.id          : '';
+    $('comp-fecha').value       = r ? r.fecha        : new Date().toISOString().slice(0,10);
+    $('comp-preparacion').value = r ? r.preparacion  : '';
+    $('comp-cosecha').value     = r ? r.cosecha      : '';
+    $('comp-costo-viaje').value = r ? r.costoViaje   : '';
+    $('comp-precio').value      = r ? r.precio       : '';
+    $('comp-guia').value        = r ? r.guia         : '';
+    $('comp-factura').value     = r ? r.factura      : '';
+    $('comp-volumen').value     = r ? r.volumen      : '';
+    $('comp-peso').value        = r ? r.peso         : '';
+    $('comp-obs').value         = r ? r.obs          : '';
+    updatePreview();
+    $('modal-comp-overlay').classList.add('open');
+  }
+  function closeModal() { $('modal-comp-overlay').classList.remove('open'); }
+  function updatePreview() {
+    $('comp-peso-preview').textContent =
+      (parseFloat($('comp-peso').value)||0).toLocaleString('es-PE',{minimumFractionDigits:2}) + ' Kg';
+  }
+
+  async function guardar() {
+    const id = $('comp-id').value;
+    const fecha = $('comp-fecha').value;
+    if (!fecha) { alert('La fecha es obligatoria.'); return; }
+    const payload = {
+      fecha, preparacion: $('comp-preparacion').value, cosecha: $('comp-cosecha').value,
+      costo_viaje: $('comp-costo-viaje').value, precio: $('comp-precio').value,
+      guia: $('comp-guia').value, factura: $('comp-factura').value,
+      volumen: $('comp-volumen').value, peso: $('comp-peso').value, obs: $('comp-obs').value,
+    };
+    const url = id ? '/admin/residuos/compostaje/editar/' + id : '/admin/residuos/compostaje/guardar';
+    const res  = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (json.success) { closeModal(); location.reload(); }
+    else alert('Error: ' + json.error);
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    const res  = await fetch('/admin/residuos/compostaje/eliminar/' + id, { method:'POST' });
+    const json = await res.json();
+    if (json.success) location.reload();
+    else alert('Error: ' + json.error);
+  }
+
+  document.querySelectorAll('.btn-edit').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      openModal({
+        id: btn.dataset.id, fecha: btn.dataset.fecha,
+        preparacion: btn.dataset.preparacion, cosecha: btn.dataset.cosecha,
+        costoViaje: btn.dataset.costoViaje, precio: btn.dataset.precio,
+        guia: btn.dataset.guia, factura: btn.dataset.factura,
+        volumen: btn.dataset.volumen, peso: btn.dataset.peso, obs: btn.dataset.obs,
+      });
+    });
+  });
+
+  $('btn-open-comp').addEventListener('click',   function() { openModal(); });
   $('btn-close-comp').addEventListener('click',  closeModal);
   $('btn-cancel-comp').addEventListener('click', closeModal);
   $('btn-save-comp').addEventListener('click',   guardar);
-  $('comp-peso').addEventListener('input',       updatePesoPreview);
-  $('modal-comp-overlay').addEventListener('click', e => {
+  $('comp-peso').addEventListener('input',       updatePreview);
+  $('comp-f-aplicar').addEventListener('click',  applyFilter);
+  $('comp-f-limpiar').addEventListener('click',  function() {
+    $('comp-f-desde').value = '';
+    $('comp-f-hasta').value = '';
+    applyFilter();
+  });
+  $('comp-f-exportar').addEventListener('click', function() {
+    window.location.href = '/admin/residuos/compostaje/exportar';
+  });
+  $('modal-comp-overlay').addEventListener('click', function(e) {
     if (e.target === $('modal-comp-overlay')) closeModal();
   });
 
-  window.COMP = { editar: openModal, eliminar };
-  renderTabla();
+  window.COMP = {
+    eliminar: eliminar,
+    goPage: function(p) { currentPage = p; render(); }
+  };
+
+  filteredRows = allRows.slice();
+  render();
 })();
 </script>
 

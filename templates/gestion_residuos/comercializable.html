@@ -17,12 +17,26 @@
   </button>
 </div>
 
-<!-- ── TABLA ── -->
 <div class="table-card">
   <div class="table-header">
-    <div class="table-title-row">
-      <span class="table-icon"><i data-feather="list"></i></span>
-      <div><h3>Registros Comercializables</h3><p id="com-count">0 registro(s)</p></div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;align-items:flex-start">
+      <div class="table-title-row">
+        <span class="table-icon"><i data-feather="list"></i></span>
+        <div><h3>Registros Comercializables</h3><p id="com-count">{{ registros|length }} registro(s)</p></div>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label class="date-label" style="font-size:.75rem">Desde</label>
+          <input class="date-input" type="date" id="com-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label class="date-label" style="font-size:.75rem">Hasta</label>
+          <input class="date-input" type="date" id="com-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
+        </div>
+        <button class="btn btn-secondary" id="com-f-aplicar" style="padding:.38rem .9rem;font-size:.82rem">Filtrar</button>
+        <button class="btn" id="com-f-limpiar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
+        <button class="btn" id="com-f-exportar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;gap:.4rem"><i data-feather="download" style="width:14px;height:14px"></i> Excel</button>
+      </div>
     </div>
   </div>
   <div style="overflow-x:auto;">
@@ -41,25 +55,49 @@
         </tr>
       </thead>
       <tbody id="com-tbody">
-        <tr id="com-empty">
-          <td colspan="9">
-            <div class="empty-state" style="padding:3rem">
-              <i data-feather="package" style="width:48px;height:48px;color:var(--text-muted)"></i>
-              <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
-              <p style="color:var(--text-muted);font-size:.85rem;margin-top:.3rem">
-                Usa el botón "Nuevo Registro" para agregar el primero
-              </p>
-            </div>
+        {% for r in registros %}
+        <tr data-fecha="{{ r.fecha[:10] if r.fecha else '' }}">
+          <td class="col-sticky">
+            {% if r.fecha %}{{ r.fecha[:10].split('-')[2] }}/{{ r.fecha[:10].split('-')[1] }}/{{ r.fecha[:10].split('-')[0] }}{% endif %}
+          </td>
+          <td>{{ r.supervisor or '—' }}</td>
+          <td>{{ r.tipo_residuo or '—' }}</td>
+          <td style="text-align:right">{{ '%.2f'|format(r.precio or 0) }}</td>
+          <td>{{ r.nro_guia or '—' }}</td>
+          <td>{{ r.factura or '—' }}</td>
+          <td style="text-align:right;font-weight:600;color:var(--green)">{{ '%.2f'|format(r.peso or 0) }} Kg</td>
+          <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.observacion }}">{{ r.observacion or '—' }}</td>
+          <td class="col-acciones">
+            <button class="btn-accion btn-edit"
+              data-id="{{ r.id }}"
+              data-fecha="{{ r.fecha[:10] if r.fecha else '' }}"
+              data-supervisor="{{ r.supervisor or '' }}"
+              data-tipo="{{ r.tipo_residuo or '' }}"
+              data-precio="{{ r.precio or '' }}"
+              data-guia="{{ r.nro_guia or '' }}"
+              data-factura="{{ r.factura or '' }}"
+              data-peso="{{ r.peso or '' }}"
+              data-obs="{{ (r.observacion or '')|replace('"', '&quot;') }}"
+              title="Editar"><i data-feather="edit-2"></i></button>
+            <button class="btn-accion btn-del" onclick="COM.eliminar({{ r.id }})" title="Eliminar"><i data-feather="trash-2"></i></button>
           </td>
         </tr>
+        {% else %}
+        <tr id="com-empty"><td colspan="9">
+          <div class="empty-state" style="padding:3rem">
+            <i data-feather="package" style="width:48px;height:48px;color:var(--text-muted)"></i>
+            <p style="margin-top:.75rem;font-weight:600">Sin registros aún</p>
+          </div>
+        </td></tr>
+        {% endfor %}
       </tbody>
     </table>
   </div>
+  <!-- Paginado -->
+  <div id="com-pagination" style="display:flex;justify-content:center;align-items:center;gap:.5rem;padding:1rem;flex-wrap:wrap"></div>
 </div>
 
-<!-- ══════════════════════════════════════
-     MODAL REGISTRO COMERCIALIZABLE
-══════════════════════════════════════ -->
+<!-- MODAL -->
 <div class="modal-overlay" id="modal-com-overlay">
   <div class="modal" style="max-width:560px">
     <div class="modal-header">
@@ -75,64 +113,47 @@
         </button>
       </div>
     </div>
-
     <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
-
+      <input type="hidden" id="com-id">
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-fecha">Fecha</label>
+        <label class="date-label">Fecha</label>
         <input class="date-input" type="date" id="com-fecha">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-supervisor">Supervisor que registra</label>
+        <label class="date-label">Supervisor que registra</label>
         <input class="plant-input" type="text" id="com-supervisor" placeholder="Nombre del supervisor">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-tipo">Tipo de Residuo</label>
+        <label class="date-label">Tipo de Residuo</label>
         <select class="plant-input" id="com-tipo">
           <option value="">— Seleccionar —</option>
-          <option>RRSS Papel y cartón</option>
-          <option>RRSS Plástico</option>
-          <option>RRSS Vidrio</option>
-          <option>RRSS Madera</option>
-          <option>Chatarra mayor</option>
-          <option>Copelas</option>
-          <option>Borras</option>
-          <option>Aceites</option>
-          <option>Varios</option>
+          <option>RRSS Papel y cartón</option><option>RRSS Plástico</option>
+          <option>RRSS Vidrio</option><option>RRSS Madera</option>
+          <option>Chatarra mayor</option><option>Copelas</option>
+          <option>Borras</option><option>Aceites</option><option>Varios</option>
         </select>
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-precio">Precio (S/)</label>
+        <label class="date-label">Precio (S/)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="com-precio" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-guia">N° Guía</label>
+        <label class="date-label">N° Guía</label>
         <input class="plant-input" type="text" id="com-guia" placeholder="Ej: G-001-2025">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-factura">Factura</label>
+        <label class="date-label">Factura</label>
         <input class="plant-input" type="text" id="com-factura" placeholder="Ej: F001-00123">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label" for="com-peso">Peso (Kg)</label>
+        <label class="date-label">Peso (Kg)</label>
         <input class="plant-input" type="number" min="0" step="0.01" id="com-peso" placeholder="0.00">
       </div>
-
       <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
-        <label class="date-label" for="com-obs">Observación</label>
-        <textarea class="plant-input" id="com-obs" rows="2"
-          style="resize:vertical;font-family:inherit;font-size:.85rem"
-          placeholder="Observaciones adicionales..."></textarea>
+        <label class="date-label">Observación</label>
+        <textarea class="plant-input" id="com-obs" rows="2" style="resize:vertical;font-family:inherit;font-size:.85rem" placeholder="Observaciones..."></textarea>
       </div>
-
     </div>
-
     <div class="modal-footer">
       <div class="modal-footer__summary">
         <span class="footer-label">Peso registrado</span>
@@ -148,136 +169,154 @@
 
 <script>
 (function () {
-  // ── Estado ──────────────────────────────────────────────
-  let registros = [];
-  let editIdx   = null;
-
-  // ── Helpers ─────────────────────────────────────────────
   const $ = id => document.getElementById(id);
-  const fmtFecha = iso => {
-    if (!iso) return '—';
-    const [y, m, d] = iso.split('-');
-    return `${d}/${m}/${y}`;
-  };
+  const PAGE_SIZE = 10;
+  let currentPage = 1;
+  let filteredRows = [];
 
-  // ── Modal open/close ────────────────────────────────────
-  function openModal(idx = null) {
-    editIdx = idx;
-    $('com-modal-title').textContent = idx === null ? 'Nuevo registro comercializable' : 'Editar registro';
-    const r = idx !== null ? registros[idx] : {};
-    $('com-fecha').value      = r.fecha      || new Date().toISOString().slice(0,10);
-    $('com-supervisor').value = r.supervisor || '';
-    $('com-tipo').value       = r.tipo       || '';
-    $('com-precio').value     = r.precio     || '';
-    $('com-guia').value       = r.guia       || '';
-    $('com-factura').value    = r.factura    || '';
-    $('com-peso').value       = r.peso       || '';
-    $('com-obs').value        = r.obs        || '';
-    updatePesoPreview();
-    $('modal-com-overlay').classList.add('open');
+  // Todas las filas de datos (excluye la fila empty si existe)
+  const allRows = Array.from(document.querySelectorAll('#com-tbody tr[data-fecha]'));
+
+  function applyFilter() {
+    const desde = $('com-f-desde').value;
+    const hasta = $('com-f-hasta').value;
+    filteredRows = allRows.filter(function(tr) {
+      const f = tr.dataset.fecha;
+      if (desde && f < desde) return false;
+      if (hasta && f > hasta) return false;
+      return true;
+    });
+    currentPage = 1;
+    render();
   }
 
-  function closeModal() {
-    $('modal-com-overlay').classList.remove('open');
-    editIdx = null;
-  }
+  function render() {
+    const total = filteredRows.length;
+    const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+    if (currentPage > totalPages) currentPage = totalPages;
 
-  function updatePesoPreview() {
-    const p = parseFloat($('com-peso').value) || 0;
-    $('com-peso-preview').textContent = p.toLocaleString('es-PE', {minimumFractionDigits:2}) + ' Kg';
-  }
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const end   = start + PAGE_SIZE;
 
-  // ── Guardar ─────────────────────────────────────────────
-  function guardar() {
-    const fecha = $('com-fecha').value;
-    const supervisor = $('com-supervisor').value.trim();
-    const tipo  = $('com-tipo').value;
-    if (!fecha || !supervisor || !tipo) {
-      alert('Fecha, supervisor y tipo de residuo son obligatorios.');
-      return;
-    }
-    const reg = {
-      fecha,
-      supervisor,
-      tipo,
-      precio:  $('com-precio').value  || '—',
-      guia:    $('com-guia').value    || '—',
-      factura: $('com-factura').value || '—',
-      peso:    parseFloat($('com-peso').value) || 0,
-      obs:     $('com-obs').value     || '',
-    };
-    if (editIdx !== null) {
-      registros[editIdx] = reg;
-    } else {
-      registros.push(reg);
-    }
-    closeModal();
-    renderTabla();
-  }
+    // Ocultar/mostrar filas
+    allRows.forEach(function(tr) { tr.style.display = 'none'; });
+    filteredRows.slice(start, end).forEach(function(tr) { tr.style.display = ''; });
 
-  // ── Eliminar ─────────────────────────────────────────────
-  function eliminar(idx) {
-    if (!confirm('¿Eliminar este registro?')) return;
-    registros.splice(idx, 1);
-    renderTabla();
-  }
+    // Fila empty
+    const empty = document.getElementById('com-empty');
+    if (empty) empty.style.display = total === 0 ? '' : 'none';
 
-  // ── Render tabla ─────────────────────────────────────────
-  function renderTabla() {
-    const tbody = $('com-tbody');
-    $('com-count').textContent = registros.length + ' registro(s)';
+    // Contador
+    $('com-count').textContent = total + ' registro(s)';
 
-    if (registros.length === 0) {
-      tbody.innerHTML = `
-        <tr id="com-empty"><td colspan="9">
-          <div class="empty-state" style="padding:3rem">
-            <p style="font-weight:600">Sin registros aún</p>
-          </div>
-        </td></tr>`;
-      if (window.feather) feather.replace();
-      return;
-    }
-
-    tbody.innerHTML = registros.map((r, i) => `
-      <tr>
-        <td class="col-sticky">${fmtFecha(r.fecha)}</td>
-        <td>${r.supervisor}</td>
-        <td>${r.tipo}</td>
-        <td style="text-align:right">${r.precio}</td>
-        <td>${r.guia}</td>
-        <td>${r.factura}</td>
-        <td style="text-align:right;font-weight:600;color:var(--green)">${parseFloat(r.peso).toLocaleString('es-PE',{minimumFractionDigits:2})} Kg</td>
-        <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${r.obs}">${r.obs || '—'}</td>
-        <td class="col-acciones">
-          <button class="btn-accion btn-edit" onclick="COM.editar(${i})" title="Editar">
-            <i data-feather="edit-2"></i>
-          </button>
-          <button class="btn-accion btn-del" onclick="COM.eliminar(${i})" title="Eliminar">
-            <i data-feather="trash-2"></i>
-          </button>
-        </td>
-      </tr>
-    `).join('');
+    // Paginado
+    renderPagination(totalPages);
 
     if (window.feather) feather.replace();
   }
 
-  // ── Eventos ──────────────────────────────────────────────
-  $('btn-open-com').addEventListener('click',   () => openModal());
+  function renderPagination(totalPages) {
+    const container = $('com-pagination');
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+    let html = '';
+    const btnStyle = 'style="min-width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;font-size:.82rem;padding:0 .5rem"';
+    const activeStyle = 'style="min-width:32px;height:32px;border-radius:6px;border:1px solid var(--green);background:var(--green);color:#fff;cursor:pointer;font-size:.82rem;padding:0 .5rem;font-weight:600"';
+
+    html += '<button ' + btnStyle + ' onclick="COM.goPage(' + (currentPage-1) + ')" ' + (currentPage===1?'disabled':'') + '>‹</button>';
+    for (var i = 1; i <= totalPages; i++) {
+      html += '<button ' + (i===currentPage ? activeStyle : btnStyle) + ' onclick="COM.goPage(' + i + ')">' + i + '</button>';
+    }
+    html += '<button ' + btnStyle + ' onclick="COM.goPage(' + (currentPage+1) + ')" ' + (currentPage===totalPages?'disabled':'') + '>›</button>';
+    container.innerHTML = html;
+  }
+
+  // ── Modal ──────────────────────────────────────────────
+  function openModal(r) {
+    r = r || null;
+    $('com-modal-title').textContent = r ? 'Editar registro' : 'Nuevo registro comercializable';
+    $('com-id').value         = r ? r.id         : '';
+    $('com-fecha').value      = r ? r.fecha       : new Date().toISOString().slice(0,10);
+    $('com-supervisor').value = r ? r.supervisor  : '';
+    $('com-tipo').value       = r ? r.tipo        : '';
+    $('com-precio').value     = r ? r.precio      : '';
+    $('com-guia').value       = r ? r.guia        : '';
+    $('com-factura').value    = r ? r.factura     : '';
+    $('com-peso').value       = r ? r.peso        : '';
+    $('com-obs').value        = r ? r.obs         : '';
+    updatePreview();
+    $('modal-com-overlay').classList.add('open');
+  }
+  function closeModal() { $('modal-com-overlay').classList.remove('open'); }
+  function updatePreview() {
+    $('com-peso-preview').textContent =
+      (parseFloat($('com-peso').value)||0).toLocaleString('es-PE',{minimumFractionDigits:2}) + ' Kg';
+  }
+
+  async function guardar() {
+    const id    = $('com-id').value;
+    const fecha = $('com-fecha').value;
+    if (!fecha) { alert('La fecha es obligatoria.'); return; }
+    const payload = {
+      fecha, supervisor: $('com-supervisor').value.trim(),
+      tipo: $('com-tipo').value, precio: $('com-precio').value,
+      guia: $('com-guia').value, factura: $('com-factura').value,
+      peso: $('com-peso').value, obs: $('com-obs').value,
+    };
+    const url = id ? '/admin/residuos/comercializable/editar/' + id : '/admin/residuos/comercializable/guardar';
+    const res  = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const json = await res.json();
+    if (json.success) { closeModal(); location.reload(); }
+    else alert('Error: ' + json.error);
+  }
+
+  async function eliminar(id) {
+    if (!confirm('¿Eliminar este registro?')) return;
+    const res  = await fetch('/admin/residuos/comercializable/eliminar/' + id, { method:'POST' });
+    const json = await res.json();
+    if (json.success) location.reload();
+    else alert('Error: ' + json.error);
+  }
+
+  // Botones editar
+  document.querySelectorAll('.btn-edit').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      openModal({
+        id: btn.dataset.id, fecha: btn.dataset.fecha,
+        supervisor: btn.dataset.supervisor, tipo: btn.dataset.tipo,
+        precio: btn.dataset.precio, guia: btn.dataset.guia,
+        factura: btn.dataset.factura, peso: btn.dataset.peso,
+        obs: btn.dataset.obs,
+      });
+    });
+  });
+
+  $('btn-open-com').addEventListener('click',   function() { openModal(); });
   $('btn-close-com').addEventListener('click',  closeModal);
   $('btn-cancel-com').addEventListener('click', closeModal);
   $('btn-save-com').addEventListener('click',   guardar);
-  $('com-peso').addEventListener('input',       updatePesoPreview);
-  $('modal-com-overlay').addEventListener('click', e => {
+  $('com-peso').addEventListener('input',       updatePreview);
+  $('com-f-aplicar').addEventListener('click',  applyFilter);
+  $('com-f-limpiar').addEventListener('click',  function() {
+    $('com-f-desde').value = '';
+    $('com-f-hasta').value = '';
+    applyFilter();
+  });
+  $('com-f-exportar').addEventListener('click', function() {
+    window.location.href = '/admin/residuos/comercializable/exportar';
+  });
+  $('modal-com-overlay').addEventListener('click', function(e) {
     if (e.target === $('modal-com-overlay')) closeModal();
   });
 
-  // ── API pública ──────────────────────────────────────────
-  window.COM = { editar: openModal, eliminar };
+  window.COM = {
+    eliminar: eliminar,
+    goPage: function(p) { currentPage = p; render(); }
+  };
 
-  // ── Init ─────────────────────────────────────────────────
-  renderTabla();
+  // Inicializar
+  filteredRows = allRows.slice();
+  render();
 })();
 </script>
-
 {% endblock %}

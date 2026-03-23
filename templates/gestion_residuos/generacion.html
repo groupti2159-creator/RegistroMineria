@@ -20,9 +20,24 @@
 <!-- ── TABLA RESUMEN ── -->
 <div class="table-card">
   <div class="table-header">
-    <div class="table-title-row">
-      <span class="table-icon"><i data-feather="list"></i></span>
-      <div><h3>Registros de Generación</h3><p>Historial de registros diarios</p></div>
+    <div style="display:flex;flex-direction:column;gap:.75rem;align-items:flex-start">
+      <div class="table-title-row">
+        <span class="table-icon"><i data-feather="list"></i></span>
+        <div><h3>Registros de Generación</h3><p id="gen-count">Historial de registros diarios</p></div>
+      </div>
+      <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label class="date-label" style="font-size:.75rem">Desde</label>
+          <input class="date-input" type="date" id="gen-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.25rem">
+          <label class="date-label" style="font-size:.75rem">Hasta</label>
+          <input class="date-input" type="date" id="gen-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
+        </div>
+        <button class="btn btn-secondary" id="gen-f-aplicar" style="padding:.38rem .9rem;font-size:.82rem">Filtrar</button>
+        <button class="btn" id="gen-f-limpiar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
+        <button class="btn" id="gen-f-exportar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border);display:flex;align-items:center;gap:.4rem"><i data-feather="download" style="width:14px;height:14px"></i> Excel</button>
+      </div>
     </div>
   </div>
 
@@ -39,9 +54,9 @@
           <th>Acciones</th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="gen-tbody">
         {% for r in registros %}
-        <tr>
+        <tr data-fecha="{{ r.fecha[:10] if r.fecha else '' }}" data-idx="{{ loop.index0 }}">
           <td class="col-sticky">
             {% if r.fecha %}
               {{ r.fecha[:10].split('-')[2] }}/{{ r.fecha[:10].split('-')[1] }}/{{ r.fecha[:10].split('-')[0] }}
@@ -73,6 +88,7 @@
       </tbody>
     </table>
   </div>
+  <div id="gen-pagination" style="display:flex;justify-content:center;align-items:center;gap:.5rem;padding:1rem;flex-wrap:wrap"></div>
   {% else %}
   <div class="empty-state" style="padding:4rem">
     <i data-feather="calendar" style="width:64px;height:64px;color:var(--text-muted)"></i>
@@ -200,6 +216,85 @@
 <script>
 window.SECTIONS = {{ sections | tojson }};
 window.REGISTROS = {{ registros | tojson }};
+</script>
+<script>
+(function() {
+  const PAGE_SIZE = 10;
+  let currentPage = 1;
+  let filteredRows = [];
+
+  function init() {
+    const tbody = document.getElementById('gen-tbody');
+    if (!tbody) return;
+    const allRows = Array.from(tbody.querySelectorAll('tr[data-fecha]'));
+    filteredRows = allRows.slice();
+
+    function applyFilter() {
+      const desde = document.getElementById('gen-f-desde').value;
+      const hasta = document.getElementById('gen-f-hasta').value;
+      filteredRows = allRows.filter(function(tr) {
+        const f = tr.dataset.fecha;
+        if (desde && f < desde) return false;
+        if (hasta && f > hasta) return false;
+        return true;
+      });
+      currentPage = 1;
+      render(allRows);
+    }
+
+    function render(allRows) {
+      const total = filteredRows.length;
+      const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+      if (currentPage > totalPages) currentPage = totalPages;
+      const start = (currentPage - 1) * PAGE_SIZE;
+
+      allRows.forEach(function(tr) { tr.style.display = 'none'; });
+      filteredRows.slice(start, start + PAGE_SIZE).forEach(function(tr) { tr.style.display = ''; });
+
+      const countEl = document.getElementById('gen-count');
+      if (countEl) countEl.textContent = total + ' registro(s)';
+
+      renderPagination(totalPages);
+    }
+
+    function renderPagination(totalPages) {
+      const container = document.getElementById('gen-pagination');
+      if (!container) return;
+      if (totalPages <= 1) { container.innerHTML = ''; return; }
+      const btnStyle = 'style="min-width:32px;height:32px;border-radius:6px;border:1px solid var(--border);background:var(--bg-card);cursor:pointer;font-size:.82rem;padding:0 .5rem"';
+      const activeStyle = 'style="min-width:32px;height:32px;border-radius:6px;border:1px solid var(--green);background:var(--green);color:#fff;cursor:pointer;font-size:.82rem;padding:0 .5rem;font-weight:600"';
+      let html = '<button ' + btnStyle + ' onclick="GEN.goPage(' + (currentPage-1) + ')" ' + (currentPage===1?'disabled':'') + '>‹</button>';
+      for (var i = 1; i <= totalPages; i++) {
+        html += '<button ' + (i===currentPage ? activeStyle : btnStyle) + ' onclick="GEN.goPage(' + i + ')">' + i + '</button>';
+      }
+      html += '<button ' + btnStyle + ' onclick="GEN.goPage(' + (currentPage+1) + ')" ' + (currentPage===totalPages?'disabled':'') + '>›</button>';
+      container.innerHTML = html;
+    }
+
+    document.getElementById('gen-f-aplicar').addEventListener('click', applyFilter);
+    document.getElementById('gen-f-limpiar').addEventListener('click', function() {
+      document.getElementById('gen-f-desde').value = '';
+      document.getElementById('gen-f-hasta').value = '';
+      applyFilter();
+    });
+
+    document.getElementById('gen-f-exportar').addEventListener('click', function() {
+      window.location.href = '/admin/residuos/generacion/exportar';
+    });
+
+    window.GEN = {
+      goPage: function(p) { currentPage = p; render(allRows); }
+    };
+
+    render(allRows);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
 </script>
 <script src="{{ url_for('static', filename='js/gestion_residuos/gestion_residuos.js') }}"></script>
 

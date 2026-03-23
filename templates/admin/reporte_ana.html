@@ -195,12 +195,12 @@ function limpiarFiltros() {
 }
 
 function abrirModal() {
-  document.getElementById('modalANA').style.display = 'flex';
+  document.getElementById('modalANA').classList.add('open');
   feather.replace();
 }
 
 function cerrarModal() {
-  document.getElementById('modalANA').style.display = 'none';
+  document.getElementById('modalANA').classList.remove('open');
 }
 
 function editarRegistro(id) {
