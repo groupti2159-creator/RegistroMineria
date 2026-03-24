@@ -7,7 +7,11 @@ compromisos_bp = Blueprint('compromisos', __name__)
 @admin_required
 @modulo_required('COMPROMISOS_DASH')
 def dashboard():
-    return render_template('compromisos/dashboard.html', notif_count=get_notif_count())
+    stats = {'total': 0, 'cumplidos': 0, 'pendientes': 0, 'vencidos': 0}
+    return render_template('compromisos/dashboard.html',
+                           notif_count=get_notif_count(),
+                           stats=stats,
+                           ultimos=[])
 
 @compromisos_bp.route('/compromisos')
 @admin_required
