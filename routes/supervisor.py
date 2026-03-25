@@ -1,38 +1,17 @@
 ﻿from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
 from extensions import mysql
-from utils.helpers import save_image, sp_exec, sp_one
+from utils.helpers import save_image, sp_exec, sp_one, get_notif_count, modulo_required
 
 supervisor_bp = Blueprint('supervisor', __name__)
 
 def sup_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session or session.get('rol') not in ('Supervisor','Trabajador'):
+        if 'user_id' not in session or session.get('rol') not in ('Supervisor', 'Trabajador'):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated
-
-def modulo_required(codigo):
-    def decorator(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            if 'user_id' not in session:
-                return redirect(url_for('auth.login'))
-            if codigo not in session.get('accesos', []):
-                return render_template('auth/sin_acceso.html'), 403
-            return f(*args, **kwargs)
-        return decorated
-    return decorator
-
-def get_notif_count():
-    try:
-        cur  = mysql.connection.cursor()
-        rows = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
-        cur.close()
-        return rows[0]['total'] if rows else 0
-    except:
-        return 0
 
 @supervisor_bp.route('/desvios')
 @sup_required

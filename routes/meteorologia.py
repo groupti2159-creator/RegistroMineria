@@ -7,7 +7,10 @@ meteorologia_bp = Blueprint('meteorologia', __name__)
 @admin_required
 @modulo_required('DATA_METRO_DASH')
 def dashboard():
-    return render_template('meteorologia/dashboard.html', notif_count=get_notif_count())
+    import os
+    return render_template('meteorologia/dashboard.html',
+                           notif_count=get_notif_count(),
+                           wx_api_key=os.getenv('OPENWEATHER_API_KEY', ''))
 
 @meteorologia_bp.route('/meteorologia')
 @admin_required

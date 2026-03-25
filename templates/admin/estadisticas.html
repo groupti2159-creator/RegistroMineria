@@ -51,7 +51,7 @@
 </div>
 
 <!-- MODAL -->
-<div class="modal-overlay" id="modalEstadisticas" style="display:none;align-items:flex-start;padding-top:2rem">
+<div class="modal-overlay" id="modalEstadisticas" style="align-items:flex-start;padding-top:2rem">
   <div class="modal-box" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto">
     <div class="modal-header">
       <div class="modal-title-group">
@@ -178,9 +178,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const URLS = {
-  areas: "{{ url_for('admin.estadisticas_areas') }}",
-  ccta:  "{{ url_for('admin.estadisticas_ccta') }}",
-  tipos: "{{ url_for('admin.estadisticas_tipos') }}"
+  areas: "{{ url_for('da.estadisticas_areas') }}",
+  ccta:  "{{ url_for('da.estadisticas_ccta') }}",
+  tipos: "{{ url_for('da.estadisticas_tipos') }}"
 };
 
 const CONFIG = {
@@ -256,15 +256,16 @@ function abrirModal(tipo) {
   document.getElementById('modalSubtitulo').textContent = cfg.subtitulo;
   document.getElementById('filtroFechaIni').value = '';
   document.getElementById('filtroFechaFin').value = '';
-  document.getElementById('modalEstadisticas').style.display = 'flex';
+  document.getElementById('modalEstadisticas').classList.add('open');
   feather.replace();
   if (previewCache[tipo]) renderModalContenido(cfg, previewCache[tipo]);
   else cargarModal();
 }
 
 function cerrarModal() {
-  document.getElementById('modalEstadisticas').style.display = 'none';
+  document.getElementById('modalEstadisticas').classList.remove('open');
   if (chartModal) { chartModal.destroy(); chartModal = null; }
+  document.getElementById('modalContenido').innerHTML = '';
   tipoActual = null;
 }
 

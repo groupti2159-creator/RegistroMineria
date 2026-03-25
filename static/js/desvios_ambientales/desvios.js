@@ -160,7 +160,7 @@ function buildDetalleHTML(data) {
 function verDetalle(rid) {
   const url = DETALLE_URL_BASE + rid;
   document.getElementById('detalleContent').innerHTML = '<div class="loading-state">Cargando...</div>';
-  document.getElementById('modalDetalle').style.display = 'flex';
+  document.getElementById('modalDetalle').classList.add('open');
   fetch(url).then(r => r.json()).then(data => {
     document.getElementById('detalleContent').innerHTML = buildDetalleHTML(data);
     // Inicializar iconos Feather después de cargar el contenido
@@ -205,7 +205,7 @@ function editarRegistro(rid) {
     // Cargar imágenes existentes
     renderEditImagenes(data.evidencias || [], data.levantamientos || []);
 
-    document.getElementById('modalEditar').style.display = 'flex';
+    document.getElementById('modalEditar').classList.add('open');
   });
 }
 
@@ -372,7 +372,7 @@ function abrirSubirModal(rid) {
   const form = document.getElementById('formSubir');
   if (form) {
     form.action = SUBIR_URL_BASE + rid;
-    document.getElementById('modalSubir').style.display = 'flex';
+    document.getElementById('modalSubir').classList.add('open');
   }
 }
 
@@ -392,8 +392,8 @@ function abrirValidarConjunto(registroId, levantamientos) {
   
   document.getElementById('formValidar').action = VALIDAR_URL_BASE + registroId;
   renderValidarGallery();
-  document.getElementById('modalDetalle').style.display = 'none';
-  document.getElementById('modalValidar').style.display = 'flex';
+  document.getElementById('modalDetalle').classList.remove('open');
+  document.getElementById('modalValidar').classList.add('open');
 }
 
 function renderValidarGallery() {
@@ -446,7 +446,7 @@ function validarFormulario() {
 }
 
 function cerrarModalValidar() {
-  document.getElementById('modalValidar').style.display = 'none';
+  document.getElementById('modalValidar').classList.remove('open');
   document.getElementById('validarComentario').value = '';
   imagenesValidar = [];
   imagenesOriginales = [];
@@ -546,7 +546,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Validar al abrir el modal
   const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
-      if (mutation.target === modalCrear && modalCrear.style.display === 'flex') {
+      if (mutation.target === modalCrear && modalCrear.classList.contains('open')) {
         // Poner fecha de hoy del navegador si el campo está vacío
         const today = new Date();
         const yyyy = today.getFullYear();
@@ -562,7 +562,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
   
-  observer.observe(modalCrear, { attributes: true, attributeFilter: ['style'] });
+  observer.observe(modalCrear, { attributes: true, attributeFilter: ['class'] });
   
   // Agregar validación personalizada antes del submit
   formCrear.addEventListener('submit', function(e) {
@@ -616,7 +616,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Fallback manual si la función no está disponible
         const url = DETALLE_URL_BASE + verDetalleId;
         document.getElementById('detalleContent').innerHTML = '<div class="loading-state">Cargando...</div>';
-        document.getElementById('modalDetalle').style.display = 'flex';
+        document.getElementById('modalDetalle').classList.add('open');
         fetch(url).then(r => r.json()).then(data => {
           document.getElementById('detalleContent').innerHTML = buildDetalleHTML(data);
           setTimeout(() => {
@@ -693,7 +693,7 @@ document.addEventListener('DOMContentLoaded', function () {
   });
   const modalEditar = document.getElementById('modalEditar');
   if (modalEditar) {
-    observer.observe(modalEditar, { attributes: true, attributeFilter: ['style'] });
+    observer.observe(modalEditar, { attributes: true, attributeFilter: ['class'] });
   }
 
   // Limpiar clases al resetear el modal crear

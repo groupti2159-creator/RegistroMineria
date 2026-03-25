@@ -36,9 +36,9 @@
 <!-- ===== MODAL DETALLE ===== -->
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal-box modal-large">
-    <div class="modal-header" style="background:#2d3748">
-      <h3 style="color:white">📄 Detalle del Reporte</h3>
-      <button class="modal-close" style="color:white" onclick="document.getElementById('modalDetalle').style.display='none'">✕</button>
+    <div class="modal-header">
+      <h3>📄 Detalle del Reporte</h3>
+      <button class="modal-close" onclick="document.getElementById('modalDetalle').classList.remove('open')">✕</button>
     </div>
     <div class="modal-body" id="detalleContent">
       <div class="loading-state">Cargando...</div>
@@ -49,11 +49,11 @@
 <!-- ===== MODAL SUBIR LEVANTAMIENTO ===== -->
 <div class="modal-overlay" id="modalSubir">
   <div class="modal-box">
-    <div class="modal-header" style="background:#7c3aed">
+    <div class="modal-header">
       <div>
-        <h3 style="color:white">☁️ Subir Imagen de Levantamiento</h3>
+        <h3>☁️ Subir Imagen de Levantamiento</h3>
       </div>
-      <button class="modal-close" style="color:white" onclick="document.getElementById('modalSubir').style.display='none'">✕</button>
+      <button class="modal-close" onclick="document.getElementById('modalSubir').classList.remove('open')">✕</button>
     </div>
     <form method="POST" id="formSubir" enctype="multipart/form-data">
       <div class="modal-body">
@@ -63,19 +63,19 @@
         <div class="form-group">
           <label class="form-label">Seleccionar Imágenes (múltiples)</label>
           <div class="file-upload-area">
-            <input type="file" name="imagenes" multiple accept="image/jpg,image/jpeg,image/png,image/gif" class="file-input" id="fileSubirImagenes">
+            <input type="file" name="imagenes" multiple accept="image/jpg,image/jpeg,image/png,image/gif,image/webp" class="file-input" id="fileSubirImagenes">
             <label for="fileSubirImagenes" class="file-label">
               <span class="btn btn-outline-purple">Elegir archivos</span>
               <span class="file-name" id="nameSubir">Sin archivos seleccionados</span>
             </label>
           </div>
-          <small class="form-hint">Formatos permitidos: JPG, PNG, GIF. Tamaño máximo: 5MB por imagen. Máx 5 imágenes.</small>
+          <small class="form-hint">Formatos permitidos: JPG, PNG, GIF, WebP. Tamaño máximo: 5MB por imagen. Máx 5 imágenes.</small>
           <div id="previewSubirImagenes" class="image-preview-container" style="display:none"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="submit" class="btn btn-lg" style="background:#7c3aed;color:white">☁️ Subir Imágenes</button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalSubir').style.display='none'">Cancelar</button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalSubir').classList.remove('open')">Cancelar</button>
       </div>
     </form>
   </div>

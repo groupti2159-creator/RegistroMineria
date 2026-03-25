@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (result.success) {
           // Cerrar modal
-          modalCrear.style.display = 'none';
+          modalCrear.classList.remove('open');
           
           // Mostrar notificación
           mostrarNotificacion(result.message || 'Registro creado exitosamente', 'success');
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Significa que funcionó y redirigió
         mostrarNotificacion('Registro creado exitosamente', 'success');
         await recargarTabla();
-        modalCrear.style.display = 'none';
+        modalCrear.classList.remove('open');
         if (typeof resetFormCrear === 'function') resetFormCrear();
         else this.reset();
       }
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         
         if (result.success) {
-          modalEditar.style.display = 'none';
+          modalEditar.classList.remove('open');
           mostrarNotificacion(result.message || 'Registro actualizado exitosamente', 'success');
           await recargarTabla();
         } else {
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Comportamiento antiguo (HTML)
         mostrarNotificacion('Registro actualizado exitosamente', 'success');
         await recargarTabla();
-        modalEditar.style.display = 'none';
+        modalEditar.classList.remove('open');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
           if (typeof cerrarModalValidar === 'function') cerrarModalValidar();
           else {
             const modalValidar = document.getElementById('modalValidar');
-            if (modalValidar) modalValidar.style.display = 'none';
+            if (modalValidar) modalValidar.classList.remove('open');
           }
           mostrarNotificacion(result.message || 'Imágenes validadas exitosamente', 'success');
           await recargarTabla();
@@ -376,7 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (result.success) {
           const modalSubir = document.getElementById('modalSubir');
-          if (modalSubir) modalSubir.style.display = 'none';
+          if (modalSubir) modalSubir.classList.remove('open');
           
           mostrarNotificacion(result.message || 'Imágenes subidas exitosamente', 'success');
           await recargarTabla();
@@ -389,7 +389,7 @@ document.addEventListener('DOMContentLoaded', function() {
         mostrarNotificacion('Imágenes subidas exitosamente', 'success');
         await recargarTabla();
         const modalSubir = document.getElementById('modalSubir');
-        if (modalSubir) modalSubir.style.display = 'none';
+        if (modalSubir) modalSubir.classList.remove('open');
         this.reset();
       }
     } catch (error) {

@@ -69,9 +69,9 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script>
 const URLS = {
-  areas: "{{ url_for('admin.estadisticas_areas') }}",
-  ccta:  "{{ url_for('admin.estadisticas_ccta') }}",
-  tipos: "{{ url_for('admin.estadisticas_tipos') }}"
+  areas: "{{ url_for('da.estadisticas_areas') }}",
+  ccta:  "{{ url_for('da.estadisticas_ccta') }}",
+  tipos: "{{ url_for('da.estadisticas_tipos') }}"
 };
 const CONFIG = {
   areas: {
@@ -111,6 +111,7 @@ function abrirModal(tipo) {
 function cerrarModal() {
   document.getElementById('modalEstadisticas').classList.remove('open');
   if (chartModal) { chartModal.destroy(); chartModal = null; }
+  document.getElementById('modalContenido').innerHTML = '';
   tipoActual = null;
 }
 function aplicarFiltro() { cargarModal(); }

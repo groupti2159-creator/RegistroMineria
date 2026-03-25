@@ -291,7 +291,7 @@
           <p>Modifica las credenciales de un usuario</p>
         </div>
       </div>
-      <button class="modal-close" onclick="document.getElementById('modalCambiarPassword').style.display='none'">
+      <button class="modal-close" onclick="document.getElementById('modalCambiarPassword').classList.remove('open')">
         <i data-feather="x"></i>
       </button>
     </div>
@@ -322,7 +322,7 @@
           <i data-feather="check"></i> Cambiar Contraseña
         </button>
         <button type="button" class="btn btn-secondary btn-lg" 
-                onclick="document.getElementById('modalCambiarPassword').style.display='none'">
+                onclick="document.getElementById('modalCambiarPassword').classList.remove('open')">
           Cancelar
         </button>
       </div>
@@ -394,11 +394,11 @@ function abrirModalCrear() {
   document.getElementById('formCrearUsuario').reset();
   document.getElementById('crear_modulos_container').style.display = 'none';
   document.getElementById('crear_modulos_grid').innerHTML = '';
-  document.getElementById('modalCrearUsuario').style.display = 'flex';
+  document.getElementById('modalCrearUsuario').classList.add('open');
   feather.replace();
 }
 function cerrarModalCrear() {
-  document.getElementById('modalCrearUsuario').style.display = 'none';
+  document.getElementById('modalCrearUsuario').classList.remove('open');
 }
 
 function abrirModalEditar(id, nombre, correo, rolId, idarea, cargo) {
@@ -408,21 +408,20 @@ function abrirModalEditar(id, nombre, correo, rolId, idarea, cargo) {
   document.getElementById('editar_correo').value = correo;
   document.getElementById('editar_idarea').value = idarea || '';
   document.getElementById('editar_cargo').value  = cargo || '';
-  // Seleccionar rol actual y cargar sus módulos
   const rolSelect = document.getElementById('editar_rol');
   rolSelect.value = rolId || '';
   if (rolId) cargarModulosRol(rolId, 'editar_modulos_container');
   else document.getElementById('editar_modulos_container').style.display = 'none';
-  document.getElementById('modalEditarUsuario').style.display = 'flex';
+  document.getElementById('modalEditarUsuario').classList.add('open');
   feather.replace();
 }
 function cerrarModalEditar() {
-  document.getElementById('modalEditarUsuario').style.display = 'none';
+  document.getElementById('modalEditarUsuario').classList.remove('open');
 }
 
 function abrirModalCambiarPassword() {
   document.getElementById('formCambiarPassword').reset();
-  document.getElementById('modalCambiarPassword').style.display = 'flex';
+  document.getElementById('modalCambiarPassword').classList.add('open');
 }
 
 function filtrarUsuarios(q) {
@@ -502,7 +501,7 @@ async function cambiarPassword(e) {
       headers:{'X-Requested-With':'XMLHttpRequest'} });
     const json = await res.json();
     if (json.success) {
-      document.getElementById('modalCambiarPassword').style.display = 'none';
+      document.getElementById('modalCambiarPassword').classList.remove('open');
       showToast('Contraseña actualizada', 'success');
     } else showToast(json.error || 'Error', 'error');
   } catch(err) { showToast('Error de conexión', 'error'); }

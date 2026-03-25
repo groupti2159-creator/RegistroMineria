@@ -14,7 +14,7 @@
 </div>
 
 <div class="action-bar">
-  <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='flex'">
+  <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.add('open')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Reporte Ambiental</strong>
   </button>
   <a href="{{ url_for('da.exportar_excel') }}" class="btn btn-export">
@@ -61,7 +61,7 @@
           <p>Completa todos los campos obligatorios (*)</p>
         </div>
       </div>
-      <button class="modal-close" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'">
+      <button class="modal-close" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.remove('open')">
         <i data-feather="x"></i>
       </button>
     </div>
@@ -239,7 +239,7 @@
           <i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
           Guardar Reporte
         </button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'">
+        <button type="button" class="btn btn-secondary btn-lg" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.remove('open')">
           <i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
           Cancelar
         </button>
@@ -259,7 +259,7 @@
           <p>Modifica los campos necesarios</p>
         </div>
       </div>
-      <button class="modal-close" onclick="document.getElementById('modalEditar').style.display='none'">
+      <button class="modal-close" onclick="document.getElementById('modalEditar').classList.remove('open')">
         <i data-feather="x"></i>
       </button>
     </div>
@@ -404,7 +404,7 @@
       </div>
       <div class="modal-footer">
         <button type="submit" class="btn btn-yellow btn-lg"><i data-feather="save" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Actualizar Reporte</button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalEditar').style.display='none'"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalEditar').classList.remove('open')"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
       </div>
     </form>
   </div>
@@ -415,7 +415,7 @@
   <div class="modal-box modal-large">
     <div class="modal-header">
       <h3><i data-feather="file-text"></i> Detalle del Reporte</h3>
-      <button class="modal-close" onclick="document.getElementById('modalDetalle').style.display='none'">
+      <button class="modal-close" onclick="document.getElementById('modalDetalle').classList.remove('open')">
         <i data-feather="x"></i>
       </button>
     </div>
@@ -467,5 +467,5 @@ const VALIDAR_URL_BASE = "{{ url_for('da.validar_levantamiento', rid='PLACEHOLDE
 const ELIMINAR_URL_BASE = "{{ url_for('da.eliminar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = true;
 </script>
-<script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}?v=3"></script>
 {% endblock %}

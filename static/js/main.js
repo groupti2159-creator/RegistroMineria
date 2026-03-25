@@ -64,15 +64,18 @@ function closeMobileMenu() {
 function toggleSubmenu(button) {
   const submenu = button.nextElementSibling;
   const isOpen = submenu.classList.contains('open');
-  
-  // Cerrar todos los otros submenus
-  document.querySelectorAll('.nav-submenu.open').forEach(menu => {
-    if (menu !== submenu) {
+
+  // Cerrar otros submenus del mismo nivel (no los padres)
+  const parentSubmenu = button.closest('.nav-submenu');
+  const selector = parentSubmenu ? '.nav-submenu.open' : '.nav-group > .nav-submenu.open';
+  document.querySelectorAll(selector).forEach(menu => {
+    if (menu !== submenu && !menu.contains(button)) {
       menu.classList.remove('open');
-      menu.previousElementSibling.classList.remove('open');
+      const btn = menu.previousElementSibling;
+      if (btn) btn.classList.remove('active');
     }
   });
-  
+
   // Toggle el submenu actual
   if (isOpen) {
     submenu.classList.remove('open');
@@ -81,7 +84,7 @@ function toggleSubmenu(button) {
     submenu.classList.add('open');
     button.classList.add('open');
   }
-  
+
   // Reinicializar iconos
   if (typeof feather !== 'undefined') {
     feather.replace({ 'stroke-width': 1.2 });
@@ -220,7 +223,7 @@ document.addEventListener('click', e => {
 // Close modals on overlay click
 document.addEventListener('click', e => {
   if (e.target.classList.contains('modal-overlay')) {
-    e.target.style.display = 'none';
+    e.target.classList.remove('open');
   }
 });
 
@@ -422,13 +425,16 @@ function toggleProyectos() {
   const dropdown = document.getElementById('proyectoDropdown');
   const btn = document.getElementById('proyectoBtn');
   if (!dropdown || !btn) return;
-  
+
   const isOpen = dropdown.classList.contains('open');
-  
+
   if (isOpen) {
     dropdown.classList.remove('open');
     btn.classList.remove('open');
   } else {
+    // Posicionar el dropdown alineado verticalmente con el botón
+    const rect = btn.getBoundingClientRect();
+    dropdown.style.top = rect.top + 'px';
     dropdown.classList.add('open');
     btn.classList.add('open');
     cargarProyectosDisponibles();
@@ -466,14 +472,14 @@ function cargarProyectosDisponibles() {
       
       console.log('Generando HTML para', data.proyectos.length, 'proyectos');
       list.innerHTML = data.proyectos.map(p => `
-        <div class="proyecto-item ${p.activo ? 'active' : ''}" 
+        <div class="proyecto-item ${p.activo ? 'active' : ''}"
              onclick="cambiarProyecto('${p.codigo}', '${p.nombre}')">
-          <div class="proyecto-item-icon" style="background: #22c55e20; color: #22c55e">
-            <i data-feather="folder"></i>
+          <div class="proyecto-item-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
           </div>
           <div class="proyecto-item-info">
             <span class="proyecto-item-nombre">${p.nombre}</span>
-            <span class="proyecto-item-desc">${p.descripcion || 'Sin descripción'}</span>
+            <span class="proyecto-item-desc">${p.descripcion || p.codigo}</span>
           </div>
           <span class="proyecto-item-check">✓</span>
         </div>
@@ -579,6 +585,17 @@ document.addEventListener('DOMContentLoaded', function() {
       })
       .catch(() => { nombreEl.textContent = 'Error'; });
   }
+
+  // Cerrar dropdown de proyectos al hacer clic fuera
+  document.addEventListener('click', function(e) {
+    const dropdown = document.getElementById('proyectoDropdown');
+    const btn = document.getElementById('proyectoBtn');
+    if (!dropdown || !btn) return;
+    if (!btn.contains(e.target) && !dropdown.contains(e.target)) {
+      dropdown.classList.remove('open');
+      btn.classList.remove('open');
+    }
+  });
 });
 
 
