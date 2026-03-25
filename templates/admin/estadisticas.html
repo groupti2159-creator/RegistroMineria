@@ -52,16 +52,18 @@
 
 <!-- MODAL -->
 <div class="modal-overlay" id="modalEstadisticas" style="display:none;align-items:flex-start;padding-top:2rem">
-  <div class="modal-box" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto">
+  <div class="modal" style="max-width:900px;width:95%;max-height:90vh;overflow-y:auto">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="bar-chart-2"></i></span>
-        <div>
-          <h3 id="modalTitulo">Estadisticas</h3>
-          <p id="modalSubtitulo"></p>
-        </div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Estadísticas</p>
+        <h2 class="modal-title" id="modalTitulo">Estadisticas</h2>
+        <p id="modalSubtitulo" style="font-size:.8rem;color:var(--text-3);margin-top:2px"></p>
       </div>
-      <button class="modal-close" onclick="cerrarModal()"><i data-feather="x"></i></button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarModal()" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border)">
       <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">

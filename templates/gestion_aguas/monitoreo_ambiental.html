@@ -267,13 +267,17 @@
 
 <!-- ═══ MODAL EFLUENTES ═══ -->
 <div class="modal-overlay" id="modal-efluentes">
-  <div class="modal-box modal-large">
+  <div class="modal modal-large">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="droplet"></i></span>
-        <div><h3>Nuevo Registro — Efluentes</h3><p>Completa todos los campos</p></div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Gestión de Aguas</p>
+        <h2 class="modal-title">Nuevo Registro — Efluentes</h2>
       </div>
-      <button class="modal-close" onclick="cerrarModal('modal-efluentes')"><i data-feather="x"></i></button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarModal('modal-efluentes')" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form method="POST" action="/admin/aguas/crear/efluentes">
       <div class="modal-body">
@@ -344,13 +348,17 @@
 
 <!-- ═══ MODAL PTARD ═══ -->
 <div class="modal-overlay" id="modal-ptard">
-  <div class="modal-box modal-large">
+  <div class="modal modal-large">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="filter"></i></span>
-        <div><h3>Nuevo Registro — PTARD</h3><p>Completa todos los campos</p></div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Gestión de Aguas</p>
+        <h2 class="modal-title">Nuevo Registro — PTARD</h2>
       </div>
-      <button class="modal-close" onclick="cerrarModal('modal-ptard')"><i data-feather="x"></i></button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarModal('modal-ptard')" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form method="POST" action="/admin/aguas/crear/ptard">
       <div class="modal-body">
@@ -413,13 +421,17 @@
 
 <!-- ═══ MODAL PTAP ═══ -->
 <div class="modal-overlay" id="modal-ptap">
-  <div class="modal-box modal-large">
+  <div class="modal modal-large">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="droplet"></i></span>
-        <div><h3>Nuevo Registro — PTAP</h3><p>Completa todos los campos</p></div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Gestión de Aguas</p>
+        <h2 class="modal-title">Nuevo Registro — PTAP</h2>
       </div>
-      <button class="modal-close" onclick="cerrarModal('modal-ptap')"><i data-feather="x"></i></button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarModal('modal-ptap')" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form method="POST" action="/admin/aguas/crear/ptap">
       <div class="modal-body">

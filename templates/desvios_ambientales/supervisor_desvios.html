@@ -36,9 +36,16 @@
 <!-- ===== MODAL DETALLE ===== -->
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal-box modal-large">
-    <div class="modal-header" style="background:#2d3748">
-      <h3 style="color:white">📄 Detalle del Reporte</h3>
-      <button class="modal-close" style="color:white" onclick="document.getElementById('modalDetalle').style.display='none'">✕</button>
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <h2 class="modal-title">Detalle del Reporte</h2>
+      </div>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="document.getElementById('modalDetalle').style.display='none'" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <div class="modal-body" id="detalleContent">
       <div class="loading-state">Cargando...</div>
@@ -49,11 +56,16 @@
 <!-- ===== MODAL SUBIR LEVANTAMIENTO ===== -->
 <div class="modal-overlay" id="modalSubir">
   <div class="modal-box">
-    <div class="modal-header" style="background:#7c3aed">
-      <div>
-        <h3 style="color:white">☁️ Subir Imagen de Levantamiento</h3>
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <h2 class="modal-title">Subir Imagen de Levantamiento</h2>
       </div>
-      <button class="modal-close" style="color:white" onclick="document.getElementById('modalSubir').style.display='none'">✕</button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="document.getElementById('modalSubir').style.display='none'" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form method="POST" id="formSubir" enctype="multipart/form-data">
       <div class="modal-body">

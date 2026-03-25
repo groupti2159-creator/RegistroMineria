@@ -103,16 +103,17 @@
 
 <!-- ===== MODAL CREAR USUARIO ===== -->
 <div class="modal-overlay" id="modalCrearUsuario">
-  <div class="modal-box" style="max-width:560px">
+  <div class="modal" style="max-width:560px">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="user-plus"></i></span>
-        <div>
-          <h3>Nuevo Usuario</h3>
-          <p>Completa el formulario para crear un usuario</p>
-        </div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Configuración</p>
+        <h2 class="modal-title">Nuevo Usuario</h2>
       </div>
-      <button class="modal-close" onclick="cerrarModalCrear()"><i data-feather="x"></i></button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarModalCrear()" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form id="formCrearUsuario" onsubmit="crearUsuario(event)">
       <div class="modal-body">
@@ -198,16 +199,17 @@
 
 <!-- ===== MODAL EDITAR USUARIO ===== -->
 <div class="modal-overlay" id="modalEditarUsuario">
-  <div class="modal-box" style="max-width:560px">
+  <div class="modal" style="max-width:560px">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="edit-2"></i></span>
-        <div>
-          <h3>Editar Usuario</h3>
-          <p>Modifica los datos del usuario</p>
-        </div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Configuración</p>
+        <h2 class="modal-title">Editar Usuario</h2>
       </div>
-      <button class="modal-close" onclick="cerrarModalEditar()"><i data-feather="x"></i></button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarModalEditar()" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form id="formEditarUsuario" onsubmit="editarUsuario(event)">
       <input type="hidden" id="editar_id" name="id">
@@ -282,18 +284,17 @@
 
 <!-- ===== MODAL CAMBIAR CONTRASEÑA ===== -->
 <div class="modal-overlay" id="modalCambiarPassword">
-  <div class="modal-box" style="max-width:440px">
+  <div class="modal" style="max-width:440px">
     <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn"><i data-feather="key"></i></span>
-        <div>
-          <h3>Cambiar Contraseña</h3>
-          <p>Modifica las credenciales de un usuario</p>
-        </div>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Configuración</p>
+        <h2 class="modal-title">Cambiar Contraseña</h2>
       </div>
-      <button class="modal-close" onclick="document.getElementById('modalCambiarPassword').style.display='none'">
-        <i data-feather="x"></i>
-      </button>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="document.getElementById('modalCambiarPassword').style.display='none'" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <form id="formCambiarPassword" onsubmit="cambiarPassword(event)">
       <div class="modal-body">
