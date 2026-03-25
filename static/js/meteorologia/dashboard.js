@@ -62,7 +62,7 @@
   // ── Fetch OpenWeather ─────────────────────────────────────────────────────
 
   async function fetchWeather() {
-    const key  = window.WX_API_KEY || '';
+    const key  = window.WX_API_KEY || document.getElementById('wx-apikey')?.value.trim() || '';
     const city = document.getElementById('wx-city').value.trim();
     if (!key)  { setStatus('error', 'API key no configurada'); return; }
     if (!city) { setStatus('error', 'Falta el nombre de la ciudad'); return; }
