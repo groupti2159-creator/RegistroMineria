@@ -138,7 +138,7 @@ def set_session(user):
 
 def redirect_by_rol(rol):
     if rol == 'Administrador':
-        return redirect(url_for('admin.dashboard'))
+        return redirect(url_for('da.dashboard'))
     return redirect(url_for('supervisor.desvios'))
 
 @auth_bp.route('/', methods=['GET','POST'])

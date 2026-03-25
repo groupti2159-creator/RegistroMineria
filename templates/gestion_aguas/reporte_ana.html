@@ -1,0 +1,240 @@
+{% extends 'base.html' %}
+{% block title %}Reportes ANA — ecoSupervisor{% endblock %}
+{% block page_title %}Reportes ANA{% endblock %}
+
+{% block content %}
+
+<div class="page-header-section">
+  <div class="page-header-icon"><i data-feather="clipboard"></i></div>
+  <div>
+    <h2 class="section-title">Reportes <span class="text-green">ANA</span></h2>
+    <p class="section-sub">Autoridad Nacional del Agua — Registro de captación hídrica</p>
+  </div>
+</div>
+
+<!-- BOTONES -->
+<div class="action-bar">
+  <button class="btn btn-primary" onclick="abrirModal()">
+    <i data-feather="plus-circle"></i> <strong>Nuevo Reporte ANA</strong>
+  </button>
+  <a href="#" class="btn btn-export"
+     onclick="showToast('Exportación próximamente disponible','info');return false;">
+    <i data-feather="download"></i> Exportar <strong>.xlsx</strong>
+  </a>
+</div>
+
+<!-- FILTROS -->
+<div class="filter-bar">
+  <div class="filter-select-wrapper">
+    <i data-feather="search"></i>
+    <input type="text" id="inputBuscar" class="filter-select"
+           placeholder="Buscar..."
+           oninput="aplicarFiltros()" style="min-width:220px;">
+  </div>
+  <div class="filter-select-wrapper">
+    <i data-feather="calendar"></i>
+    <input type="date" id="filtroFechaIni" class="filter-select" onchange="aplicarFiltros()">
+  </div>
+  <span style="align-self:center;color:var(--text-muted);font-size:.85rem;">hasta</span>
+  <div class="filter-select-wrapper">
+    <i data-feather="calendar"></i>
+    <input type="date" id="filtroFechaFin" class="filter-select" onchange="aplicarFiltros()">
+  </div>
+  <button class="btn btn-secondary" onclick="limpiarFiltros()" style="padding:.45rem .9rem;">
+    <i data-feather="x" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Limpiar
+  </button>
+  <span class="filter-count" id="contadorRegistros">{{ registros|length }} registros</span>
+</div>
+
+<!-- TABLA -->
+<div class="card" style="overflow:hidden;">
+  <div class="card-title">
+    <i data-feather="list"></i>
+    Reportes ANA
+    <span class="badge-count" id="contadorTabla">{{ registros|length }} registros</span>
+  </div>
+  <div style="display:block;width:100%;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;">
+    <table class="data-table ana-table" style="min-width:700px;">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Tiempo de Operación<br>(Horas)</th>
+          <th>Contómetro Inicial</th>
+          <th>Contómetro Final</th>
+          <th>Caudal<br>(m³/seg)</th>
+          <th>Volumen de Agua<br>Captado (m³)</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody id="tbody-ana">
+        {% for r in registros %}
+        <tr data-search="{{ r.fecha }}" data-fecha="{{ r.fecha }}">
+          <td>{{ r.fecha }}</td>
+          <td>{{ r.tiempo_operacion }}</td>
+          <td>{{ r.contometro_inicial }}</td>
+          <td>{{ r.contometro_final }}</td>
+          <td>{{ r.caudal }}</td>
+          <td>{{ r.volumen_captado }}</td>
+          <td>
+            <div style="display:flex;gap:.4rem;">
+              <button class="btn-icon btn-icon-edit" onclick="editarRegistro('{{ r.id }}')"><i data-feather="edit-2"></i></button>
+              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('{{ r.id }}')"><i data-feather="trash-2"></i></button>
+            </div>
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2.5rem;">
+          <i data-feather="inbox" style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
+          No hay reportes ANA registrados
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+
+<!-- ═══ MODAL NUEVO REPORTE ═══ -->
+<div class="modal-overlay" id="modalANA">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="clipboard"></i></span>
+        <div><h3>Nuevo Reporte ANA</h3><p>Completa todos los campos</p></div>
+      </div>
+      <button class="modal-close" onclick="cerrarModal()"><i data-feather="x"></i></button>
+    </div>
+    <form method="POST" action="/admin/ana/crear">
+      <div class="modal-body">
+        <div class="form-section">
+          <h4 class="form-section-title"><i data-feather="info"></i> Datos del Reporte</h4>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Fecha *</label>
+              <input type="date" name="fecha" class="form-input" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Tiempo de Operación (Horas) *</label>
+              <input type="text" name="tiempo_operacion" class="form-input"
+                     placeholder="Ej: 24 horas" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Contómetro Inicial *</label>
+              <input type="number" step="0.01" name="contometro_inicial" class="form-input"
+                     placeholder="0.00" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Contómetro Final *</label>
+              <input type="number" step="0.01" name="contometro_final" class="form-input"
+                     placeholder="0.00" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Caudal (m³/seg)</label>
+              <input type="number" step="0.000000001" name="caudal" class="form-input"
+                     placeholder="0.000000000">
+              <small class="form-hint">Se puede calcular automáticamente</small>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Volumen de Agua Captado (m³)</label>
+              <input type="number" step="0.01" name="volumen_captado" class="form-input"
+                     placeholder="0.00">
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i data-feather="check"></i> Guardar Reporte
+        </button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModal()">
+          Cancelar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+.ana-table th { white-space: nowrap; font-size: .8rem; }
+.ana-table td { font-size: .85rem; }
+</style>
+
+<script>
+function aplicarFiltros() {
+  const q  = document.getElementById('inputBuscar').value.toLowerCase();
+  const fi = document.getElementById('filtroFechaIni').value;
+  const ff = document.getElementById('filtroFechaFin').value;
+  const tbody = document.getElementById('tbody-ana');
+  if (!tbody) return;
+  let v = 0;
+  tbody.querySelectorAll('tr[data-fecha]').forEach(tr => {
+    const ok = (!q  || tr.textContent.toLowerCase().includes(q))
+            && (!fi || tr.dataset.fecha >= fi)
+            && (!ff || tr.dataset.fecha <= ff);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) v++;
+  });
+  document.getElementById('contadorRegistros').textContent = v + ' registros';
+  document.getElementById('contadorTabla').textContent     = v + ' registros';
+}
+
+function limpiarFiltros() {
+  document.getElementById('inputBuscar').value = '';
+  document.getElementById('filtroFechaIni').value = '';
+  document.getElementById('filtroFechaFin').value = '';
+  aplicarFiltros();
+}
+
+function abrirModal() {
+  document.getElementById('modalANA').classList.add('open');
+  feather.replace();
+}
+
+function cerrarModal() {
+  document.getElementById('modalANA').classList.remove('open');
+}
+
+function editarRegistro(id) {
+  showToast('Editar reporte #'+id+' — pendiente de endpoint','info');
+}
+
+async function eliminarRegistro(id) {
+  if (!confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')) return;
+  try {
+    const res  = await fetch('/admin/ana/eliminar/'+id,
+      {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}});
+    const json = await res.json();
+    if (json.success) {
+      showToast('Reporte eliminado','success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast(json.error || 'Error al eliminar','error');
+    }
+  } catch(e) { showToast('Error de conexión','error'); }
+}
+
+function showToast(msg, type) {
+  const d = document.createElement('div');
+  d.className = 'alert alert-'+type;
+  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
+  d.innerHTML = '<span>'+msg+'</span>'
+    + '<button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>';
+  document.body.appendChild(d);
+  feather.replace();
+  setTimeout(() => d.remove(), 4000);
+}
+
+document.getElementById('modalANA').addEventListener('click', function(e) {
+  if (e.target === this) cerrarModal();
+});
+
+document.addEventListener('DOMContentLoaded', () => feather.replace());
+</script>
+{% endblock %}

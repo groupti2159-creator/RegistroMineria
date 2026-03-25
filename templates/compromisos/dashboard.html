@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Compromisos — ecoSupervisor{% endblock %}
+{% block page_title %}Compromisos{% endblock %}
+
+{% block content %}
+<div class="stats-cards-row">
+  <div class="stat-card">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">
+        <i data-feather="check-square" style="width:36px;height:36px;color:#fff"></i>
+      </div>
+      <div class="stat-card-title">Total</div>
+      <div class="stat-value">{{ stats.total }}</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#22c55e,#15803d)">
+        <i data-feather="check" style="width:36px;height:36px;color:#fff"></i>
+      </div>
+      <div class="stat-card-title">Cumplidos</div>
+      <div class="stat-value">{{ stats.cumplidos }}</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#b45309)">
+        <i data-feather="clock" style="width:36px;height:36px;color:#fff"></i>
+      </div>
+      <div class="stat-card-title">Pendientes</div>
+      <div class="stat-value">{{ stats.pendientes }}</div>
+    </div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-card-default">
+      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
+        <i data-feather="alert-circle" style="width:36px;height:36px;color:#fff"></i>
+      </div>
+      <div class="stat-card-title">Vencidos</div>
+      <div class="stat-value">{{ stats.vencidos }}</div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -237,19 +237,6 @@ def leer_todas():
     return jsonify({'ok': True})
 
 
-# ── Gestión de Aguas ──────────────────────────────────────────────────────────
-
-@admin_bp.route('/aguas')
-@admin_required
-def gestion_aguas():
-    return render_template('admin/gestion_aguas.html', notif_count=get_notif_count())
-
-
-@admin_bp.route('/ana')
-@admin_required
-def reporte_ana():
-    return render_template('admin/reporte_ana.html', notif_count=get_notif_count())
-
 
 # ── Debug ─────────────────────────────────────────────────────────────────────
 

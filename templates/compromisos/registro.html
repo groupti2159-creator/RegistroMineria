@@ -1,0 +1,218 @@
+﻿{% extends 'base.html' %}
+{% block title %}Compromisos — ecoSupervisor{% endblock %}
+{% block page_title %}Compromisos{% endblock %}
+
+{% block content %}
+
+<div class="page-header-section">
+  <div class="page-header-icon"><i data-feather="check-square"></i></div>
+  <div>
+    <h2 class="section-title">Gestión de <span class="text-green">Compromisos</span></h2>
+    <p class="section-sub">Seguimiento de obligaciones ambientales</p>
+  </div>
+</div>
+
+<!-- BOTONES -->
+<div class="action-bar">
+  <a href="#" class="btn btn-export"
+     onclick="showToast('Exportación próximamente disponible','info');return false;">
+    <i data-feather="download"></i> Exportar <strong>.xlsx</strong>
+  </a>
+</div>
+
+<!-- TABLA -->
+<div class="card" style="overflow:hidden;">
+  <div class="card-title">
+    <i data-feather="check-square"></i>
+    Permisos y Obligaciones Ambientales
+  </div>
+  <div style="display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;">
+    <table class="data-table compromisos-table" style="min-width:900px;">
+      <thead>
+        <tr>
+          <th style="min-width:200px;">Permisos / Obligaciones<br>Ambientales</th>
+          <th style="min-width:220px;">Descripción / Justificación</th>
+          <th style="min-width:120px;">Entidad<br>Regulatoria</th>
+          <th style="min-width:100px;">Evidencia</th>
+          <th style="min-width:180px;">Supervisor que genera<br>el registro</th>
+          <th style="min-width:200px;">Observaciones</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Fila 1 -->
+        <tr>
+          <td><strong>Evidencia Registro SIMCAL</strong></td>
+          <td>Contar con la evidencia del reporte al sistema SIMCAL en la fecha</td>
+          <td style="text-align:center;font-weight:600;">ANA</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
+              onclick="showToast('Pendiente de implementación','info')">
+              <i data-feather="paperclip"></i>
+            </button>
+          </td>
+          <td>
+            <select class="form-select" style="font-size:.8rem;" disabled>
+              <option>— Pendiente —</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+          </td>
+        </tr>
+
+        <!-- Fila 2 -->
+        <tr>
+          <td><strong>Evidencia Registro IMA PLUSD</strong></td>
+          <td>Contar con la evidencia del reporte al sistema PLUSD en la fecha</td>
+          <td style="text-align:center;font-weight:600;">OEFA</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
+              onclick="showToast('Pendiente de implementación','info')">
+              <i data-feather="paperclip"></i>
+            </button>
+          </td>
+          <td>
+            <select class="form-select" style="font-size:.8rem;" disabled>
+              <option>— Pendiente —</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+          </td>
+        </tr>
+
+        <!-- Fila 3 -->
+        <tr>
+          <td><strong>Cargo de Presentación Reporte de Consumo Agua</strong></td>
+          <td>Contar con la evidencia del reporte antes del día 05 de cada mes</td>
+          <td style="text-align:center;font-weight:600;">ALA - ANA</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
+              onclick="showToast('Pendiente de implementación','info')">
+              <i data-feather="paperclip"></i>
+            </button>
+          </td>
+          <td>
+            <select class="form-select" style="font-size:.8rem;" disabled>
+              <option>— Pendiente —</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+          </td>
+        </tr>
+
+        <!-- Fila 4 -->
+        <tr>
+          <td><strong>Registro de Manifiestos de Residuos Peligrosos</strong></td>
+          <td>Obligación ambiental auditable — Plataforma SIGERSOL</td>
+          <td style="text-align:center;font-weight:600;">SIGERSOL<br>MINAM</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
+              onclick="showToast('Pendiente de implementación','info')">
+              <i data-feather="paperclip"></i>
+            </button>
+          </td>
+          <td>
+            <select class="form-select" style="font-size:.8rem;" disabled>
+              <option>— Pendiente —</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+          </td>
+        </tr>
+
+        <!-- Fila 5 - Grupo Monitoreo Ambiental -->
+        <tr style="background:var(--color-background-secondary);">
+          <td rowspan="5"><strong>Cargo Presentación de Monitoreo Ambiental</strong></td>
+          <td rowspan="2">Calidad de Agua</td>
+          <td style="text-align:center;font-weight:600;">OEFA</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
+          </td>
+          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
+          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
+        </tr>
+        <tr style="background:var(--color-background-secondary);">
+          <td style="text-align:center;font-weight:600;">MINEM</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
+          </td>
+          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
+          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
+        </tr>
+        <tr style="background:var(--color-background-secondary);">
+          <td rowspan="2">Suelo</td>
+          <td style="text-align:center;font-weight:600;">MINEM</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
+          </td>
+          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
+          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
+        </tr>
+        <tr style="background:var(--color-background-secondary);">
+          <td style="text-align:center;font-weight:600;">OEFA</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
+          </td>
+          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
+          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
+        </tr>
+        <tr style="background:var(--color-background-secondary);">
+          <td>Biológico</td>
+          <td style="text-align:center;font-weight:600;">OEFA / MINEM</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
+          </td>
+          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
+          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
+        </tr>
+
+        <!-- Fila ESTAMIN -->
+        <tr>
+          <td><strong>ESTAMIN</strong></td>
+          <td>Reporte Mensual ESTAMIN</td>
+          <td style="text-align:center;font-weight:600;">MINEM</td>
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
+              onclick="showToast('Pendiente de implementación','info')">
+              <i data-feather="paperclip"></i>
+            </button>
+          </td>
+          <td>
+            <select class="form-select" style="font-size:.8rem;" disabled>
+              <option>— Pendiente —</option>
+            </select>
+          </td>
+          <td>
+            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<style>
+.compromisos-table th { font-size: .78rem; white-space: nowrap; }
+.compromisos-table td { font-size: .83rem; vertical-align: middle; }
+</style>
+<script>
+function showToast(msg, type) {
+  const d = document.createElement('div');
+  d.className = 'alert alert-'+type;
+  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
+  d.innerHTML = '<span>'+msg+'</span><button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>';
+  document.body.appendChild(d);
+  feather.replace();
+  setTimeout(()=>d.remove(), 4000);
+}
+document.addEventListener('DOMContentLoaded', () => feather.replace());
+</script>
+{% endblock %}
