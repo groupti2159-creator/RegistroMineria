@@ -535,12 +535,14 @@ function limpiarFiltros() {
 function abrirModal(tipo) {
   document.getElementById('selectTipo').value = tipo;
   cambiarTipo(tipo);
-  document.getElementById('modal-'+tipo).style.display = 'flex';
+  document.getElementById('modal-'+tipo).classList.add('open');
+  document.body.style.overflow = 'hidden';
   try { feather.replace(); } catch(e) {}
 }
 
 function cerrarModal(id) {
-  document.getElementById(id).style.display = 'none';
+  document.getElementById(id).classList.remove('open');
+  document.body.style.overflow = '';
 }
 
 function editarRegistro(tipo, id) {
