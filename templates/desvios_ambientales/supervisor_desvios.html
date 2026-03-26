@@ -14,7 +14,7 @@
 </div>
 
 <div class="info-banner">
-  <i data-feather="info"></i> Modo {{ session.rol }}: Puedes ver reportes y subir imágenes de levantamiento en reportes <strong>PENDIENTES</strong>.
+  <i data-feather="info"></i> Modo {{ session.rol }}: Puedes ver reportes y subir imágenes de levantamiento en reportes <strong>PENDIENTES</strong> o <strong>ATRASADOS</strong>.
 </div>
 
 <div class="filter-bar">
@@ -88,5 +88,6 @@ const DETALLE_URL_BASE = "{{ url_for('supervisor.detalle_registro', rid='PLACEHO
 const SUBIR_URL_BASE   = "{{ url_for('supervisor.subir_levantamiento', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = false;
 </script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}"></script>
 {% endblock %}

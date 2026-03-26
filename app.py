@@ -42,8 +42,14 @@ app.register_blueprint(supervisor_bp,   url_prefix='/supervisor')
 app.register_blueprint(shared_bp,       url_prefix='/api')
 app.register_blueprint(proyectos_bp,    url_prefix='/proyectos')
 
-from flask import session
+from flask import session, request
 from routes.auth import cargar_accesos, cargar_modulos
+from utils.helpers import sp_exec
+from datetime import datetime, timedelta
+
+# Cache para evitar ejecutar el SP en cada request
+_ultimo_update_estados = None
+_intervalo_update = timedelta(minutes=5)  # Actualizar cada 5 minutos
 
 @app.before_request
 def refresh_accesos():
@@ -56,6 +62,28 @@ def refresh_accesos():
         except Exception as e:
             print(f"[refresh_accesos] error: {e}")
             # No limpiar sesión si falla la BD
+
+@app.before_request
+def actualizar_estados_atrasados():
+    """Actualiza estados atrasados automáticamente cada 5 minutos."""
+    global _ultimo_update_estados
+    
+    # Solo ejecutar en requests HTML (no en static, API, etc.)
+    if request.endpoint and 'static' not in request.endpoint:
+        ahora = datetime.now()
+        
+        # Ejecutar si nunca se ha ejecutado o si pasaron más de 5 minutos
+        if _ultimo_update_estados is None or (ahora - _ultimo_update_estados) > _intervalo_update:
+            try:
+                cur = mysql.connection.cursor()
+                sp_exec(cur, 'sp_actualizarestadosatrasados')
+                mysql.connection.commit()
+                cur.close()
+                _ultimo_update_estados = ahora
+                print(f"[{ahora.strftime('%H:%M:%S')}] Estados atrasados actualizados")
+            except Exception as e:
+                print(f"[actualizar_estados_atrasados] error: {e}")
+                # No interrumpir el request si falla
 
 @app.after_request
 def no_cache(response):

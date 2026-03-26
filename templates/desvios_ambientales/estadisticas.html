@@ -77,20 +77,20 @@ const CONFIG = {
   areas: {
     titulo:'Areas Responsables', subtitulo:'Reportes por area responsable',
     labelKey:'area_responsable', valorKey:'total', isHoriz:false,
-    cols:['Area Responsable','Total','Culminados','Pendientes','En Proceso'],
-    rowFn: r => "<td>"+r.area_responsable+"</td><td><strong>"+r.total+"</strong></td><td><span class='estado-badge estado-culminado'>"+r.culminado+"</span></td><td><span class='estado-badge estado-pendiente'>"+r.pendiente+"</span></td><td><span class='estado-badge estado-en-proceso'>"+r.proceso+"</span></td>"
+    cols:['Area Responsable','Total','Culminados','Pendientes','Atrasados','En Proceso'],
+    rowFn: r => "<td>"+r.area_responsable+"</td><td><strong>"+r.total+"</strong></td><td><span class='estado-badge estado-culminado'>"+r.culminado+"</span></td><td><span class='estado-badge estado-pendiente'>"+r.pendiente+"</span></td><td><span class='estado-badge estado-atrasado'>"+r.atrasado+"</span></td><td><span class='estado-badge estado-en-proceso'>"+r.proceso+"</span></td>"
   },
   ccta: {
     titulo:'Ccta Responsables', subtitulo:'Reportes por cuenta responsable',
     labelKey:'ccta_responsable', valorKey:'total', isHoriz:false,
-    cols:['Cuenta Responsable','Total','Culminados','Pendientes','En Proceso'],
-    rowFn: r => "<td>"+r.ccta_responsable+"</td><td><strong>"+r.total+"</strong></td><td><span class='estado-badge estado-culminado'>"+r.culminado+"</span></td><td><span class='estado-badge estado-pendiente'>"+r.pendiente+"</span></td><td><span class='estado-badge estado-en-proceso'>"+r.proceso+"</span></td>"
+    cols:['Cuenta Responsable','Total','Culminados','Pendientes','Atrasados','En Proceso'],
+    rowFn: r => "<td>"+r.ccta_responsable+"</td><td><strong>"+r.total+"</strong></td><td><span class='estado-badge estado-culminado'>"+r.culminado+"</span></td><td><span class='estado-badge estado-pendiente'>"+r.pendiente+"</span></td><td><span class='estado-badge estado-atrasado'>"+r.atrasado+"</span></td><td><span class='estado-badge estado-en-proceso'>"+r.proceso+"</span></td>"
   },
   tipos: {
-    titulo:'Tipos de Desvio', subtitulo:'Desvios pendientes por tipo',
+    titulo:'Tipos de Desvio', subtitulo:'Desvios pendientes y atrasados por tipo',
     labelKey:'tipo_descripcion', valorKey:'cantidad_pendiente', isHoriz:true,
-    cols:['Tipo de Descripcion','Cantidad Pendiente'],
-    rowFn: r => "<td>"+r.tipo_descripcion+"</td><td style='text-align:center'><span class='cantidad-badge'>"+r.cantidad_pendiente+"</span></td>"
+    cols:['Tipo de Descripcion','Pendientes','Atrasados','Total'],
+    rowFn: r => "<td>"+r.tipo_descripcion+"</td><td style='text-align:center'><span class='estado-badge estado-pendiente'>"+r.pendiente+"</span></td><td style='text-align:center'><span class='estado-badge estado-atrasado'>"+r.atrasado+"</span></td><td style='text-align:center'><span class='cantidad-badge'>"+r.cantidad_pendiente+"</span></td>"
   }
 };
 
@@ -156,8 +156,10 @@ function renderModalContenido(cfg, data) {
   const rows    = data.map(r => '<tr>'+cfg.rowFn(r)+'</tr>').join('');
   let totalRow  = '';
   if (cfg.isHoriz) {
-    const tot = data.reduce((s,r) => s+(r.cantidad_pendiente||0), 0);
-    totalRow = '<tr style="font-weight:700;border-top:2px solid var(--border)"><td>TOTAL GENERAL</td><td style="text-align:center"><span class="cantidad-badge total">'+tot+'</span></td></tr>';
+    const totPend = data.reduce((s,r) => s+parseInt(r.pendiente||0, 10), 0);
+    const totAtra = data.reduce((s,r) => s+parseInt(r.atrasado||0, 10), 0);
+    const tot = data.reduce((s,r) => s+parseInt(r.cantidad_pendiente||0, 10), 0);
+    totalRow = '<tr style="font-weight:700;border-top:2px solid var(--border)"><td>TOTAL GENERAL</td><td style="text-align:center"><span class="estado-badge estado-pendiente">'+totPend+'</span></td><td style="text-align:center"><span class="estado-badge estado-atrasado">'+totAtra+'</span></td><td style="text-align:center"><span class="cantidad-badge total">'+tot+'</span></td></tr>';
   }
   document.getElementById('modalContenido').innerHTML =
     '<div style="padding:1rem 0">'+

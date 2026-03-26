@@ -155,7 +155,7 @@
           <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
               <label class="form-label">ACCIÓN REALIZADA *</label>
-              <textarea name="accion" class="form-textarea" placeholder="Describe la acción tomada o a tomar" minlength="10"></textarea>
+              <textarea name="accion" class="form-textarea" placeholder=" Recomendacion" minlength="10"></textarea>
               <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
             </div>
           </div>
@@ -208,7 +208,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">IMÁGENES DE EVIDENCIA *</label>
+              <label class="form-label">EVIDENCIAS *</label>
               <div class="file-upload-area">
                 <input type="file" name="evidencias" multiple accept="image/*" class="file-input" id="fileEvidencias">
                 <label for="fileEvidencias" class="file-label">
@@ -343,7 +343,7 @@
           </div>
           <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">ACCIÓN REALIZADA</label>
+              <label class="form-label">ACCIÓN A REALIZAR</label>
               <textarea name="accion" id="edit_accion" class="form-textarea"></textarea>
             </div>
           </div>
@@ -467,5 +467,6 @@ const VALIDAR_URL_BASE = "{{ url_for('da.validar_levantamiento', rid='PLACEHOLDE
 const ELIMINAR_URL_BASE = "{{ url_for('da.eliminar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = true;
 </script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}?v=3"></script>
 {% endblock %}

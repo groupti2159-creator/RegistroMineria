@@ -38,7 +38,8 @@ def dashboard():
     cur = mysql.connection.cursor()
     todos = sp_exec(cur, 'sp_listarregistros', (None,))
     cur.close()
-    registros_pendientes = [r for r in todos if r.get('estado') == 'Pendiente']
+    
+    registros_pendientes = [r for r in todos if r.get('estado') in ['Pendiente', 'Atrasado']]
     total_pendientes = len(registros_pendientes)
     return render_template('desvios_ambientales/dashboard.html',
         stats=stats or {'total':0,'culminados':0,'en_proceso':0,'pendientes':0},
@@ -70,7 +71,7 @@ def registrar():
     if personal_filter:
         registros = [r for r in registros if r.get('personalresponsable','').lower() == personal_filter.lower()]
 
-    orden_estados = {'Pendiente':1,'En Proceso':2,'Enviado':3,'En Revision':4,'Culminado':5,'Rechazado':6,'Cerrado':7}
+    orden_estados = {'Pendiente':1,'Atrasado':2,'Asignado':3,'En Proceso':4,'Enviado':5,'En Revision':6,'Culminado':7,'Rechazado':8,'Cerrado':9}
     registros_ordenados = sorted(registros, key=lambda x: orden_estados.get(x.get('estado',''), 999))
 
     total       = len(registros_ordenados)
@@ -214,14 +215,20 @@ def crear_registro():
 @modulo_required('DESVIOS')
 def editar_registro(rid):
     try:
+        # El stored procedure ahora maneja automáticamente la lógica de Pendiente/Atrasado
+        # basándose en la fecha de ejecución
         cur = mysql.connection.cursor()
-        sp_exec(cur, 'sp_actualizarregistro', (
+        result = sp_exec(cur, 'sp_actualizarregistro', (
             rid,
             request.form.get('fecha_inicio') or datetime.now().strftime('%Y-%m-%d'),
             request.form.get('fecha_ejecucion') or None,
-            request.form['descripcion'], request.form.get('accion',''),
-            int(request.form['area_reportante']), int(request.form['area_responsable']),
-            int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
+            request.form['descripcion'], 
+            request.form.get('accion',''),
+            int(request.form['area_reportante']), 
+            int(request.form['area_responsable']),
+            int(request.form['ubicacion']), 
+            int(request.form['riesgo']), 
+            int(request.form['tipo']),
             int(request.form['estado']),
             request.form.get('personal_responsable',''),
             int(request.form['ccta_responsable']) if request.form.get('ccta_responsable','').strip() not in ('','0','None') else 0,
@@ -230,6 +237,7 @@ def editar_registro(rid):
         mysql.connection.commit()
         cur.close()
 
+        # Manejar eliminación de imágenes
         imagenes_eliminar = request.form.get('imagenes_eliminar','')
         if imagenes_eliminar:
             for imagen_id in [i.strip() for i in imagenes_eliminar.split(',') if i.strip()]:
@@ -244,6 +252,7 @@ def editar_registro(rid):
                 if img_row:
                     delete_image_file(img_row.get('rutaimagen',''))
 
+        # Agregar nuevas evidencias
         for f in request.files.getlist('nuevas_evidencias')[:5]:
             if f and f.filename:
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'evidencias')
@@ -253,6 +262,7 @@ def editar_registro(rid):
                     mysql.connection.commit()
                     cur.close()
 
+        # Agregar nuevos levantamientos
         for f in request.files.getlist('nuevos_levantamientos')[:5]:
             if f and f.filename:
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')

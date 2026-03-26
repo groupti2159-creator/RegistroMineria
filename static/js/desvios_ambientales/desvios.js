@@ -371,7 +371,35 @@ function setupImagePreviewEdit(inputId, previewContainerId, nameId) {
 function abrirSubirModal(rid) {
   const form = document.getElementById('formSubir');
   if (form) {
+    // Limpiar formulario antes de abrir
+    form.reset();
+    
+    // Usar la función global de limpieza si existe
+    if (typeof window.limpiarPreviewSubir === 'function') {
+      window.limpiarPreviewSubir();
+    } else {
+      // Fallback: limpiar manualmente
+      const previewContainer = document.getElementById('previewSubirImagenes');
+      if (previewContainer) {
+        previewContainer.innerHTML = '';
+        previewContainer.style.display = 'none';
+      }
+      
+      const nameEl = document.getElementById('nameSubir');
+      if (nameEl) {
+        nameEl.textContent = 'Sin archivos seleccionados';
+      }
+      
+      const fileInput = document.getElementById('fileSubirImagenes');
+      if (fileInput) {
+        fileInput.value = '';
+      }
+    }
+    
+    // Establecer action del formulario
     form.action = SUBIR_URL_BASE + rid;
+    
+    // Abrir modal
     document.getElementById('modalSubir').classList.add('open');
   }
 }
@@ -709,3 +737,60 @@ document.addEventListener('DOMContentLoaded', function () {
     });
   });
 });
+
+// ── PREVIEW DE IMÁGENES PARA MODAL DE SUBIR ──
+// Versión simplificada: solo mostrar contador, sin preview de imágenes
+(function() {
+  let previewInitialized = false;
+  
+  function initializePreview() {
+    if (previewInitialized) return;
+    
+    const fileInput = document.getElementById('fileSubirImagenes');
+    if (!fileInput) return;
+    
+    previewInitialized = true;
+    
+    // Solo actualizar el contador de archivos
+    fileInput.addEventListener('change', function() {
+      const nameEl = document.getElementById('nameSubir');
+      if (!nameEl) return;
+      
+      const count = this.files.length;
+      
+      if (count === 0) {
+        nameEl.textContent = 'Sin archivos seleccionados';
+      } else if (count === 1) {
+        nameEl.textContent = this.files[0].name;
+      } else {
+        nameEl.textContent = `${count} archivos seleccionados`;
+      }
+    });
+    
+    // Función global para limpiar
+    window.limpiarPreviewSubir = function() {
+      const nameEl = document.getElementById('nameSubir');
+      if (nameEl) {
+        nameEl.textContent = 'Sin archivos seleccionados';
+      }
+      
+      if (fileInput) {
+        fileInput.value = '';
+      }
+      
+      // Ocultar contenedor de preview si existe
+      const container = document.getElementById('previewSubirImagenes');
+      if (container) {
+        container.innerHTML = '';
+        container.style.display = 'none';
+      }
+    };
+  }
+  
+  // Inicializar cuando el DOM esté listo
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializePreview);
+  } else {
+    initializePreview();
+  }
+})();

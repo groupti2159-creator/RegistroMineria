@@ -170,13 +170,14 @@ INSERT IGNORE INTO Tbl_Roles (nombrerol, descripcion) VALUES
 
 INSERT IGNORE INTO Tbl_Estado (estado, descripcion, orden) VALUES
 ('Pendiente',   'Registro creado, esperando imágenes', 1),
-('Asignado',    'Asignado al personal', 2),
-('En Proceso',  'Imágenes subidas, esperando validación', 3),
-('Enviado',     'Trabajador subió imagen', 4),
-('En Revisión', 'Supervisor validó', 5),
-('Culminado',   'Imágenes validadas y aprobadas', 6),
-('Rechazado',   'Rechazado, reintentar', 7),
-('Cerrado',     'Cerrado', 8);
+('Atrasado',    'Registro pendiente con fecha de ejecución vencida', 2),
+('Asignado',    'Asignado al personal', 3),
+('En Proceso',  'Imágenes subidas, esperando validación', 4),
+('Enviado',     'Trabajador subió imagen', 5),
+('En Revisión', 'Supervisor validó', 6),
+('Culminado',   'Imágenes validadas y aprobadas', 7),
+('Rechazado',   'Rechazado, reintentar', 8),
+('Cerrado',     'Cerrado', 9);
 
 INSERT IGNORE INTO Tbl_Riesgo (riesgo) VALUES
 ('Bajo'),('Medio'),('Alto'),('Crítico');
@@ -252,6 +253,26 @@ BEGIN
     LIMIT 1;
 END$
 
+-- SP: Actualizar estados atrasados
+DROP PROCEDURE IF EXISTS SP_ActualizarEstadosAtrasados$
+CREATE PROCEDURE SP_ActualizarEstadosAtrasados()
+BEGIN
+    -- Obtener el ID del estado "Atrasado"
+    DECLARE v_id_atrasado INT;
+    SELECT idEstado INTO v_id_atrasado FROM Tbl_Estado WHERE Estado = 'Atrasado' LIMIT 1;
+    
+    -- Actualizar registros Pendientes con fecha de ejecución vencida a Atrasado
+    UPDATE Tbl_Registro r
+    JOIN Tbl_Estado e ON e.idEstado = r.idEstado
+    SET r.idEstado = v_id_atrasado
+    WHERE e.Estado = 'Pendiente'
+      AND r.FechaEjecucion IS NOT NULL
+      AND DATE(r.FechaEjecucion) < CURDATE()
+      AND r.Archivado = 0;
+    
+    SELECT ROW_COUNT() AS registros_actualizados;
+END$
+
 -- SP: Dashboard stats
 DROP PROCEDURE IF EXISTS SP_DashboardStats$
 CREATE PROCEDURE SP_DashboardStats()
@@ -260,7 +281,7 @@ BEGIN
         COUNT(*) AS total,
         SUM(CASE WHEN e.Estado = 'Culminado' THEN 1 ELSE 0 END) AS culminados,
         SUM(CASE WHEN e.Estado IN ('En Proceso','Enviado','En Revisión') THEN 1 ELSE 0 END) AS en_proceso,
-        SUM(CASE WHEN e.Estado = 'Pendiente' THEN 1 ELSE 0 END) AS pendientes
+        SUM(CASE WHEN e.Estado IN ('Pendiente','Atrasado') THEN 1 ELSE 0 END) AS pendientes
     FROM tbl_registro r
     JOIN tbl_estado e ON e.idEstado = r.idEstado
     WHERE r.Archivado = 0;
