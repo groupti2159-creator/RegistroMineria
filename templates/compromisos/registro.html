@@ -29,10 +29,8 @@
       <option value="{{ a }}" {% if a == anio %}selected{% endif %}>{{ a }}</option>
       {% endfor %}
     </select>
-    <button class="btn btn-secondary" onclick="cambiarPeriodo()"
-            style="padding:.45rem .9rem;">
-      <i data-feather="refresh-cw"
-         style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+    <button class="btn btn-secondary" onclick="cambiarPeriodo()" style="padding:.45rem .9rem;">
+      <i data-feather="refresh-cw" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
       Aplicar
     </button>
   </div>
@@ -78,7 +76,8 @@
           <td style="text-align:center;">
             <div style="display:flex;gap:.4rem;justify-content:center;align-items:center;">
               <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-                onclick="abrirAdjuntar({{ c.idcompromiso }}, {{ mes }}, {{ anio }})">
+                data-comp="{{ c.idcompromiso }}" data-mes="{{ mes }}" data-anio="{{ anio }}"
+                onclick="abrirAdjuntar(this.dataset.comp, this.dataset.mes, this.dataset.anio)">
                 <i data-feather="paperclip"></i>
               </button>
               {% if tiene_evidencia %}
@@ -94,10 +93,10 @@
             </div>
           </td>
           <td>
-            <select class="form-select" style="font-size:.8rem;" data-id="{{ c.idcompromiso }}"
-                    onchange="guardarCampo({{ c.idcompromiso }}, {{ mes }}, {{ anio }},
-                                          this.value,
-                                          document.getElementById('obs-{{ c.idcompromiso }}').value)">
+            <select class="form-select supervisor-select" style="font-size:.8rem;"
+                    data-id="{{ c.idcompromiso }}"
+                    data-mes="{{ mes }}"
+                    data-anio="{{ anio }}">
               <option value="">— Seleccionar —</option>
               {% for s in supervisores %}
               <option value="{{ s.idusuario }}"
@@ -108,12 +107,14 @@
             </select>
           </td>
           <td>
-            <input type="text" id="obs-{{ c.idcompromiso }}" class="form-input"
-                   style="font-size:.8rem;" placeholder="Observaciones..."
-                   value="{{ observaciones_cum }}"
-                   onblur="guardarCampo({{ c.idcompromiso }}, {{ mes }}, {{ anio }},
-                                        document.querySelector('select[data-id=\'{{ c.idcompromiso }}\']').value,
-                                        this.value)">
+            <input type="text"
+                   class="form-input obs-input"
+                   style="font-size:.8rem;"
+                   placeholder="Observaciones..."
+                   data-id="{{ c.idcompromiso }}"
+                   data-mes="{{ mes }}"
+                   data-anio="{{ anio }}"
+                   value="{{ observaciones_cum }}">
           </td>
         </tr>
         {% else %}
@@ -247,10 +248,6 @@ function cambiarPeriodo() {
   window.location.href = `/admin/compromisos?mes=${mes}&anio=${anio}`;
 }
 
-document.getElementById('modalAdjuntar').addEventListener('click', function(e) {
-  if (e.target === this) cerrarAdjuntar();
-});
-
 function showToast(msg, type) {
   const d = document.createElement('div');
   d.className = 'alert alert-' + type;
@@ -261,6 +258,34 @@ function showToast(msg, type) {
   setTimeout(() => d.remove(), 4000);
 }
 
-document.addEventListener('DOMContentLoaded', () => feather.replace());
+document.getElementById('modalAdjuntar').addEventListener('click', function(e) {
+  if (e.target === this) cerrarAdjuntar();
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  feather.replace();
+
+  // Supervisor select — evento via JS puro, sin Jinja2 inline
+  document.querySelectorAll('.supervisor-select').forEach(sel => {
+    sel.addEventListener('change', function() {
+      const id   = this.dataset.id;
+      const mes  = this.dataset.mes;
+      const anio = this.dataset.anio;
+      const obs  = document.querySelector(`.obs-input[data-id="${id}"]`);
+      guardarCampo(id, mes, anio, this.value, obs ? obs.value : '');
+    });
+  });
+
+  // Observaciones input — evento via JS puro, sin Jinja2 inline
+  document.querySelectorAll('.obs-input').forEach(inp => {
+    inp.addEventListener('blur', function() {
+      const id   = this.dataset.id;
+      const mes  = this.dataset.mes;
+      const anio = this.dataset.anio;
+      const sel  = document.querySelector(`.supervisor-select[data-id="${id}"]`);
+      guardarCampo(id, mes, anio, sel ? sel.value : '', this.value);
+    });
+  });
+});
 </script>
 {% endblock %}
