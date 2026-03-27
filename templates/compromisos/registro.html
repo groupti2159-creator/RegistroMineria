@@ -12,187 +12,161 @@
   </div>
 </div>
 
-<!-- BOTONES -->
-<div class="action-bar">
-  <a href="#" class="btn btn-export"
-     onclick="showToast('Exportación próximamente disponible','info');return false;">
+<div class="action-bar" style="justify-content:space-between;flex-wrap:wrap;gap:.75rem;">
+  <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+    <label class="date-label" style="margin:0;">Período:</label>
+    <select id="selMes" class="filter-select" style="width:130px;">
+      {% for m, nombre in [
+        (1,'Enero'),(2,'Febrero'),(3,'Marzo'),(4,'Abril'),
+        (5,'Mayo'),(6,'Junio'),(7,'Julio'),(8,'Agosto'),
+        (9,'Setiembre'),(10,'Octubre'),(11,'Noviembre'),(12,'Diciembre')
+      ] %}
+      <option value="{{ m }}" {% if m == mes %}selected{% endif %}>{{ nombre }}</option>
+      {% endfor %}
+    </select>
+    <select id="selAnio" class="filter-select" style="width:90px;">
+      {% for a in range(2023, 2028) %}
+      <option value="{{ a }}" {% if a == anio %}selected{% endif %}>{{ a }}</option>
+      {% endfor %}
+    </select>
+    <button class="btn btn-secondary" onclick="cambiarPeriodo()"
+            style="padding:.45rem .9rem;">
+      <i data-feather="refresh-cw"
+         style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+      Aplicar
+    </button>
+  </div>
+  <a href="/admin/compromisos/exportar?mes={{ mes }}&anio={{ anio }}" class="btn btn-export">
     <i data-feather="download"></i> Exportar <strong>.xlsx</strong>
   </a>
 </div>
 
-<!-- TABLA -->
 <div class="card" style="overflow:hidden;">
   <div class="card-title">
     <i data-feather="check-square"></i>
     Permisos y Obligaciones Ambientales
+    <span class="badge-count">{{ compromisos|length }} registros</span>
   </div>
   <div style="display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;">
     <table class="data-table compromisos-table" style="min-width:900px;">
       <thead>
         <tr>
-          <th style="min-width:200px;">Permisos / Obligaciones<br>Ambientales</th>
-          <th style="min-width:220px;">Descripción / Justificación</th>
-          <th style="min-width:120px;">Entidad<br>Regulatoria</th>
-          <th style="min-width:100px;">Evidencia</th>
-          <th style="min-width:180px;">Supervisor que genera<br>el registro</th>
+          <th style="min-width:220px;">Permisos / Obligaciones Ambientales</th>
+          <th style="min-width:200px;">Descripción / Justificación</th>
+          <th style="min-width:120px;">Entidad Regulatoria</th>
+          <th style="min-width:110px;text-align:center;">Evidencia</th>
+          <th style="min-width:180px;">Supervisor</th>
           <th style="min-width:200px;">Observaciones</th>
         </tr>
       </thead>
       <tbody>
-
-        <!-- Fila 1 -->
-        <tr>
-          <td><strong>Evidencia Registro SIMCAL</strong></td>
-          <td>Contar con la evidencia del reporte al sistema SIMCAL en la fecha</td>
-          <td style="text-align:center;font-weight:600;">ANA</td>
+        {% for c in compromisos %}
+        {% set cum = cum_dict.get(c.idcompromiso|string) or cum_dict.get(c.idcompromiso) or {} %}
+        {% set tiene_evidencia   = cum.get('tiene_evidencia')  or cum.get('TIENE_EVIDENCIA') %}
+        {% set idusuario_cum     = cum.get('idusuario')        or cum.get('IDUSUARIO') %}
+        {% set observaciones_cum = cum.get('observaciones')    or cum.get('OBSERVACIONES') or '' %}
+        {% set es_monitoreo = 'Monitoreo' in c.nombre %}
+        <tr {% if es_monitoreo %}style="background:var(--color-background-secondary);"{% endif %}>
+          <td>
+            <strong>{{ c.nombre }}</strong>
+            {% if c.descripcion %}
+            <br><small style="color:var(--text-muted);font-size:.75rem;">{{ c.descripcion }}</small>
+            {% endif %}
+          </td>
+          <td style="color:var(--text-muted);font-size:.82rem;">{{ c.descripcion or '—' }}</td>
+          <td style="text-align:center;font-weight:600;font-size:.82rem;">{{ c.entidad_reguladora or '—' }}</td>
           <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-              onclick="showToast('Pendiente de implementación','info')">
-              <i data-feather="paperclip"></i>
-            </button>
+            <div style="display:flex;gap:.4rem;justify-content:center;align-items:center;">
+              <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
+                onclick="abrirAdjuntar({{ c.idcompromiso }}, {{ mes }}, {{ anio }})">
+                <i data-feather="paperclip"></i>
+              </button>
+              {% if tiene_evidencia %}
+              <a class="btn-icon btn-icon-edit" title="Descargar última versión"
+                href="/admin/compromisos/descargar/{{ c.idcompromiso }}?mes={{ mes }}&anio={{ anio }}">
+                <i data-feather="download"></i>
+              </a>
+              {% else %}
+              <button class="btn-icon" title="Sin evidencia" disabled style="opacity:.35;cursor:not-allowed;">
+                <i data-feather="download"></i>
+              </button>
+              {% endif %}
+            </div>
           </td>
           <td>
-            <select class="form-select" style="font-size:.8rem;" disabled>
-              <option>— Pendiente —</option>
+            <select class="form-select" style="font-size:.8rem;" data-id="{{ c.idcompromiso }}"
+                    onchange="guardarCampo({{ c.idcompromiso }}, {{ mes }}, {{ anio }},
+                                          this.value,
+                                          document.getElementById('obs-{{ c.idcompromiso }}').value)">
+              <option value="">— Seleccionar —</option>
+              {% for s in supervisores %}
+              <option value="{{ s.idusuario }}"
+                {% if idusuario_cum == s.idusuario %}selected{% endif %}>
+                {{ s.nombrecompleto }}
+              </option>
+              {% endfor %}
             </select>
           </td>
           <td>
-            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+            <input type="text" id="obs-{{ c.idcompromiso }}" class="form-input"
+                   style="font-size:.8rem;" placeholder="Observaciones..."
+                   value="{{ observaciones_cum }}"
+                   onblur="guardarCampo({{ c.idcompromiso }}, {{ mes }}, {{ anio }},
+                                        document.querySelector('select[data-id=\'{{ c.idcompromiso }}\']').value,
+                                        this.value)">
           </td>
         </tr>
-
-        <!-- Fila 2 -->
+        {% else %}
         <tr>
-          <td><strong>Evidencia Registro IMA PLUSD</strong></td>
-          <td>Contar con la evidencia del reporte al sistema PLUSD en la fecha</td>
-          <td style="text-align:center;font-weight:600;">OEFA</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-              onclick="showToast('Pendiente de implementación','info')">
-              <i data-feather="paperclip"></i>
-            </button>
-          </td>
-          <td>
-            <select class="form-select" style="font-size:.8rem;" disabled>
-              <option>— Pendiente —</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
+          <td colspan="6" style="text-align:center;color:#94a3b8;padding:2.5rem;">
+            <i data-feather="inbox" style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
+            No hay compromisos registrados
           </td>
         </tr>
-
-        <!-- Fila 3 -->
-        <tr>
-          <td><strong>Cargo de Presentación Reporte de Consumo Agua</strong></td>
-          <td>Contar con la evidencia del reporte antes del día 05 de cada mes</td>
-          <td style="text-align:center;font-weight:600;">ALA - ANA</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-              onclick="showToast('Pendiente de implementación','info')">
-              <i data-feather="paperclip"></i>
-            </button>
-          </td>
-          <td>
-            <select class="form-select" style="font-size:.8rem;" disabled>
-              <option>— Pendiente —</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
-          </td>
-        </tr>
-
-        <!-- Fila 4 -->
-        <tr>
-          <td><strong>Registro de Manifiestos de Residuos Peligrosos</strong></td>
-          <td>Obligación ambiental auditable — Plataforma SIGERSOL</td>
-          <td style="text-align:center;font-weight:600;">SIGERSOL<br>MINAM</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-              onclick="showToast('Pendiente de implementación','info')">
-              <i data-feather="paperclip"></i>
-            </button>
-          </td>
-          <td>
-            <select class="form-select" style="font-size:.8rem;" disabled>
-              <option>— Pendiente —</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
-          </td>
-        </tr>
-
-        <!-- Fila 5 - Grupo Monitoreo Ambiental -->
-        <tr style="background:var(--color-background-secondary);">
-          <td rowspan="5"><strong>Cargo Presentación de Monitoreo Ambiental</strong></td>
-          <td rowspan="2">Calidad de Agua</td>
-          <td style="text-align:center;font-weight:600;">OEFA</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
-          </td>
-          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
-          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
-        </tr>
-        <tr style="background:var(--color-background-secondary);">
-          <td style="text-align:center;font-weight:600;">MINEM</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
-          </td>
-          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
-          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
-        </tr>
-        <tr style="background:var(--color-background-secondary);">
-          <td rowspan="2">Suelo</td>
-          <td style="text-align:center;font-weight:600;">MINEM</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
-          </td>
-          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
-          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
-        </tr>
-        <tr style="background:var(--color-background-secondary);">
-          <td style="text-align:center;font-weight:600;">OEFA</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
-          </td>
-          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
-          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
-        </tr>
-        <tr style="background:var(--color-background-secondary);">
-          <td>Biológico</td>
-          <td style="text-align:center;font-weight:600;">OEFA / MINEM</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" onclick="showToast('Pendiente de implementación','info')"><i data-feather="paperclip"></i></button>
-          </td>
-          <td><select class="form-select" style="font-size:.8rem;" disabled><option>— Pendiente —</option></select></td>
-          <td><input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled></td>
-        </tr>
-
-        <!-- Fila ESTAMIN -->
-        <tr>
-          <td><strong>ESTAMIN</strong></td>
-          <td>Reporte Mensual ESTAMIN</td>
-          <td style="text-align:center;font-weight:600;">MINEM</td>
-          <td style="text-align:center;">
-            <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-              onclick="showToast('Pendiente de implementación','info')">
-              <i data-feather="paperclip"></i>
-            </button>
-          </td>
-          <td>
-            <select class="form-select" style="font-size:.8rem;" disabled>
-              <option>— Pendiente —</option>
-            </select>
-          </td>
-          <td>
-            <input type="text" class="form-input" style="font-size:.8rem;" placeholder="Observaciones..." disabled>
-          </td>
-        </tr>
-
+        {% endfor %}
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- MODAL ADJUNTAR EVIDENCIA -->
+<div class="modal-overlay" id="modalAdjuntar" style="display:none;">
+  <div class="modal-box" style="max-width:480px;">
+    <div class="modal-header">
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Compromisos</p>
+        <h2 class="modal-title">Adjuntar Evidencia</h2>
+      </div>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="cerrarAdjuntar()" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-body" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
+      <p style="font-size:.85rem;color:var(--text-muted);">
+        Selecciona el archivo PDF o imagen. Si ya existe una evidencia para este período,
+        se guardará como nueva versión y la descarga siempre traerá la más reciente.
+      </p>
+      <div>
+        <label class="date-label">Archivo *</label>
+        <input type="file" id="inputArchivo" accept=".pdf,.png,.jpg,.jpeg"
+               class="plant-input" style="padding:.4rem;">
+      </div>
+      <div id="adjuntarEstado" style="font-size:.82rem;display:none;"></div>
+    </div>
+    <div class="modal-footer">
+      <div class="modal-footer__summary"><span class="footer-label" id="adjuntarLabel">—</span></div>
+      <div class="modal-footer__actions">
+        <button type="button" class="btn-cancel" onclick="cerrarAdjuntar()">Cancelar</button>
+        <button type="button" class="btn-save" onclick="subirEvidencia()">
+          <i data-feather="upload" style="width:14px;height:14px;vertical-align:middle;"></i>
+          Subir
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -200,19 +174,93 @@
 
 {% block scripts %}
 <style>
-.compromisos-table th { font-size: .78rem; white-space: nowrap; }
-.compromisos-table td { font-size: .83rem; vertical-align: middle; }
+.compromisos-table th { font-size:.78rem; white-space:nowrap; }
+.compromisos-table td { font-size:.83rem; vertical-align:middle; }
+.compromisos-table tbody tr:hover { transform:none !important; box-shadow:none !important; }
+.compromisos-table tbody tr { cursor:default !important; }
+.compromisos-table tbody tr td { height:56px; }
 </style>
+
 <script>
+let _adjIdCompromiso = null;
+let _adjMes = null;
+let _adjAnio = null;
+
+function abrirAdjuntar(idcompromiso, mes, anio) {
+  _adjIdCompromiso = idcompromiso;
+  _adjMes  = mes;
+  _adjAnio = anio;
+  document.getElementById('inputArchivo').value = '';
+  document.getElementById('adjuntarEstado').style.display = 'none';
+  document.getElementById('adjuntarLabel').textContent = `Compromiso #${idcompromiso} — ${mes}/${anio}`;
+  document.getElementById('modalAdjuntar').style.display = 'flex';
+  feather.replace();
+}
+
+function cerrarAdjuntar() {
+  document.getElementById('modalAdjuntar').style.display = 'none';
+}
+
+async function subirEvidencia() {
+  const archivo = document.getElementById('inputArchivo').files[0];
+  if (!archivo) { showToast('Selecciona un archivo', 'error'); return; }
+  const fd = new FormData();
+  fd.append('idcompromiso', _adjIdCompromiso);
+  fd.append('mes',          _adjMes);
+  fd.append('anio',         _adjAnio);
+  fd.append('archivo',      archivo);
+  const estado = document.getElementById('adjuntarEstado');
+  estado.style.display = 'block';
+  estado.style.color   = 'var(--text-muted)';
+  estado.textContent   = 'Subiendo...';
+  try {
+    const res  = await fetch('/admin/compromisos/subir-evidencia', {
+      method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'}, body: fd,
+    });
+    const json = await res.json();
+    if (json.success) {
+      estado.style.color = 'var(--color-green)';
+      estado.textContent = `✓ ${json.nombre} (v${json.version}) subido correctamente`;
+      showToast('Evidencia subida correctamente', 'success');
+      setTimeout(() => { cerrarAdjuntar(); location.reload(); }, 1200);
+    } else {
+      estado.style.color = 'var(--color-red)';
+      estado.textContent = `Error: ${json.error}`;
+      showToast(json.error || 'Error al subir', 'error');
+    }
+  } catch(e) { showToast('Error de conexión', 'error'); }
+}
+
+async function guardarCampo(idcompromiso, mes, anio, idusuario, observaciones) {
+  try {
+    await fetch('/admin/compromisos/guardar', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
+      body: JSON.stringify({ idcompromiso, mes, anio, idusuario, observaciones }),
+    });
+  } catch(e) { console.error('Error guardando compromiso:', e); }
+}
+
+function cambiarPeriodo() {
+  const mes  = document.getElementById('selMes').value;
+  const anio = document.getElementById('selAnio').value;
+  window.location.href = `/admin/compromisos?mes=${mes}&anio=${anio}`;
+}
+
+document.getElementById('modalAdjuntar').addEventListener('click', function(e) {
+  if (e.target === this) cerrarAdjuntar();
+});
+
 function showToast(msg, type) {
   const d = document.createElement('div');
-  d.className = 'alert alert-'+type;
+  d.className = 'alert alert-' + type;
   d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
-  d.innerHTML = '<span>'+msg+'</span><button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>';
+  d.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>`;
   document.body.appendChild(d);
   feather.replace();
-  setTimeout(()=>d.remove(), 4000);
+  setTimeout(() => d.remove(), 4000);
 }
+
 document.addEventListener('DOMContentLoaded', () => feather.replace());
 </script>
 {% endblock %}

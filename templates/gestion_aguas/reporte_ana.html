@@ -61,8 +61,8 @@
           <th>Tiempo de Operación<br>(Horas)</th>
           <th>Contómetro Inicial</th>
           <th>Contómetro Final</th>
-          <th>Caudal<br>(m³/seg)</th>
-          <th>Volumen de Agua<br>Captado (m³)</th>
+          <th>Volumen Captado<br>(m³) <em style="font-weight:400;font-size:.7rem;">= Final − Inicial</em></th>
+          <th>Caudal<br>(m³/seg) <em style="font-weight:400;font-size:.7rem;">= Vol ÷ 86400</em></th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -73,90 +73,105 @@
           <td>{{ r.tiempo_operacion }}</td>
           <td>{{ r.contometro_inicial }}</td>
           <td>{{ r.contometro_final }}</td>
-          <td>{{ r.caudal }}</td>
           <td>{{ r.volumen_captado }}</td>
+          <td>{{ r.caudal }}</td>
           <td>
             <div style="display:flex;gap:.4rem;">
-              <button class="btn-icon btn-icon-edit" onclick="editarRegistro('{{ r.id }}')"><i data-feather="edit-2"></i></button>
-              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('{{ r.id }}')"><i data-feather="trash-2"></i></button>
+              <button class="btn-icon btn-icon-edit"
+                onclick="editarRegistro('{{ r.id }}')">
+                <i data-feather="edit-2"></i>
+              </button>
+              <button class="btn-icon btn-icon-danger"
+                onclick="eliminarRegistro('{{ r.id }}')">
+                <i data-feather="trash-2"></i>
+              </button>
             </div>
           </td>
         </tr>
         {% else %}
-        <tr><td colspan="7" style="text-align:center;color:#94a3b8;padding:2.5rem;">
-          <i data-feather="inbox" style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
-          No hay reportes ANA registrados
-        </td></tr>
+        <tr>
+          <td colspan="7" style="text-align:center;color:#94a3b8;padding:2.5rem;">
+            <i data-feather="inbox"
+               style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
+            No hay reportes ANA registrados
+          </td>
+        </tr>
         {% endfor %}
       </tbody>
     </table>
   </div>
 </div>
 
-
-<!-- ═══ MODAL NUEVO REPORTE ═══ -->
-<div class="modal-overlay" id="modalANA">
+<!-- ═══ MODAL ═══ -->
+<div class="modal-overlay" id="modalANA" style="display:none;">
   <div class="modal-box" style="max-width:560px;">
     <div class="modal-header">
       <div class="modal-header__info">
         <p class="modal-eyebrow">Gestión de Aguas</p>
-        <h2 class="modal-title">Nuevo Reporte ANA</h2>
+        <h2 class="modal-title" id="modalANA-titulo">Nuevo Reporte ANA</h2>
       </div>
       <div class="modal-header__controls">
         <button class="btn-close" onclick="cerrarModal()" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor"
+                  stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
         </button>
       </div>
     </div>
-    <form method="POST" action="/admin/ana/crear">
-      <div class="modal-body">
-        <div class="form-section">
-          <h4 class="form-section-title"><i data-feather="info"></i> Datos del Reporte</h4>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Fecha *</label>
-              <input type="date" name="fecha" class="form-input" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Tiempo de Operación (Horas) *</label>
-              <input type="text" name="tiempo_operacion" class="form-input"
-                     placeholder="Ej: 24 horas" required>
-            </div>
+
+    <form id="formANA" method="POST" action="/admin/ana/crear">
+      <div class="modal-body"
+           style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
+
+        <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
+          <div>
+            <label class="date-label">Fecha *</label>
+            <input type="date" name="fecha" class="date-input"
+                   style="width:100%" required>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Contómetro Inicial *</label>
-              <input type="number" step="0.01" name="contometro_inicial" class="form-input"
-                     placeholder="0.00" required>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Contómetro Final *</label>
-              <input type="number" step="0.01" name="contometro_final" class="form-input"
-                     placeholder="0.00" required>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label">Caudal (m³/seg)</label>
-              <input type="number" step="0.000000001" name="caudal" class="form-input"
-                     placeholder="0.000000000">
-              <small class="form-hint">Se puede calcular automáticamente</small>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Volumen de Agua Captado (m³)</label>
-              <input type="number" step="0.01" name="volumen_captado" class="form-input"
-                     placeholder="0.00">
-            </div>
+          <div>
+            <label class="date-label">Tiempo de Operación *</label>
+            <input type="text" name="tiempo_operacion" class="plant-input"
+                   placeholder="Ej: 24 horas" required>
           </div>
         </div>
+
+        <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
+          <div>
+            <label class="date-label">Contómetro Inicial *</label>
+            <input type="number" step="0.01" name="contometro_inicial"
+                   class="plant-input" placeholder="0.00" required>
+          </div>
+          <div>
+            <label class="date-label">Contómetro Final *</label>
+            <input type="number" step="0.01" name="contometro_final"
+                   class="plant-input" placeholder="0.00" required>
+          </div>
+        </div>
+
+        <!-- Nota: Volumen y Caudal son calculados automáticamente en el servidor -->
+        <div style="background:var(--color-background-secondary);
+                    padding:.75rem 1rem;border-radius:.5rem;
+                    font-size:.8rem;color:var(--text-muted);">
+          <i data-feather="info"
+             style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+          <strong>Volumen</strong> y <strong>Caudal</strong> se calculan
+          automáticamente —
+          <em>Volumen = Final − Inicial &nbsp;|&nbsp; Caudal = Volumen ÷ 86400</em>
+        </div>
+
       </div>
       <div class="modal-footer">
-        <button type="submit" class="btn btn-primary btn-lg">
-          <i data-feather="check"></i> Guardar Reporte
-        </button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModal()">
-          Cancelar
-        </button>
+        <div class="modal-footer__summary">
+          <span class="footer-label">Reportes ANA</span>
+        </div>
+        <div class="modal-footer__actions">
+          <button type="button" class="btn-cancel" onclick="cerrarModal()">
+            Cancelar
+          </button>
+          <button type="submit" class="btn-save">Guardar</button>
+        </div>
       </div>
     </form>
   </div>
@@ -171,6 +186,7 @@
 </style>
 
 <script>
+// ── Filtros ──────────────────────────────────────────────
 function aplicarFiltros() {
   const q  = document.getElementById('inputBuscar').value.toLowerCase();
   const fi = document.getElementById('filtroFechaIni').value;
@@ -190,51 +206,103 @@ function aplicarFiltros() {
 }
 
 function limpiarFiltros() {
-  document.getElementById('inputBuscar').value = '';
+  document.getElementById('inputBuscar').value    = '';
   document.getElementById('filtroFechaIni').value = '';
   document.getElementById('filtroFechaFin').value = '';
   aplicarFiltros();
 }
 
+// ── Modal ────────────────────────────────────────────────
 function abrirModal() {
-  document.getElementById('modalANA').classList.add('open');
+  document.getElementById('modalANA').style.display = 'flex';
   feather.replace();
 }
 
 function cerrarModal() {
-  document.getElementById('modalANA').classList.remove('open');
+  const form = document.getElementById('formANA');
+  form.reset();
+  form.action    = '/admin/ana/crear';
+  form.onsubmit  = null;
+  document.getElementById('modalANA-titulo').textContent = 'Nuevo Reporte ANA';
+  document.getElementById('modalANA').style.display = 'none';
 }
 
-function editarRegistro(id) {
-  showToast('Editar reporte #'+id+' — pendiente de endpoint','info');
+// ── Editar ───────────────────────────────────────────────
+async function editarRegistro(id) {
+  try {
+    const res  = await fetch(`/admin/ana/detalle/${id}`);
+    const data = await res.json();
+    if (data.error) { showToast(data.error, 'error'); return; }
+
+    const form = document.getElementById('formANA');
+    form.action = `/admin/ana/editar/${id}`;
+
+    // Solo campos que el usuario ingresa (Volumen y Caudal son calculados)
+    form.querySelector('[name=fecha]').value             = data.fecha           || '';
+    form.querySelector('[name=tiempo_operacion]').value  = data.tiempooperacion || '';
+    form.querySelector('[name=contometro_inicial]').value = data.contometroinicial ?? '';
+    form.querySelector('[name=contometro_final]').value   = data.contometrofinal   ?? '';
+
+    document.getElementById('modalANA-titulo').textContent = `Editar Reporte ANA #${id}`;
+
+    // Interceptar submit para AJAX
+    form.onsubmit = async function(e) {
+      e.preventDefault();
+      const fd  = new FormData(form);
+      const r   = await fetch(form.action, {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        body: fd
+      });
+      const json = await r.json();
+      if (json.success) {
+        showToast('Reporte actualizado', 'success');
+        cerrarModal();
+        setTimeout(() => location.reload(), 800);
+      } else {
+        showToast(json.error || 'Error al actualizar', 'error');
+      }
+    };
+
+    abrirModal();
+  } catch(e) {
+    showToast('Error al cargar reporte', 'error');
+  }
 }
 
+// ── Eliminar ─────────────────────────────────────────────
 async function eliminarRegistro(id) {
   if (!confirm('¿Eliminar este reporte? Esta acción no se puede deshacer.')) return;
   try {
-    const res  = await fetch('/admin/ana/eliminar/'+id,
-      {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}});
+    const res  = await fetch(`/admin/ana/eliminar/${id}`,
+      { method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'} });
     const json = await res.json();
     if (json.success) {
-      showToast('Reporte eliminado','success');
+      showToast('Reporte eliminado', 'success');
       setTimeout(() => location.reload(), 800);
     } else {
-      showToast(json.error || 'Error al eliminar','error');
+      showToast(json.error || 'Error al eliminar', 'error');
     }
-  } catch(e) { showToast('Error de conexión','error'); }
+  } catch(e) {
+    showToast('Error de conexión', 'error');
+  }
 }
 
+// ── Toast ────────────────────────────────────────────────
 function showToast(msg, type) {
   const d = document.createElement('div');
-  d.className = 'alert alert-'+type;
+  d.className = 'alert alert-' + type;
   d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
-  d.innerHTML = '<span>'+msg+'</span>'
-    + '<button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>';
+  d.innerHTML = `<span>${msg}</span>
+    <button onclick="this.parentElement.remove()">
+      <i data-feather="x"></i>
+    </button>`;
   document.body.appendChild(d);
   feather.replace();
   setTimeout(() => d.remove(), 4000);
 }
 
+// ── Cerrar modal al click afuera ─────────────────────────
 document.getElementById('modalANA').addEventListener('click', function(e) {
   if (e.target === this) cerrarModal();
 });
