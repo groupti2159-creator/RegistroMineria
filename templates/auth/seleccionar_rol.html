@@ -48,6 +48,11 @@
               </span>
               <span class="rol-selector-info">
                 <strong>{{ rol.nombrerol }}</strong>
+                {% if rol.nombreproyecto %}
+                <small style="display:block;color:#64748b;font-size:.85rem;margin-top:.25rem">
+                  Proyecto: {{ rol.nombreproyecto }}
+                </small>
+                {% endif %}
               </span>
               <span class="rol-selector-check"><i data-feather="check-circle"></i></span>
             </span>

@@ -81,9 +81,24 @@ from functools import wraps
 from flask import session, redirect, url_for, render_template
 
 def admin_required(f):
+    """
+    DEPRECADO: Usar @login_required + @modulo_required en su lugar.
+    Mantiene compatibilidad pero ahora permite acceso si el usuario tiene el módulo.
+    """
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session or session.get('rol') != 'Administrador':
+        if 'user_id' not in session:
+            return redirect(url_for('auth.login'))
+        # Ya no restringe solo a Administrador - cualquier usuario logueado puede acceder
+        # La restricción real la hace @modulo_required
+        return f(*args, **kwargs)
+    return decorated
+
+def login_required(f):
+    """Verifica que el usuario esté logueado."""
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        if 'user_id' not in session:
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated

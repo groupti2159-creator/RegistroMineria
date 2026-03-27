@@ -43,7 +43,6 @@ app.register_blueprint(shared_bp,       url_prefix='/api')
 app.register_blueprint(proyectos_bp,    url_prefix='/proyectos')
 
 from flask import session, request
-from routes.auth import cargar_accesos, cargar_modulos
 from utils.helpers import sp_exec
 from datetime import datetime, timedelta
 
@@ -51,17 +50,8 @@ from datetime import datetime, timedelta
 _ultimo_update_estados = None
 _intervalo_update = timedelta(minutes=5)  # Actualizar cada 5 minutos
 
-@app.before_request
-def refresh_accesos():
-    """Recarga accesos y módulos desde BD en cada request."""
-    if session.get('user_id') and session.get('rol_id'):
-        try:
-            rol_id = session['rol_id']
-            session['accesos'] = cargar_accesos(rol_id)
-            session['modulos'] = cargar_modulos(rol_id)
-        except Exception as e:
-            print(f"[refresh_accesos] error: {e}")
-            # No limpiar sesión si falla la BD
+# Nota: Los accesos y módulos se cargan una sola vez en login (set_session)
+# No es necesario recargarlos en cada request
 
 @app.before_request
 def actualizar_estados_atrasados():

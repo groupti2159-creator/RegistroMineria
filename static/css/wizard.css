@@ -1,0 +1,443 @@
+/* ============================================
+   WIZARD DE 3 PASOS - ESTILO BANCO MODERNO
+   ============================================ */
+
+/* Overlay del modal - Clase específica para wizard */
+.wizard-modal {
+    display: none !important;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    background: rgba(0, 0, 0, 0.6) !important;
+    z-index: 9999 !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 20px !important;
+    overflow-y: auto !important;
+}
+
+.wizard-modal.open {
+    display: flex !important;
+}
+
+/* Contenedor principal del wizard */
+.wizard-modal .wizard-container {
+    max-width: 900px;
+    width: 100%;
+    margin: 20px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    overflow: hidden;
+    position: relative;
+}
+
+/* Header del wizard */
+.wizard-modal .wizard-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 30px;
+    color: white;
+}
+
+.wizard-modal .wizard-title {
+    font-size: 24px;
+    font-weight: 600;
+    margin: 0 0 25px 0;
+    text-align: center;
+}
+
+/* Indicador de pasos */
+.wizard-modal .wizard-steps {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.wizard-modal .wizard-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    z-index: 0;
+}
+
+.wizard-modal .wizard-step {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+    flex: 1;
+}
+
+.wizard-modal .wizard-step-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.3);
+    border: 3px solid rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.3s ease;
+}
+
+.wizard-modal .wizard-step-label {
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.wizard-modal .wizard-step.active .wizard-step-circle {
+    background: white;
+    color: #667eea;
+    border-color: white;
+    box-shadow: 0 0 0 4px rgba(255,255,255,0.3);
+    transform: scale(1.1);
+}
+
+.wizard-modal .wizard-step.active .wizard-step-label {
+    opacity: 1;
+    font-weight: 600;
+}
+
+.wizard-modal .wizard-step.completed .wizard-step-circle {
+    background: #4CAF50;
+    border-color: #4CAF50;
+    color: white;
+}
+
+.wizard-modal .wizard-step.completed .wizard-step-circle::before {
+    content: '✓';
+    font-size: 20px;
+}
+
+/* Contenido del wizard */
+.wizard-modal .wizard-body {
+    padding: 40px;
+    min-height: 400px;
+    background: white;
+}
+
+.wizard-modal .wizard-step-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in;
+}
+
+.wizard-modal .wizard-step-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Sección de paso */
+.wizard-modal .step-section {
+    margin-bottom: 30px;
+}
+
+.wizard-modal .step-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+/* Formulario */
+.wizard-modal .wizard-form-group {
+    margin-bottom: 20px;
+}
+
+.wizard-modal .wizard-form-group label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+    font-size: 14px;
+}
+
+.wizard-modal .wizard-form-group label .required {
+    color: #e74c3c;
+    margin-left: 3px;
+}
+
+.wizard-modal .wizard-form-group input,
+.wizard-modal .wizard-form-group select {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.wizard-modal .wizard-form-group input:focus,
+.wizard-modal .wizard-form-group select:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.wizard-modal .wizard-form-group .help-text {
+    font-size: 12px;
+    color: #999;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Grid de 2 columnas */
+.wizard-modal .wizard-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+/* Tarjetas de proyecto */
+.wizard-modal .proyecto-card {
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+    background: #fafafa;
+    transition: all 0.3s ease;
+}
+
+.wizard-modal .proyecto-card:hover {
+    border-color: #667eea;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+}
+
+.wizard-modal .proyecto-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.wizard-modal .proyecto-card h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.wizard-modal .btn-remove-proyecto {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wizard-modal .btn-remove-proyecto:hover {
+    background: #c0392b;
+    transform: scale(1.05);
+}
+
+/* Botón agregar proyecto */
+.wizard-modal .btn-add-proyecto {
+    background: white;
+    border: 2px dashed #667eea;
+    color: #667eea;
+    padding: 15px;
+    border-radius: 10px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.wizard-modal .btn-add-proyecto:hover {
+    background: #f0f4ff;
+    border-color: #5568d3;
+}
+
+/* Resumen */
+.wizard-modal .summary-section {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.wizard-modal .summary-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wizard-modal .summary-item {
+    padding: 10px 0;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    gap: 10px;
+}
+
+.wizard-modal .summary-item:last-child {
+    border-bottom: none;
+}
+
+.wizard-modal .summary-label {
+    font-weight: 600;
+    color: #666;
+    font-size: 13px;
+    min-width: 80px;
+}
+
+.wizard-modal .summary-value {
+    color: #2c3e50;
+    flex: 1;
+}
+
+.wizard-modal .summary-proyecto-item {
+    background: white;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 10px;
+    border-left: 4px solid #667eea;
+}
+
+.wizard-modal .summary-proyecto-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 10px;
+}
+
+.wizard-modal .summary-proyecto-details {
+    display: grid;
+    gap: 5px;
+    font-size: 13px;
+    color: #666;
+    margin-left: 28px;
+}
+
+/* Sección de módulos */
+.wizard-modal .modulos-section {
+    margin-bottom: 25px;
+}
+
+.wizard-modal .modulos-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.wizard-modal .modulos-section-header h4 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* Footer del wizard */
+.wizard-modal .wizard-footer {
+    padding: 25px 40px;
+    background: #f8f9fa;
+    border-top: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.wizard-modal .wizard-btn {
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.wizard-modal .wizard-btn-secondary {
+    background: white;
+    color: #666;
+    border: 2px solid #e0e0e0;
+}
+
+.wizard-modal .wizard-btn-secondary:hover {
+    background: #f8f9fa;
+    border-color: #ccc;
+}
+
+.wizard-modal .wizard-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.wizard-modal .wizard-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.wizard-modal .wizard-btn-success {
+    background: #4CAF50;
+    color: white;
+}
+
+.wizard-modal .wizard-btn-success:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .wizard-modal .wizard-grid-2 {
+        grid-template-columns: 1fr;
+    }
+    
+    .wizard-modal .wizard-body {
+        padding: 20px;
+    }
+    
+    .wizard-modal .wizard-footer {
+        padding: 15px 20px;
+        flex-direction: column;
+        gap: 10px;
+    }
+}

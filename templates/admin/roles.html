@@ -1,0 +1,703 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Roles y Permisos{% endblock %}
+
+{% block content %}
+<style>
+/* Variables */
+:root {
+    --primary: #3b82f6;
+    --primary-hover: #2563eb;
+    --primary-light: #eff6ff;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --bg-hover: #f8fafc;
+    --bg-card: #ffffff;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+/* Layout principal */
+.roles-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Tarjeta de rol - Diseño mejorado */
+.role-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+}
+
+.role-card:hover {
+    box-shadow: var(--shadow-sm);
+    border-color: var(--primary-light);
+}
+
+/* Cabecera del rol */
+.role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: linear-gradient(to right, #fafbff, #ffffff);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.role-header:hover {
+    background: var(--bg-hover);
+}
+
+.role-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.role-icon {
+    width: 32px;
+    height: 32px;
+    background: var(--primary-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+}
+
+.role-details {
+    flex: 1;
+}
+
+.role-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.role-badge {
+    font-size: 0.6rem;
+    padding: 2px 6px;
+    background: var(--primary-light);
+    color: var(--primary);
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.role-description {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+.role-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.stat-number {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.role-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* Área de permisos (colapsable) */
+.role-permissions {
+    border-top: 1px solid var(--border);
+    padding: 0;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.role-permissions.open {
+    max-height: 2000px;
+    transition: max-height 0.4s ease-in;
+}
+
+.permissions-header {
+    padding: 12px 16px;
+    background: var(--bg-hover);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.permissions-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.permissions-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.select-all-btn {
+    font-size: 0.65rem;
+    color: var(--primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 2px 6px;
+}
+
+.select-all-btn:hover {
+    text-decoration: underline;
+}
+
+/* Grid de módulos - Organizado por categorías */
+.modulos-grid {
+    padding: 12px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.modulo-categoria {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.categoria-header {
+    padding: 8px 12px;
+    background: var(--bg-hover);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.categoria-header:hover {
+    background: #f1f5f9;
+}
+
+.categoria-header i {
+    font-size: 0.75rem;
+    color: var(--primary);
+}
+
+.categoria-nombre {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.categoria-check {
+    margin-left: auto;
+}
+
+.categoria-permisos {
+    padding: 8px 12px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, auto));
+    gap: 4px;
+    background: white;
+}
+
+.permiso-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-size: 0.7rem;
+}
+
+.permiso-item:hover {
+    background: var(--primary-light);
+}
+
+.permiso-item input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--primary);
+}
+
+.permiso-nombre {
+    color: var(--text-secondary);
+}
+
+/* Botones */
+.btn-save-role {
+    background: var(--primary);
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-save-role:hover {
+    background: var(--primary-hover);
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.7rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.btn-secondary:hover {
+    background: var(--bg-hover);
+}
+
+.btn-icon {
+    background: transparent;
+    border: none;
+    padding: 4px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-icon:hover {
+    background: var(--bg-hover);
+    color: var(--primary);
+}
+
+/* Selector de proyecto */
+.proyecto-selector {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.proyecto-selector label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+
+.proyecto-selector select {
+    padding: 4px 8px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    min-width: 200px;
+}
+
+/* Indicadores visuales */
+.badge-success {
+    background: #dcfce7;
+    color: #166534;
+    padding: 2px 6px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    font-weight: 500;
+}
+
+/* Mensajes toast */
+.message-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: white;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    font-size: 0.75rem;
+}
+
+.message-toast.success {
+    border-left: 3px solid var(--success);
+}
+
+.message-toast.error {
+    border-left: 3px solid var(--danger);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .role-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .role-stats {
+        width: 100%;
+        justify-content: flex-start;
+    }
+    
+    .categoria-permisos {
+        grid-template-columns: 1fr;
+    }
+    
+    .role-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .role-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .proyecto-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .proyecto-selector select {
+        width: 100%;
+    }
+}
+</style>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h2 style="font-size: 1.1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px;">
+                <i data-feather="shield" style="width: 18px; height: 18px;"></i> 
+                Gestión de Roles y Permisos
+            </h2>
+            <p class="text-muted" style="font-size: 0.7rem; margin: 2px 0 0 0;">Administra los permisos por rol y proyecto</p>
+        </div>
+        <button class="btn-save-role" onclick="abrirModalNuevoRol()">
+            <i data-feather="plus" style="width: 12px; height: 12px;"></i> 
+            Nuevo Rol
+        </button>
+    </div>
+
+    <!-- Selector de Proyecto -->
+    <div class="proyecto-selector">
+        <label for="proyectoSelect">
+            <i data-feather="folder" style="width: 12px; height: 12px;"></i> 
+            Proyecto actual:
+        </label>
+        <select id="proyectoSelect">
+            <option value="">Selecciona un proyecto...</option>
+        </select>
+        <span class="text-muted" style="font-size: 0.65rem;">
+            Los permisos se aplican al proyecto seleccionado
+        </span>
+    </div>
+
+    <!-- Contenedor de Roles -->
+    <div id="rolesContainer">
+        <div class="text-center text-muted py-4" style="font-size: 0.8rem;">
+            <i data-feather="folder" style="width: 32px; height: 32px; opacity: 0.5;"></i>
+            <p class="mt-2 mb-0">Selecciona un proyecto para ver y editar sus roles</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Nuevo Rol -->
+<div class="modal fade" id="modalNuevoRol" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 400px;">
+        <div class="modal-content">
+            <div class="modal-header" style="padding: 12px 16px;">
+                <h5 class="modal-title" style="font-size: 0.9rem;">Crear Nuevo Rol</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 16px;">
+                <form id="formNuevoRol">
+                    <div class="form-group mb-3">
+                        <label style="font-size: 0.75rem; font-weight: 500;">Nombre del rol *</label>
+                        <input type="text" class="form-control" id="nuevoRolNombre" required 
+                               placeholder="Ej: Analista Ambiental" style="font-size: 0.8rem; padding: 6px 10px;">
+                    </div>
+                    <div class="form-group">
+                        <label style="font-size: 0.75rem; font-weight: 500;">Descripción</label>
+                        <textarea class="form-control" id="nuevoRolDescripcion" rows="2"
+                                  placeholder="Describe las responsabilidades de este rol" style="font-size: 0.8rem;"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="padding: 12px 16px;">
+                <button type="button" class="btn-secondary" data-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn-save-role" onclick="crearNuevoRol()">Crear Rol</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Función para renderizar roles con el nuevo diseño
+function renderRoles(roles, modulos) {
+    const container = document.getElementById('rolesContainer');
+    
+    if (!roles || roles.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4">
+                <i data-feather="users" style="width: 32px; height: 32px; opacity: 0.5;"></i>
+                <p class="mt-2 mb-0">No hay roles creados para este proyecto</p>
+                <button class="btn-save-role mt-3" onclick="abrirModalNuevoRol()">Crear primer rol</button>
+            </div>
+        `;
+        feather.replace();
+        return;
+    }
+    
+    container.innerHTML = `
+        <div class="roles-grid">
+            ${roles.map(rol => renderRolCard(rol, modulos)).join('')}
+        </div>
+    `;
+    
+    feather.replace();
+    
+    // Inicializar eventos de colapso
+    document.querySelectorAll('.role-header').forEach(header => {
+        header.addEventListener('click', (e) => {
+            if (e.target.closest('.role-actions')) return;
+            const card = header.closest('.role-card');
+            const permissions = card.querySelector('.role-permissions');
+            permissions.classList.toggle('open');
+        });
+    });
+    
+    // Inicializar eventos de categorías
+    document.querySelectorAll('.categoria-header').forEach(catHeader => {
+        catHeader.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const categoria = catHeader.closest('.modulo-categoria');
+            const permisos = categoria.querySelector('.categoria-permisos');
+            if (permisos.style.display === 'none') {
+                permisos.style.display = 'grid';
+            } else {
+                permisos.style.display = 'none';
+            }
+        });
+    });
+}
+
+function renderRolCard(rol, modulos) {
+    const permisosCount = rol.permisos ? Object.keys(rol.permisos).length : 0;
+    const modulosAgrupados = agruparModulosPorCategoria(modulos, rol.permisos || {});
+    
+    return `
+        <div class="role-card">
+            <div class="role-header">
+                <div class="role-info">
+                    <div class="role-icon">
+                        <i data-feather="user" style="width: 16px; height: 16px;"></i>
+                    </div>
+                    <div class="role-details">
+                        <div class="role-name">
+                            ${escapeHtml(rol.nombre)}
+                            ${rol.es_administrador ? '<span class="role-badge">Administrador</span>' : ''}
+                        </div>
+                        ${rol.descripcion ? `<div class="role-description">${escapeHtml(rol.descripcion)}</div>` : ''}
+                    </div>
+                    <div class="role-stats">
+                        <div class="stat-item">
+                            <i data-feather="key" style="width: 10px; height: 10px;"></i>
+                            <span class="stat-number">${permisosCount}</span>
+                            <span>permisos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="role-actions">
+                    <button class="btn-icon" onclick="editarRol(${rol.id}, '${escapeHtml(rol.nombre)}', '${escapeHtml(rol.descripcion || '')}')" title="Editar rol">
+                        <i data-feather="edit-2" style="width: 12px; height: 12px;"></i>
+                    </button>
+                    <button class="btn-icon" onclick="eliminarRol(${rol.id}, '${escapeHtml(rol.nombre)}')" title="Eliminar rol">
+                        <i data-feather="trash-2" style="width: 12px; height: 12px;"></i>
+                    </button>
+                    <button class="btn-save-role" onclick="guardarPermisos(${rol.id})" title="Guardar cambios">
+                        <i data-feather="save" style="width: 10px; height: 10px;"></i>
+                        Guardar
+                    </button>
+                </div>
+            </div>
+            <div class="role-permissions">
+                <div class="permissions-header">
+                    <div class="permissions-title">
+                        <i data-feather="grid" style="width: 10px; height: 10px;"></i>
+                        Permisos del rol
+                    </div>
+                    <div class="permissions-actions">
+                        <button class="select-all-btn" onclick="seleccionarTodosPermisos(${rol.id}, true)">Seleccionar todos</button>
+                        <button class="select-all-btn" onclick="seleccionarTodosPermisos(${rol.id}, false)">Deseleccionar todos</button>
+                    </div>
+                </div>
+                <div class="modulos-grid">
+                    ${renderCategorias(modulosAgrupados, rol.id)}
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderCategorias(categorias, rolId) {
+    return Object.entries(categorias).map(([categoria, modulos]) => `
+        <div class="modulo-categoria">
+            <div class="categoria-header">
+                <i data-feather="folder" style="width: 12px; height: 12px;"></i>
+                <span class="categoria-nombre">${escapeHtml(categoria)}</span>
+                <div class="categoria-check">
+                    <input type="checkbox" class="categoria-select-all" data-rol="${rolId}" data-categoria="${categoria}" 
+                           onchange="seleccionarCategoria(this, ${rolId}, '${categoria}')">
+                </div>
+            </div>
+            <div class="categoria-permisos">
+                ${modulos.map(modulo => `
+                    <label class="permiso-item">
+                        <input type="checkbox" 
+                               data-rol="${rolId}" 
+                               data-modulo="${modulo.id}"
+                               data-categoria="${categoria}"
+                               ${modulo.checked ? 'checked' : ''}
+                               onchange="cambiarPermiso(${rolId}, ${modulo.id}, this.checked)">
+                        <span class="permiso-nombre">${escapeHtml(modulo.nombre)}</span>
+                    </label>
+                `).join('')}
+            </div>
+        </div>
+    `).join('');
+}
+
+function agruparModulosPorCategoria(modulos, permisos) {
+    const categorias = {};
+    
+    modulos.forEach(modulo => {
+        const categoria = modulo.categoria || 'General';
+        if (!categorias[categoria]) {
+            categorias[categoria] = [];
+        }
+        categorias[categoria].push({
+            id: modulo.id,
+            nombre: modulo.nombre,
+            checked: permisos[modulo.id] || false
+        });
+    });
+    
+    return categorias;
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// Funciones auxiliares
+function seleccionarTodosPermisos(rolId, seleccionar) {
+    const checkboxes = document.querySelectorAll(`.permiso-item input[data-rol="${rolId}"]`);
+    checkboxes.forEach(cb => {
+        cb.checked = seleccionar;
+        cambiarPermiso(rolId, parseInt(cb.dataset.modulo), seleccionar);
+    });
+}
+
+function seleccionarCategoria(checkbox, rolId, categoria) {
+    const checkboxes = document.querySelectorAll(`.permiso-item input[data-rol="${rolId}"][data-categoria="${categoria}"]`);
+    checkboxes.forEach(cb => {
+        cb.checked = checkbox.checked;
+        cambiarPermiso(rolId, parseInt(cb.dataset.modulo), checkbox.checked);
+    });
+}
+
+// Funciones a implementar según tu backend
+function cambiarPermiso(rolId, moduloId, activado) {
+    // Implementar lógica de cambio de permiso
+    console.log(`Rol ${rolId}, Módulo ${moduloId}, Activado: ${activado}`);
+}
+
+function guardarPermisos(rolId) {
+    mostrarToast('Permisos guardados correctamente', 'success');
+}
+
+function editarRol(id, nombre, descripcion) {
+    // Implementar edición
+    mostrarToast('Editar rol: ' + nombre, 'info');
+}
+
+function eliminarRol(id, nombre) {
+    if (confirm(`¿Eliminar el rol "${nombre}"?`)) {
+        mostrarToast('Rol eliminado', 'success');
+    }
+}
+
+function mostrarToast(mensaje, tipo = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `message-toast ${tipo}`;
+    toast.innerHTML = `
+        <i data-feather="${tipo === 'success' ? 'check-circle' : 'alert-circle'}" style="width: 14px; height: 14px;"></i>
+        <span>${mensaje}</span>
+    `;
+    document.body.appendChild(toast);
+    feather.replace();
+    setTimeout(() => toast.remove(), 3000);
+}
+</script>
+
+<script src="{{ url_for('static', filename='js/admin/roles.js') }}"></script>
+{% endblock %}

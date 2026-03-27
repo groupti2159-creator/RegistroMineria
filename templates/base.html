@@ -159,10 +159,11 @@
       {% endif %}
 
       {# ── CONFIGURACIÓN ── #}
-      {% if 'CONFIGURACION' in accesos or 'CONFIG_USUARIOS' in accesos or 'CONFIG_DASH' in accesos %}
+      {% if 'CONFIGURACION' in accesos or 'CONFIG_USUARIOS' in accesos or 'CONFIG_DASH' in accesos or 'ROLES' in accesos %}
         {% set hijos_cfg = [] %}
         {% if 'CONFIG_DASH'     in accesos %}{% set _ = hijos_cfg.append(('Dashboard',                  '/admin/configuracion/dashboard', 'layout')) %}{% endif %}
         {% if 'CONFIG_USUARIOS' in accesos or 'CONFIGURACION' in accesos %}{% set _ = hijos_cfg.append(('Configuración de Usuarios', '/admin/configuracion/usuarios', 'users')) %}{% endif %}
+        {% if 'ROLES' in accesos %}{% set _ = hijos_cfg.append(('Gestión de Roles', '/admin/roles', 'shield')) %}{% endif %}
         {{ nav_group('settings', 'Configuración', hijos_cfg) }}
       {% endif %}
 
