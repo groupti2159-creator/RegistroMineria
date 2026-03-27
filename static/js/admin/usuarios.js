@@ -24,41 +24,52 @@ function agregarProyecto() {
     proyectoDiv.dataset.index = index;
     proyectoDiv.innerHTML = `
         <div class="proyecto-item-header">
-            <strong>Proyecto ${index + 1}</strong>
-            <button type="button" class="btn-remove" onclick="eliminarProyecto(${index})">Eliminar</button>
+            <strong style="color: var(--text); font-size: .95rem;">
+                <i data-feather="folder" style="width: 16px; height: 16px; vertical-align: middle; margin-right: .35rem;"></i>
+                Proyecto ${index + 1}
+            </strong>
+            <button type="button" class="btn btn-secondary" style="padding: .45rem .85rem; font-size: .8rem;" onclick="eliminarProyecto(${index})">
+                <i data-feather="x" style="width: 14px; height: 14px;"></i>
+                Eliminar
+            </button>
         </div>
         
-        <div class="form-row">
+        <div class="form-row" style="gap: 1.25rem;">
             <div class="form-group">
-                <label>Proyecto *</label>
-                <select id="proyecto_${index}" required>
-                    <option value="">Seleccionar...</option>
+                <label class="form-label">PROYECTO *</label>
+                <select id="proyecto_${index}" class="form-select" required>
+                    <option value="">Seleccionar proyecto...</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Rol *</label>
-                <select id="rol_${index}" required>
-                    <option value="">Seleccionar...</option>
+                <label class="form-label">ROL *</label>
+                <select id="rol_${index}" class="form-select" required>
+                    <option value="">Seleccionar rol...</option>
                 </select>
             </div>
         </div>
         
-        <div class="form-row">
+        <div class="form-row" style="gap: 1.25rem;">
             <div class="form-group">
-                <label>Área *</label>
-                <select id="area_${index}" required>
-                    <option value="">Seleccionar...</option>
+                <label class="form-label">ÁREA *</label>
+                <select id="area_${index}" class="form-select" required>
+                    <option value="">Seleccionar área...</option>
                 </select>
             </div>
             <div class="form-group">
-                <label>Cargo *</label>
-                <input type="text" id="cargo_${index}" required>
+                <label class="form-label">CARGO *</label>
+                <input type="text" id="cargo_${index}" class="form-input" placeholder="Ej: Ingeniero Ambiental" required>
             </div>
         </div>
     `;
     
     container.appendChild(proyectoDiv);
     proyectosAgregados.push({});
+    
+    // Reemplazar iconos de feather
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
     
     // Cargar datos
     cargarProyectos(index);
@@ -76,9 +87,20 @@ function eliminarProyecto(index) {
     // Reindexar
     document.querySelectorAll('.proyecto-item').forEach((item, newIndex) => {
         item.dataset.index = newIndex;
-        item.querySelector('strong').textContent = `Proyecto ${newIndex + 1}`;
-        item.querySelector('.btn-remove').setAttribute('onclick', `eliminarProyecto(${newIndex})`);
+        const headerStrong = item.querySelector('.proyecto-item-header strong');
+        if (headerStrong) {
+            headerStrong.innerHTML = `<i data-feather="folder" style="width: 16px; height: 16px; vertical-align: middle; margin-right: .35rem;"></i>Proyecto ${newIndex + 1}`;
+        }
+        const btnEliminar = item.querySelector('.btn');
+        if (btnEliminar) {
+            btnEliminar.setAttribute('onclick', `eliminarProyecto(${newIndex})`);
+        }
     });
+    
+    // Reemplazar iconos de feather
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
 }
 
 function cargarProyectos(index) {

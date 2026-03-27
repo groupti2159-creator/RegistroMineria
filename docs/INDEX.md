@@ -3,22 +3,18 @@
 ## 📖 Documentación Disponible
 
 ### 🚀 Inicio y Configuración
-- **[README.md](README.md)** - Guía principal del proyecto
+- **[README.md](../README.md)** - Guía principal del proyecto
 - **[DEPLOYMENT.md](DEPLOYMENT.md)** - Instrucciones de deployment
 
 ### 🔧 Funcionalidades
 - **[ESTADO_ATRASADO.md](ESTADO_ATRASADO.md)** - Documentación del sistema de estados atrasados
-
-### 🧹 Mantenimiento
-- **[LIMPIEZA_PROYECTO.md](LIMPIEZA_PROYECTO.md)** - Registro de limpieza del proyecto
-- **[RESUMEN_LIMPIEZA.md](RESUMEN_LIMPIEZA.md)** - Resumen visual de la limpieza
 
 ## 📁 Estructura de Carpetas
 
 ```
 ecosupervisor/
 ├── docs/              # Documentación (estás aquí)
-├── sql/               # Scripts SQL
+├── sql/               # Scripts SQL (5 archivos esenciales)
 ├── scripts/           # Scripts Python auxiliares
 ├── routes/            # Módulos de rutas Flask
 ├── templates/         # Plantillas HTML
@@ -26,22 +22,40 @@ ecosupervisor/
 └── utils/             # Funciones auxiliares
 ```
 
+## 🗂️ Archivos SQL Disponibles
+
+Los siguientes scripts SQL están disponibles en la carpeta `sql/`:
+
+1. **schema.sql** - Schema principal de la base de datos
+2. **crear_sp_atrasado.sql** - Stored procedures para estados atrasados
+3. **actualizar_sp_estadisticas.sql** - Stored procedures de estadísticas
+4. **mejorar_sp_actualizar_registro.sql** - Mejoras a stored procedures
+5. **fix_orden_atrasado.sql** - Fix para orden de estados
+
 ## 🔗 Enlaces Rápidos
 
 ### Para Desarrolladores
-- [Estructura del Proyecto](README.md#estructura-del-proyecto)
-- [Configuración de Desarrollo](README.md#desarrollo)
-- [Variables de Entorno](README.md#variables-de-entorno-env)
+- [Estructura del Proyecto](../README.md#estructura-del-proyecto)
+- [Configuración de Desarrollo](../README.md#desarrollo)
+- [Variables de Entorno](../README.md#variables-de-entorno-env)
 
 ### Para Administradores
-- [Instalación](README.md#instalación)
+- [Instalación](../README.md#instalación)
 - [Deployment](DEPLOYMENT.md)
-- [Roles de Usuario](README.md#roles-de-usuario)
+- [Roles de Usuario](../README.md#roles-de-usuario)
 
 ### Para Mantenimiento
 - [Scripts SQL](../sql/)
 - [Scripts Python](../scripts/)
-- [Historial de Limpieza](LIMPIEZA_PROYECTO.md)
+
+## 🧹 Limpieza Reciente
+
+Se eliminaron archivos obsoletos de:
+- ✅ Scripts SQL de migración y testing (20 archivos)
+- ✅ Documentación de desarrollo temporal (10 archivos)
+- ✅ Archivos de notas y análisis completados
+
+El proyecto ahora está optimizado y contiene solo archivos necesarios para producción.
 
 ## 📝 Notas
 
@@ -52,6 +66,6 @@ ecosupervisor/
 
 ## 🔄 Última Actualización
 
-**Fecha**: 26 de Marzo, 2026
-**Versión**: 2.0
-**Cambios**: Reorganización completa del proyecto
+**Fecha**: 27 de Marzo, 2026
+**Versión**: 2.1
+**Cambios**: Limpieza completa del proyecto - eliminados 31 archivos obsoletos

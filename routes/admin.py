@@ -369,3 +369,82 @@ def roles_crear():
             
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/roles/<int:rol_id>/actualizar', methods=['PUT'])
+@admin_required
+def roles_actualizar(rol_id):
+    try:
+        data = request.get_json()
+        nombre = data.get('nombre', '').strip()
+        descripcion = data.get('descripcion', '').strip()
+        
+        if not nombre:
+            return jsonify({'success': False, 'error': 'El nombre del rol es requerido'}), 400
+        
+        cur = mysql.connection.cursor()
+        try:
+            # Verificar que el rol existe
+            cur.execute("SELECT idroles FROM tbl_roles WHERE idroles = %s", (rol_id,))
+            if not cur.fetchone():
+                return jsonify({'success': False, 'error': 'Rol no encontrado'}), 404
+            
+            # Actualizar rol
+            cur.execute("""
+                UPDATE tbl_roles 
+                SET nombrerol = %s, descripcion = %s
+                WHERE idroles = %s
+            """, (nombre, descripcion, rol_id))
+            
+            mysql.connection.commit()
+            return jsonify({'success': True, 'message': 'Rol actualizado correctamente'})
+            
+        except Exception as e:
+            mysql.connection.rollback()
+            return jsonify({'success': False, 'error': f'Error al actualizar rol: {str(e)}'}), 500
+        finally:
+            cur.close()
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/roles/<int:rol_id>/eliminar', methods=['DELETE'])
+@admin_required
+def roles_eliminar(rol_id):
+    try:
+        cur = mysql.connection.cursor()
+        try:
+            # Verificar que el rol existe
+            cur.execute("SELECT idroles, nombrerol FROM tbl_roles WHERE idroles = %s", (rol_id,))
+            rol = cur.fetchone()
+            if not rol:
+                return jsonify({'success': False, 'error': 'Rol no encontrado'}), 404
+            
+            # Verificar si hay usuarios asignados a este rol
+            cur.execute("SELECT COUNT(*) as count FROM tbl_usuariorol WHERE idroles = %s", (rol_id,))
+            usuarios_count = cur.fetchone()['count']
+            
+            if usuarios_count > 0:
+                return jsonify({
+                    'success': False, 
+                    'error': f'No se puede eliminar el rol porque tiene {usuarios_count} usuario(s) asignado(s). Primero reasigna los usuarios a otro rol.'
+                }), 400
+            
+            # Eliminar permisos del rol
+            cur.execute("DELETE FROM tbl_proyecto_rol_modulo WHERE idroles = %s", (rol_id,))
+            
+            # Eliminar rol
+            cur.execute("DELETE FROM tbl_roles WHERE idroles = %s", (rol_id,))
+            
+            mysql.connection.commit()
+            return jsonify({'success': True, 'message': f'Rol "{rol["nombrerol"]}" eliminado correctamente'})
+            
+        except Exception as e:
+            mysql.connection.rollback()
+            return jsonify({'success': False, 'error': f'Error al eliminar rol: {str(e)}'}), 500
+        finally:
+            cur.close()
+            
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500

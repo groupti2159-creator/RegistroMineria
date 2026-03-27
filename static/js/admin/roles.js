@@ -1,7 +1,7 @@
-// Variables globales
-let proyectoActual = null;
-let modulosProyecto = [];
-let rolesProyecto = [];
+// Variables globales - accesibles desde el HTML
+window.proyectoActual = null;
+window.modulosProyecto = [];
+window.rolesProyecto = [];
 
 // Inicializar al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
@@ -9,9 +9,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Event listener para cambio de proyecto
     document.getElementById('proyectoSelect').addEventListener('change', function() {
-        proyectoActual = this.value;
-        if (proyectoActual) {
-            cargarRolesYModulos(proyectoActual);
+        window.proyectoActual = this.value;
+        if (window.proyectoActual) {
+            cargarRolesYModulos(window.proyectoActual);
         } else {
             document.getElementById('rolesContainer').innerHTML = `
                 <div class="text-center text-muted py-5">
@@ -43,7 +43,7 @@ async function cargarProyectos() {
 }
 
 // Cargar roles y módulos del proyecto
-async function cargarRolesYModulos(proyectoId) {
+window.cargarRolesYModulos = async function(proyectoId) {
     try {
         // Mostrar loading
         document.getElementById('rolesContainer').innerHTML = `
@@ -58,12 +58,12 @@ async function cargarRolesYModulos(proyectoId) {
         // Cargar roles
         const rolesResponse = await fetch(`/admin/roles/proyecto/${proyectoId}/roles`);
         const rolesData = await rolesResponse.json();
-        rolesProyecto = rolesData.roles;
+        window.rolesProyecto = rolesData.roles;
         
         // Cargar módulos
         const modulosResponse = await fetch(`/admin/roles/proyecto/${proyectoId}/modulos`);
         const modulosData = await modulosResponse.json();
-        modulosProyecto = modulosData.modulos;
+        window.modulosProyecto = modulosData.modulos;
         
         // Renderizar roles
         renderizarRoles();
@@ -78,171 +78,67 @@ async function cargarRolesYModulos(proyectoId) {
         `;
         feather.replace();
     }
-}
+};
 
-// Renderizar tarjetas de roles
+// Renderizar tarjetas de roles usando la función del HTML
 function renderizarRoles() {
-    const container = document.getElementById('rolesContainer');
+    // Agrupar módulos por categoría para compatibilidad
+    const modulosPorCategoria = {};
     
-    if (rolesProyecto.length === 0) {
-        container.innerHTML = `
-            <div class="alert alert-info">
-                <i data-feather="info"></i>
-                No hay roles configurados para este proyecto. Crea uno nuevo.
-            </div>
-        `;
-        feather.replace();
-        return;
-    }
-    
-    container.innerHTML = '';
-    
-    rolesProyecto.forEach(rol => {
-        const card = crearTarjetaRol(rol);
-        container.appendChild(card);
-    });
-    
-    feather.replace();
-}
-
-// Crear tarjeta de rol
-function crearTarjetaRol(rol) {
-    const div = document.createElement('div');
-    div.className = 'role-card';
-    div.dataset.rolId = rol.idroles;
-    
-    // Contar módulos asignados
-    const modulosAsignados = rol.modulos_asignados || 0;
-    const totalModulos = modulosProyecto.reduce((acc, grupo) => acc + 1 + grupo.hijos.length, 0);
-    
-    div.innerHTML = `
-        <div class="role-header">
-            <div>
-                <div class="role-name">
-                    <i data-feather="shield"></i>
-                    ${rol.nombrerol}
-                </div>
-                <div class="role-description">${rol.descripcion || 'Sin descripción'}</div>
-            </div>
-            <div>
-                <span class="stats-badge">
-                    ${modulosAsignados} / ${totalModulos} módulos
-                </span>
-            </div>
-        </div>
+    window.modulosProyecto.forEach(grupo => {
+        const categoria = 'Módulos'; // Categoría por defecto
+        if (!modulosPorCategoria[categoria]) {
+            modulosPorCategoria[categoria] = [];
+        }
         
-        <div class="modulos-tree" id="modulos-rol-${rol.idroles}">
-            ${construirArbolModulos(rol)}
-        </div>
-        
-        <div class="text-right mt-3">
-            <button class="btn btn-save-role" onclick="guardarPermisosRol(${rol.idroles})">
-                <i data-feather="save"></i> Guardar Cambios
-            </button>
-        </div>
-    `;
-    
-    return div;
-}
-
-// Construir árbol de módulos con checkboxes
-function construirArbolModulos(rol) {
-    let html = '';
-    
-    modulosProyecto.forEach(grupo => {
-        const grupoChecked = rol.modulos_ids && rol.modulos_ids.includes(grupo.idmodulo);
-        
-        html += `
-            <div class="modulo-grupo-item">
-                <label>
-                    <input type="checkbox" 
-                           class="grupo-checkbox" 
-                           data-rol="${rol.idroles}"
-                           data-grupo="${grupo.idmodulo}"
-                           ${grupoChecked ? 'checked' : ''}
-                           onchange="toggleGrupoCompleto(this)">
-                    <i data-feather="${grupo.icono || 'folder'}" style="width: 18px; height: 18px;"></i>
-                    ${grupo.nombre}
-                </label>
-                
-                <div class="modulo-hijos-list">
-        `;
-        
-        grupo.hijos.forEach(hijo => {
-            const hijoChecked = rol.modulos_ids && rol.modulos_ids.includes(hijo.idmodulo);
-            
-            html += `
-                <label>
-                    <input type="checkbox" 
-                           class="hijo-checkbox" 
-                           data-rol="${rol.idroles}"
-                           data-grupo="${grupo.idmodulo}"
-                           data-modulo="${hijo.idmodulo}"
-                           ${hijoChecked ? 'checked' : ''}
-                           onchange="checkGrupoPadre(this)">
-                    <i data-feather="${hijo.icono || 'circle'}" style="width: 14px; height: 14px;"></i>
-                    ${hijo.nombre}
-                </label>
-            `;
+        // Agregar el grupo padre
+        modulosPorCategoria[categoria].push({
+            id: grupo.idmodulo,
+            nombre: grupo.nombre,
+            icono: grupo.icono,
+            categoria: categoria
         });
         
-        html += `
-                </div>
-            </div>
-        `;
+        // Agregar los hijos
+        grupo.hijos.forEach(hijo => {
+            modulosPorCategoria[categoria].push({
+                id: hijo.idmodulo,
+                nombre: hijo.nombre,
+                icono: hijo.icono,
+                categoria: categoria
+            });
+        });
     });
     
-    return html;
-}
-
-// Toggle grupo completo (marcar/desmarcar todos los hijos)
-function toggleGrupoCompleto(checkbox) {
-    const rolId = checkbox.dataset.rol;
-    const grupoId = checkbox.dataset.grupo;
-    const checked = checkbox.checked;
+    // Convertir roles al formato esperado
+    const rolesFormateados = window.rolesProyecto.map(rol => ({
+        id: rol.idroles,
+        nombre: rol.nombrerol,
+        descripcion: rol.descripcion,
+        es_administrador: false,
+        permisos: (rol.modulos_ids || []).reduce((acc, id) => {
+            acc[id] = true;
+            return acc;
+        }, {})
+    }));
     
-    const container = document.getElementById(`modulos-rol-${rolId}`);
-    const hijos = container.querySelectorAll(`.hijo-checkbox[data-grupo="${grupoId}"]`);
-    
-    hijos.forEach(hijo => {
-        hijo.checked = checked;
-    });
-}
-
-// Verificar si todos los hijos están marcados para marcar el padre
-function checkGrupoPadre(checkbox) {
-    const rolId = checkbox.dataset.rol;
-    const grupoId = checkbox.dataset.grupo;
-    
-    const container = document.getElementById(`modulos-rol-${rolId}`);
-    const hijos = container.querySelectorAll(`.hijo-checkbox[data-grupo="${grupoId}"]`);
-    const todosChecked = Array.from(hijos).every(h => h.checked);
-    const algunoChecked = Array.from(hijos).some(h => h.checked);
-    
-    const grupoPadre = container.querySelector(`.grupo-checkbox[data-grupo="${grupoId}"]`);
-    if (grupoPadre) {
-        grupoPadre.checked = todosChecked;
-        // Opcional: agregar estado indeterminado si algunos están marcados
-        grupoPadre.indeterminate = algunoChecked && !todosChecked;
+    // Llamar a la función del HTML
+    if (typeof window.renderRoles === 'function') {
+        window.renderRoles(rolesFormateados, Object.values(modulosPorCategoria).flat());
     }
 }
 
-// Guardar permisos de un rol
-async function guardarPermisosRol(rolId) {
+// Guardar permisos usando la función del HTML
+window.guardarPermisos = async function(rolId) {
     try {
-        const container = document.getElementById(`modulos-rol-${rolId}`);
-        
-        // Recopilar todos los módulos marcados (grupos + hijos)
+        // Recopilar todos los checkboxes marcados
         const modulosSeleccionados = [];
         
-        // Grupos marcados
-        container.querySelectorAll('.grupo-checkbox:checked').forEach(check => {
-            modulosSeleccionados.push(parseInt(check.dataset.grupo));
-        });
-        
-        // Hijos marcados
-        container.querySelectorAll('.hijo-checkbox:checked').forEach(check => {
-            modulosSeleccionados.push(parseInt(check.dataset.modulo));
+        document.querySelectorAll(`input[type="checkbox"][data-modulo]:checked`).forEach(checkbox => {
+            const moduloId = parseInt(checkbox.dataset.modulo);
+            if (!isNaN(moduloId)) {
+                modulosSeleccionados.push(moduloId);
+            }
         });
         
         // Enviar al servidor
@@ -257,10 +153,7 @@ async function guardarPermisosRol(rolId) {
         const result = await response.json();
         
         if (result.success) {
-            // Mostrar mensaje de éxito
             mostrarNotificacion('Permisos guardados correctamente', 'success');
-            
-            // Recargar datos para actualizar contadores
             await cargarRolesYModulos(proyectoActual);
         } else {
             mostrarNotificacion('Error: ' + result.error, 'error');
@@ -270,56 +163,13 @@ async function guardarPermisosRol(rolId) {
         console.error('Error guardando permisos:', error);
         mostrarNotificacion('Error al guardar permisos', 'error');
     }
-}
+};
 
-// Abrir modal para crear nuevo rol
-function abrirModalNuevoRol() {
-    if (!proyectoActual) {
-        alert('Primero selecciona un proyecto');
-        return;
-    }
-    
-    document.getElementById('formNuevoRol').reset();
-    $('#modalNuevoRol').modal('show');
-}
+// Función eliminada - ahora se usa window.guardarPermisos
 
-// Crear nuevo rol
-async function crearNuevoRol() {
-    const nombre = document.getElementById('nuevoRolNombre').value.trim();
-    const descripcion = document.getElementById('nuevoRolDescripcion').value.trim();
-    
-    if (!nombre) {
-        alert('El nombre del rol es requerido');
-        return;
-    }
-    
-    try {
-        const response = await fetch('/admin/roles/crear', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({
-                nombre: nombre,
-                descripcion: descripcion
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (result.success) {
-            $('#modalNuevoRol').modal('hide');
-            mostrarNotificacion('Rol creado correctamente', 'success');
-            
-            // Recargar roles
-            await cargarRolesYModulos(proyectoActual);
-        } else {
-            mostrarNotificacion('Error: ' + result.error, 'error');
-        }
-        
-    } catch (error) {
-        console.error('Error creando rol:', error);
-        mostrarNotificacion('Error al crear rol', 'error');
-    }
-}
+// Función eliminada - ahora está en el HTML inline con validaciones mejoradas
+
+// Función eliminada - ahora se usa la del HTML inline
 
 // Mostrar notificación
 function mostrarNotificacion(mensaje, tipo) {
