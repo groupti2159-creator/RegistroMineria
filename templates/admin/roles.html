@@ -1,0 +1,1072 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Roles y Permisos{% endblock %}
+
+{% block content %}
+<style>
+/* ====================================================
+   ESTILOS EXCLUSIVOS PARA GESTIÓN DE ROLES
+   Encapsulados para no interferir con el CSS global
+==================================================== */
+
+.roles-permissions-module {
+    /* Variables locales */
+    --rp-primary: #3b82f6;
+    --rp-primary-hover: #2563eb;
+    --rp-primary-light: #eff6ff;
+    --rp-text-primary: #0f172a;
+    --rp-text-secondary: #475569;
+    --rp-text-muted: #64748b;
+    --rp-border: #e2e8f0;
+    --rp-bg-hover: #f8fafc;
+    --rp-bg-card: #ffffff;
+    --rp-success: #10b981;
+    --rp-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --rp-radius: 6px;
+    --rp-radius-lg: 10px;
+}
+
+[data-theme="dark"] .roles-permissions-module {
+    --rp-text-primary: #f1f5f9;
+    --rp-text-secondary: #cbd5e1;
+    --rp-text-muted: #94a3b8;
+    --rp-border: #334155;
+    --rp-bg-hover: #334155;
+    --rp-bg-card: #1e293b;
+}
+
+/* Header del módulo */
+.roles-permissions-module .module-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.roles-permissions-module .module-header h2 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--rp-text-primary);
+}
+
+.roles-permissions-module .module-header p {
+    font-size: 0.7rem;
+    color: var(--rp-text-muted);
+    margin: 2px 0 0 0;
+}
+
+/* Selector de proyecto compacto */
+.roles-permissions-module .proyecto-selector {
+    background: var(--rp-bg-card);
+    border: 1px solid var(--rp-border);
+    padding: 8px 12px;
+    border-radius: var(--rp-radius-lg);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.roles-permissions-module .proyecto-selector label {
+    font-size: 0.75rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    color: var(--rp-text-primary);
+}
+
+.roles-permissions-module .proyecto-selector select {
+    padding: 4px 8px;
+    border: 1px solid var(--rp-border);
+    border-radius: var(--rp-radius);
+    font-size: 0.75rem;
+    min-width: 200px;
+    background: var(--rp-bg-card);
+    color: var(--rp-text-primary);
+}
+
+.roles-permissions-module .proyecto-selector .text-muted {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+}
+
+/* Grid de roles */
+.roles-permissions-module .roles-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Tarjeta de rol */
+.roles-permissions-module .role-card {
+    background: var(--rp-bg-card);
+    border: 1px solid var(--rp-border);
+    border-radius: var(--rp-radius-lg);
+    overflow: hidden;
+}
+
+/* Cabecera del rol */
+.roles-permissions-module .role-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: var(--rp-bg-hover);
+    border-bottom: 1px solid var(--rp-border);
+    cursor: pointer;
+}
+
+.roles-permissions-module .role-info {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.roles-permissions-module .role-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--rp-primary-light);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--rp-primary);
+}
+
+.roles-permissions-module .role-icon svg {
+    width: 18px;
+    height: 18px;
+}
+
+.roles-permissions-module .role-details {
+    flex: 1;
+}
+
+.roles-permissions-module .role-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--rp-text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.roles-permissions-module .role-badge {
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    background: var(--rp-primary-light);
+    color: var(--rp-primary);
+    border-radius: 12px;
+}
+
+.roles-permissions-module .role-description {
+    font-size: 0.7rem;
+    color: var(--rp-text-secondary);
+    margin-top: 2px;
+}
+
+.roles-permissions-module .role-stats {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.roles-permissions-module .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.7rem;
+    color: var(--rp-text-muted);
+}
+
+.roles-permissions-module .role-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* Área de permisos colapsable */
+.roles-permissions-module .role-permissions {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.roles-permissions-module .role-permissions.open {
+    max-height: 2000px;
+    transition: max-height 0.4s ease-in;
+}
+
+.roles-permissions-module .permissions-header {
+    padding: 8px 16px;
+    background: var(--rp-bg-hover);
+    border-bottom: 1px solid var(--rp-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.roles-permissions-module .permissions-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--rp-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.roles-permissions-module .permissions-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.roles-permissions-module .select-all-btn {
+    font-size: 0.75rem;
+    color: var(--rp-primary);
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 4px 8px;
+    border-radius: var(--rp-radius);
+    transition: all 0.2s;
+}
+
+.roles-permissions-module .select-all-btn:hover {
+    background: var(--rp-primary-light);
+    text-decoration: none;
+}
+
+/* Pestañas horizontales de categorías */
+.roles-permissions-module .categorias-tabs {
+    display: flex;
+    gap: 4px;
+    border-bottom: 1px solid var(--rp-border);
+    margin: 12px 16px 0 16px;
+    overflow-x: auto;
+}
+
+.roles-permissions-module .tab-categoria {
+    padding: 6px 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--rp-text-secondary);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+}
+
+.roles-permissions-module .tab-categoria:hover {
+    color: var(--rp-primary);
+}
+
+.roles-permissions-module .tab-categoria.active {
+    color: var(--rp-primary);
+    border-bottom-color: var(--rp-primary);
+}
+
+/* Contenedor de permisos */
+.roles-permissions-module .permisos-container {
+    display: none;
+    padding: 12px 16px;
+}
+
+.roles-permissions-module .permisos-container.active {
+    display: block;
+}
+
+/* PERMISOS EN HORIZONTAL - CHIPS */
+.roles-permissions-module .permisos-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.roles-permissions-module .permiso-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: var(--rp-bg-hover);
+    border: 1px solid var(--rp-border);
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 0.75rem;
+}
+
+.roles-permissions-module .permiso-chip:hover {
+    background: var(--rp-primary-light);
+    border-color: var(--rp-primary);
+}
+
+.roles-permissions-module .permiso-chip input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    cursor: pointer;
+    accent-color: var(--rp-primary);
+}
+
+.roles-permissions-module .permiso-nombre {
+    color: var(--rp-text-secondary);
+    white-space: nowrap;
+}
+
+.roles-permissions-module .permiso-chip.selected {
+    background: var(--rp-primary-light);
+    border-color: var(--rp-primary);
+}
+
+.roles-permissions-module .permiso-chip.selected .permiso-nombre {
+    color: var(--rp-primary);
+    font-weight: 500;
+}
+
+/* Botones - Usando estilos del proyecto (main.css) */
+/* Los botones .btn, .btn-primary, .btn-secondary, .btn-icon ya están definidos en main.css */
+
+/* Toast */
+.roles-permissions-module .message-toast {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 14px;
+    border-radius: var(--rp-radius);
+    background: var(--rp-bg-card);
+    border: 1px solid var(--rp-border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 1000;
+    font-size: 0.75rem;
+}
+
+.roles-permissions-module .message-toast.success {
+    border-left: 3px solid var(--rp-success);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .roles-permissions-module .role-info {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .roles-permissions-module .role-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+    
+    .roles-permissions-module .role-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+    
+    .roles-permissions-module .permiso-nombre {
+        white-space: normal;
+    }
+    
+    .roles-permissions-module .proyecto-selector {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .roles-permissions-module .proyecto-selector select {
+        width: 100%;
+    }
+    
+    .roles-permissions-module .categorias-tabs {
+        margin: 8px 12px 0 12px;
+    }
+    
+    .roles-permissions-module .permisos-container {
+        padding: 10px 12px;
+    }
+}
+
+/* Animación de spin para loader */
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+</style>
+
+<div class="roles-permissions-module">
+    <div class="module-header">
+        <div>
+            <h2>
+                <i data-feather="shield"></i> 
+                Gestión de Roles y Permisos
+            </h2>
+            <p>Administra los permisos por rol y proyecto</p>
+        </div>
+        <button class="btn btn-primary" onclick="abrirModalNuevoRol()">
+            <i data-feather="plus"></i> 
+            Nuevo Rol
+        </button>
+    </div>
+
+    <!-- Selector de Proyecto -->
+    <div class="proyecto-selector">
+        <label for="proyectoSelect">
+            <i data-feather="folder"></i> 
+            Proyecto actual:
+        </label>
+        <select id="proyectoSelect">
+            <option value="">Selecciona un proyecto...</option>
+        </select>
+        <span class="text-muted">Los permisos se aplican al proyecto seleccionado</span>
+    </div>
+
+    <!-- Contenedor de Roles -->
+    <div id="rolesContainer">
+        <div class="text-center text-muted py-4" style="text-align: center; color: var(--rp-text-muted);">
+            <i data-feather="folder" style="width: 32px; height: 32px;"></i>
+            <p class="mt-2">Selecciona un proyecto para ver sus roles</p>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Nuevo Rol -->
+<div class="modal-overlay" id="modalNuevoRol">
+    <div class="modal-box" style="max-width: 480px;">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-icon-btn">
+                    <i data-feather="shield"></i>
+                </span>
+                <div>
+                    <h3>
+                        <i data-feather="user-plus"></i> 
+                        Crear Nuevo Rol
+                    </h3>
+                    <p>Define un nuevo rol para el proyecto</p>
+                </div>
+            </div>
+            <button class="modal-close" onclick="cerrarModalNuevoRol()">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="formNuevoRol" onsubmit="event.preventDefault(); crearNuevoRol();">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-feather="tag" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                        Nombre del Rol *
+                    </label>
+                    <input type="text" 
+                           class="form-input" 
+                           id="nuevoRolNombre" 
+                           required 
+                           placeholder="Ej: Analista Ambiental"
+                           autocomplete="off">
+                    <span class="form-hint">
+                        <i data-feather="info" style="width: 12px; height: 12px;"></i>
+                        Mínimo 3 caracteres
+                    </span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-feather="file-text" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                        Descripción
+                    </label>
+                    <textarea class="form-textarea" 
+                              id="nuevoRolDescripcion" 
+                              rows="3"
+                              placeholder="Describe las responsabilidades de este rol"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalNuevoRol()">
+                <i data-feather="x" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                Cancelar
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="crearNuevoRol()">
+                <i data-feather="check" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                Crear Rol
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Variables globales
+window.tabsActivas = {};
+
+function slugCategoria(categoria) {
+    return String(categoria || '').replace(/\s+/g, '-').replace(/'/g, '');
+}
+
+// Función principal para renderizar roles
+function renderRoles(roles, modulos) {
+    const container = document.getElementById('rolesContainer');
+    
+    if (!roles || roles.length === 0) {
+        container.innerHTML = `
+            <div class="text-center text-muted py-4" style="text-align: center; color: var(--rp-text-muted);">
+                <i data-feather="users" style="width: 32px; height: 32px;"></i>
+                <p class="mt-2">No hay roles para este proyecto</p>
+                <button class="btn btn-primary mt-2" onclick="abrirModalNuevoRol()">
+                    <i data-feather="plus"></i>
+                    Crear primer rol
+                </button>
+            </div>
+        `;
+        feather.replace();
+        return;
+    }
+    
+    // Agrupar módulos por categoría
+    const modulosPorCategoria = {};
+    modulos.forEach(modulo => {
+        const categoria = modulo.categoria || 'General';
+        if (!modulosPorCategoria[categoria]) {
+            modulosPorCategoria[categoria] = [];
+        }
+        modulosPorCategoria[categoria].push(modulo);
+    });
+    
+    const categorias = Object.keys(modulosPorCategoria);
+    
+    container.innerHTML = `
+        <div class="roles-grid">
+            ${roles.map(rol => renderRolCard(rol, modulosPorCategoria, categorias)).join('')}
+        </div>
+    `;
+    
+    feather.replace();
+    
+    // Inicializar eventos después de renderizar
+    setTimeout(() => {
+        roles.forEach(rol => {
+            // Evento de colapso del rol
+            const header = document.querySelector(`.role-header[data-rol-id="${rol.id}"]`);
+            if (header) {
+                header.addEventListener('click', (e) => {
+                    if (e.target.closest('.role-actions')) return;
+                    const permissions = document.getElementById(`permissions-${rol.id}`);
+                    if (permissions) {
+                        permissions.classList.toggle('open');
+                    }
+                });
+            }
+            
+            // Inicializar primera pestaña activa
+            if (!window.tabsActivas[rol.id]) {
+                window.tabsActivas[rol.id] = categorias[0] || '';
+            }
+            activarTab(rol.id, window.tabsActivas[rol.id]);
+        });
+    }, 50);
+}
+
+window.renderRoles = renderRoles;
+
+function renderRolCard(rol, modulosPorCategoria, categorias) {
+    const permisosCount = rol.permisos ? Object.keys(rol.permisos).length : 0;
+    
+    return `
+        <div class="role-card">
+            <div class="role-header" data-rol-id="${rol.id}">
+                <div class="role-info">
+                    <div class="role-icon">
+                        <i data-feather="user"></i>
+                    </div>
+                    <div class="role-details">
+                        <div class="role-name">
+                            ${escapeHtml(rol.nombre)}
+                            ${rol.es_administrador ? '<span class="role-badge">Administrador</span>' : ''}
+                        </div>
+                        ${rol.descripcion ? `<div class="role-description">${escapeHtml(rol.descripcion)}</div>` : ''}
+                    </div>
+                    <div class="role-stats">
+                        <div class="stat-item">
+                            <i data-feather="key"></i>
+                            <span>${permisosCount} permisos</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="role-actions">
+                    <button class="btn-icon" onclick="event.stopPropagation(); editarRol(${rol.id}, ${JSON.stringify(rol.nombre)}, ${JSON.stringify(rol.descripcion || '')})" title="Editar rol">
+                        <i data-feather="edit-2"></i>
+                    </button>
+                    <button class="btn-icon btn-red" onclick="event.stopPropagation(); eliminarRol(${rol.id}, ${JSON.stringify(rol.nombre)})" title="Eliminar rol">
+                        <i data-feather="trash-2"></i>
+                    </button>
+                    <button class="btn btn-primary" onclick="event.stopPropagation(); guardarPermisos(${rol.id})">
+                        <i data-feather="save"></i>
+                        Guardar
+                    </button>
+                </div>
+            </div>
+            <div class="role-permissions" id="permissions-${rol.id}">
+                <div class="permissions-header">
+                    <div class="permissions-title">
+                        <i data-feather="grid"></i>
+                        Permisos del rol
+                    </div>
+                    <div class="permissions-actions">
+                        <button class="select-all-btn" onclick="seleccionarTodos(${rol.id}, true)">Seleccionar todos</button>
+                        <button class="select-all-btn" onclick="seleccionarTodos(${rol.id}, false)">Deseleccionar todos</button>
+                    </div>
+                </div>
+                <div class="categorias-tabs">
+                    ${categorias.map(cat => `
+                        <div class="tab-categoria" data-rol="${rol.id}" data-categoria="${escapeAttr(cat)}" 
+                             onclick="cambiarTab(${rol.id}, ${JSON.stringify(cat)})">
+                            ${escapeHtml(cat)}
+                        </div>
+                    `).join('')}
+                </div>
+                ${categorias.map(cat => `
+                    <div class="permisos-container" id="permisos-${rol.id}-${slugCategoria(cat)}" data-rol="${rol.id}" data-categoria="${escapeAttr(cat)}">
+                        <div class="permisos-horizontal">
+                            ${renderPermisosHorizontales(modulosPorCategoria[cat] || [], rol.permisos || {})}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+    `;
+}
+
+function renderPermisosHorizontales(modulos, permisos) {
+    if (!modulos || modulos.length === 0) {
+        return '<span style="font-size: 0.7rem; color: var(--rp-text-muted);">No hay permisos disponibles</span>';
+    }
+    
+    return modulos.map(modulo => `
+        <label class="permiso-chip ${permisos[modulo.id] ? 'selected' : ''}">
+            <input type="checkbox" 
+                   data-modulo="${modulo.id}"
+                   ${permisos[modulo.id] ? 'checked' : ''}
+                   onchange="cambiarPermiso(${modulo.id}, this.checked, this)">
+            <span class="permiso-nombre">${escapeHtml(modulo.nombre)}</span>
+        </label>
+    `).join('');
+}
+
+function cambiarTab(rolId, categoria) {
+    window.tabsActivas[rolId] = categoria;
+    activarTab(rolId, categoria);
+}
+
+function activarTab(rolId, categoria) {
+    // Actualizar pestañas
+    document.querySelectorAll(`.tab-categoria[data-rol="${rolId}"]`).forEach(tab => {
+        if (tab.dataset.categoria === categoria) {
+            tab.classList.add('active');
+        } else {
+            tab.classList.remove('active');
+        }
+    });
+    
+    // Actualizar contenedores de permisos
+    document.querySelectorAll(`.permisos-container[data-rol="${rolId}"]`).forEach(container => {
+        if (container.dataset.categoria === categoria) {
+            container.classList.add('active');
+        } else {
+            container.classList.remove('active');
+        }
+    });
+}
+
+function seleccionarTodos(rolId, seleccionar) {
+    const categoriaActiva = window.tabsActivas[rolId];
+    if (!categoriaActiva) return;
+    
+    const container = document.getElementById(`permisos-${rolId}-${slugCategoria(categoriaActiva)}`);
+    if (!container) return;
+    
+    const checkboxes = container.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+        cb.checked = seleccionar;
+        const chip = cb.closest('.permiso-chip');
+        if (chip) {
+            if (seleccionar) {
+                chip.classList.add('selected');
+            } else {
+                chip.classList.remove('selected');
+            }
+        }
+        // Llamar al cambio de permiso
+        const moduloId = parseInt(cb.dataset.modulo);
+        if (!isNaN(moduloId)) {
+            cambiarPermiso(moduloId, seleccionar, cb);
+        }
+    });
+}
+
+function cambiarPermiso(moduloId, activado, checkboxElement) {
+    const chip = checkboxElement.closest('.permiso-chip');
+    if (chip) {
+        if (activado) {
+            chip.classList.add('selected');
+        } else {
+            chip.classList.remove('selected');
+        }
+    }
+}
+
+async function guardarPermisos(rolId) {
+    try {
+        if (!window.proyectoActual) {
+            mostrarToast('Primero selecciona un proyecto', 'error');
+            return;
+        }
+        // Recopilar todos los checkboxes marcados para este rol
+        const modulosSeleccionados = [];
+        
+        const permissionsContainer = document.getElementById(`permissions-${rolId}`);
+        if (!permissionsContainer) {
+            mostrarToast('Error: No se encontró el contenedor de permisos', 'error');
+            return;
+        }
+        
+        permissionsContainer.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+            const moduloId = parseInt(checkbox.dataset.modulo);
+            if (!isNaN(moduloId)) {
+                modulosSeleccionados.push(moduloId);
+            }
+        });
+        
+        // Enviar al servidor
+        const response = await fetch(`/admin/roles/proyecto/${window.proyectoActual}/rol/${rolId}/permisos`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                modulos: modulosSeleccionados
+            })
+        });
+        
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            mostrarToast('Respuesta inválida del servidor (' + response.status + ')', 'error');
+            return;
+        }
+        
+        if (result.success) {
+            mostrarToast('Permisos guardados correctamente', 'success');
+            // Recargar datos
+            if (typeof window.cargarRolesYModulos === 'function') {
+                await window.cargarRolesYModulos(window.proyectoActual);
+            }
+        } else {
+            mostrarToast('Error: ' + (result.error || response.statusText || 'desconocido'), 'error');
+        }
+        
+    } catch (error) {
+        console.error('Error guardando permisos:', error);
+        mostrarToast('Error al guardar permisos', 'error');
+    }
+}
+
+function editarRol(id, nombre, descripcion) {
+    // Validar que haya un proyecto seleccionado
+    if (!window.proyectoActual) {
+        mostrarToast('Primero selecciona un proyecto', 'error');
+        return;
+    }
+    
+    // Prellenar el formulario con los datos actuales
+    document.getElementById('nuevoRolNombre').value = nombre;
+    document.getElementById('nuevoRolDescripcion').value = descripcion || '';
+    
+    // Cambiar el título y el botón del modal
+    const modalTitle = document.querySelector('#modalNuevoRol h3');
+    const modalSubtitle = document.querySelector('#modalNuevoRol h3 + p');
+    const btnGuardar = document.querySelector('#modalNuevoRol .btn-primary');
+    
+    if (modalTitle) {
+        modalTitle.innerHTML = '<i data-feather="edit-2"></i> Editar Rol';
+    }
+    if (modalSubtitle) {
+        modalSubtitle.textContent = 'Modifica los datos del rol';
+    }
+    if (btnGuardar) {
+        btnGuardar.setAttribute('onclick', `actualizarRol(${id})`);
+        btnGuardar.innerHTML = '<i data-feather="check" style="width: 16px; height: 16px; margin-right: 6px;"></i> Actualizar Rol';
+    }
+    
+    // Abrir modal
+    document.getElementById('modalNuevoRol').classList.add('open');
+    
+    // Focus en el primer campo
+    setTimeout(() => {
+        document.getElementById('nuevoRolNombre').focus();
+        feather.replace();
+    }, 100);
+}
+
+async function actualizarRol(rolId) {
+    const nombre = document.getElementById('nuevoRolNombre').value.trim();
+    const descripcion = document.getElementById('nuevoRolDescripcion').value.trim();
+    
+    // Validaciones
+    if (!nombre) {
+        mostrarToast('El nombre del rol es requerido', 'error');
+        document.getElementById('nuevoRolNombre').focus();
+        return;
+    }
+    
+    if (nombre.length < 3) {
+        mostrarToast('El nombre debe tener al menos 3 caracteres', 'error');
+        document.getElementById('nuevoRolNombre').focus();
+        return;
+    }
+    
+    const btnActualizar = document.querySelector('#modalNuevoRol .modal-footer .btn-primary');
+    if (!btnActualizar) return;
+    const textoOriginal = btnActualizar.innerHTML;
+    btnActualizar.disabled = true;
+    btnActualizar.innerHTML = '<i data-feather="loader" style="width: 16px; height: 16px; margin-right: 6px; animation: spin 1s linear infinite;"></i> Actualizando...';
+    feather.replace();
+    
+    try {
+        const response = await fetch(`/admin/roles/${rolId}/actualizar`, {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                nombre: nombre,
+                descripcion: descripcion
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            cerrarModalNuevoRol();
+            mostrarToast('Rol actualizado exitosamente', 'success');
+            
+            // Recargar roles
+            if (typeof window.cargarRolesYModulos === 'function') {
+                await window.cargarRolesYModulos(window.proyectoActual);
+            }
+            
+            // Restaurar el modal a su estado original
+            restaurarModalCrear();
+        } else {
+            mostrarToast('Error: ' + result.error, 'error');
+            btnActualizar.disabled = false;
+            btnActualizar.innerHTML = textoOriginal;
+            feather.replace();
+        }
+        
+    } catch (error) {
+        console.error('Error actualizando rol:', error);
+        mostrarToast('Error al actualizar rol: ' + error.message, 'error');
+        btnActualizar.disabled = false;
+        btnActualizar.innerHTML = textoOriginal;
+        feather.replace();
+    }
+}
+
+function restaurarModalCrear() {
+    // Restaurar título y botón del modal a su estado original
+    const modalTitle = document.querySelector('#modalNuevoRol h3');
+    const modalSubtitle = document.querySelector('#modalNuevoRol h3 + p');
+    const btnGuardar = document.querySelector('#modalNuevoRol .btn-primary');
+    
+    if (modalTitle) {
+        modalTitle.innerHTML = '<i data-feather="user-plus"></i> Crear Nuevo Rol';
+    }
+    if (modalSubtitle) {
+        modalSubtitle.textContent = 'Define un nuevo rol para el proyecto';
+    }
+    if (btnGuardar) {
+        btnGuardar.setAttribute('onclick', 'crearNuevoRol()');
+        btnGuardar.innerHTML = '<i data-feather="check" style="width: 16px; height: 16px; margin-right: 6px;"></i> Crear Rol';
+    }
+    
+    feather.replace();
+}
+
+function eliminarRol(id, nombre) {
+    if (!confirm(`¿Estás seguro de eliminar el rol "${nombre}"?\n\nEsta acción no se puede deshacer y eliminará todos los permisos asociados.`)) {
+        return;
+    }
+    
+    // Mostrar loading
+    mostrarToast('Eliminando rol...', 'info');
+    
+    fetch(`/admin/roles/${id}/eliminar`, {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(result => {
+        if (result.success) {
+            mostrarToast('Rol eliminado correctamente', 'success');
+            
+            // Recargar roles
+            if (typeof window.cargarRolesYModulos === 'function') {
+                window.cargarRolesYModulos(window.proyectoActual);
+            }
+        } else {
+            mostrarToast('Error: ' + result.error, 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error eliminando rol:', error);
+        mostrarToast('Error al eliminar rol: ' + error.message, 'error');
+    });
+}
+
+function mostrarToast(mensaje, tipo = 'success') {
+    const toast = document.createElement('div');
+    toast.className = `message-toast ${tipo}`;
+    const icon = tipo === 'success' ? 'check-circle' : 'info';
+    toast.innerHTML = `<i data-feather="${icon}" style="width: 14px;"></i><span>${mensaje}</span>`;
+    document.body.appendChild(toast);
+    feather.replace();
+    setTimeout(() => toast.remove(), 3000);
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;');
+}
+
+function abrirModalNuevoRol() {
+    // Validar que haya un proyecto seleccionado
+    if (!window.proyectoActual) {
+        mostrarToast('Primero selecciona un proyecto', 'error');
+        return;
+    }
+    
+    // Limpiar formulario
+    document.getElementById('nuevoRolNombre').value = '';
+    document.getElementById('nuevoRolDescripcion').value = '';
+    
+    // Mostrar modal usando las clases estándar del proyecto
+    const modal = document.getElementById('modalNuevoRol');
+    modal.classList.add('open');
+    
+    // Focus en el primer campo
+    setTimeout(() => {
+        document.getElementById('nuevoRolNombre').focus();
+    }, 100);
+}
+
+function cerrarModalNuevoRol() {
+    const modal = document.getElementById('modalNuevoRol');
+    modal.classList.remove('open');
+    
+    // Restaurar el modal a su estado original (crear)
+    setTimeout(() => {
+        restaurarModalCrear();
+    }, 300); // Esperar a que termine la animación de cierre
+}
+
+async function crearNuevoRol() {
+    const nombre = document.getElementById('nuevoRolNombre').value.trim();
+    const descripcion = document.getElementById('nuevoRolDescripcion').value.trim();
+    
+    // Validaciones
+    if (!nombre) {
+        mostrarToast('El nombre del rol es requerido', 'error');
+        document.getElementById('nuevoRolNombre').focus();
+        return;
+    }
+    
+    if (nombre.length < 3) {
+        mostrarToast('El nombre debe tener al menos 3 caracteres', 'error');
+        document.getElementById('nuevoRolNombre').focus();
+        return;
+    }
+    
+    if (!window.proyectoActual) {
+        mostrarToast('Primero selecciona un proyecto', 'error');
+        cerrarModalNuevoRol();
+        return;
+    }
+    
+    // Deshabilitar botón mientras se procesa
+    const btnCrear = event.target;
+    const textoOriginal = btnCrear.innerHTML;
+    btnCrear.disabled = true;
+    btnCrear.innerHTML = '<i data-feather="loader" style="width: 16px; height: 16px; margin-right: 6px; animation: spin 1s linear infinite;"></i> Creando...';
+    feather.replace();
+    
+    try {
+        const response = await fetch('/admin/roles/crear', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                nombre: nombre,
+                descripcion: descripcion
+            })
+        });
+        
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            mostrarToast('Respuesta inválida del servidor (' + response.status + ')', 'error');
+            btnCrear.disabled = false;
+            btnCrear.innerHTML = textoOriginal;
+            feather.replace();
+            return;
+        }
+        
+        if (result.success) {
+            cerrarModalNuevoRol();
+            mostrarToast('Rol creado exitosamente', 'success');
+            
+            // Recargar roles
+            if (typeof window.cargarRolesYModulos === 'function') {
+                await window.cargarRolesYModulos(window.proyectoActual);
+            }
+        } else {
+            mostrarToast('Error: ' + (result.error || 'desconocido'), 'error');
+            btnCrear.disabled = false;
+            btnCrear.innerHTML = textoOriginal;
+            feather.replace();
+        }
+        
+    } catch (error) {
+        console.error('Error creando rol:', error);
+        mostrarToast('Error al crear rol: ' + error.message, 'error');
+        btnCrear.disabled = false;
+        btnCrear.innerHTML = textoOriginal;
+        feather.replace();
+    }
+}
+</script>
+
+<script src="{{ url_for('static', filename='js/admin/roles.js') }}"></script>
+{% endblock %}

@@ -21,21 +21,29 @@ SECTIONS = [
     {"id": "plas", "label": "RRSS Plástico",         "unit": "Kg",  "en_total": True},
     {"id": "vid",  "label": "RRSS Vidrio",           "unit": "Kg",  "en_total": True},
     {"id": "pap",  "label": "RRSS Papel y cartón",   "unit": "Kg",  "en_total": True,
-     "col_keys": ["pap_sunec", "pap_coripuno", "pap_antioquia", "papa_smaria"],
-     "plants":   ["SUNEC", "CORI PUNO", "ANTIOQUIA", "SANTA MARÍA"]},
+     "col_keys": ["pap_coripuno"],
+     "plants":   ["CORI PUNO"]},
     {"id": "mad",  "label": "RRSS Madera",           "unit": "Kg",  "en_total": True},
 ]
 
-PLANTS = ['SUNEC', 'CORI PUNO', 'ANTIOQUIA', 'PARCOY']
+PLANTS = ['CORI PUNO']
 
-# Columnas por sección (índice 0-3 = planta, índice 4 = total)
-# Para secciones sin col_keys se usan las columnas estándar: {id}_sunec, {id}_coripuno, {id}_antioquia, {id}_parcoy
+PLANT_COLUMN_MAP = {
+    'SUNEC': 'sunec',
+    'CORI PUNO': 'coripuno',
+    'ANTIOQUIA': 'antioquia',
+    'PARCOY': 'parcoy',
+    'SANTA MARÍA': 'smaria',
+}
+
+# Columnas por sección (índice 0..n-1 = planta, índice n = total)
+# Para secciones sin col_keys se usan las columnas según las plantas definidas.
 def sec_cols(sec):
-    """Devuelve las 4 claves de columna para una sección."""
+    """Devuelve las claves de columna para una sección."""
     if 'col_keys' in sec:
         return sec['col_keys']
     sid = sec['id']
-    return [f"{sid}_sunec", f"{sid}_coripuno", f"{sid}_antioquia", f"{sid}_parcoy"]
+    return [f"{sid}_{PLANT_COLUMN_MAP.get(plant, plant.lower().replace(' ', '_'))}" for plant in PLANTS]
 
 def serialize_registro(r):
     """Convierte un registro de BD a dict JSON-serializable con claves en minúsculas."""
@@ -76,7 +84,7 @@ def generacion():
     for r in registros:
         for sec in SECTIONS:
             sid = sec['id']
-            col_keys = sec.get('col_keys', [f"{sid}_sunec", f"{sid}_coripuno", f"{sid}_antioquia", f"{sid}_parcoy"])
+            col_keys = sec.get('col_keys', sec_cols(sec))
             total_key = sid + '_total'
             if not r.get(total_key):  # None o 0
                 r[total_key] = round(sum(float(r.get(c) or 0) for c in col_keys), 2)
@@ -125,10 +133,13 @@ def guardar():
         return jsonify({'success': False, 'error': 'Fecha requerida'}), 400
 
     def v(sid, idx):
-        return float((valores.get(sid) or [0,0,0,0])[idx] or 0)
+        row = valores.get(sid) or []
+        if idx < 0 or idx >= len(row):
+            return 0.0
+        return float(row[idx] or 0)
 
     def t(sid):
-        row = valores.get(sid) or [0,0,0,0]
+        row = valores.get(sid) or []
         return sum(float(x or 0) for x in row)
 
     params = (
@@ -186,10 +197,13 @@ def editar_generacion(idgeneracion):
         return jsonify({'success': False, 'error': 'Fecha requerida'}), 400
 
     def v(sid, idx):
-        return float((valores.get(sid) or [0,0,0,0])[idx] or 0)
+        row = valores.get(sid) or []
+        if idx < 0 or idx >= len(row):
+            return 0.0
+        return float(row[idx] or 0)
 
     def t(sid):
-        return sum(float(x or 0) for x in (valores.get(sid) or [0,0,0,0]))
+        return sum(float(x or 0) for x in (valores.get(sid) or []))
 
     try:
         cur = mysql.connection.cursor()

@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         if (result.success) {
           // Cerrar modal
-          modalCrear.style.display = 'none';
+          modalCrear.classList.remove('open');
           
           // Mostrar notificación
           mostrarNotificacion(result.message || 'Registro creado exitosamente', 'success');
@@ -194,7 +194,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Significa que funcionó y redirigió
         mostrarNotificacion('Registro creado exitosamente', 'success');
         await recargarTabla();
-        modalCrear.style.display = 'none';
+        modalCrear.classList.remove('open');
         if (typeof resetFormCrear === 'function') resetFormCrear();
         else this.reset();
       }
@@ -257,7 +257,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const result = await response.json();
         
         if (result.success) {
-          modalEditar.style.display = 'none';
+          modalEditar.classList.remove('open');
           mostrarNotificacion(result.message || 'Registro actualizado exitosamente', 'success');
           await recargarTabla();
         } else {
@@ -267,7 +267,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Comportamiento antiguo (HTML)
         mostrarNotificacion('Registro actualizado exitosamente', 'success');
         await recargarTabla();
-        modalEditar.style.display = 'none';
+        modalEditar.classList.remove('open');
       }
     } catch (error) {
       console.error('Error:', error);
@@ -321,7 +321,7 @@ document.addEventListener('DOMContentLoaded', function() {
           if (typeof cerrarModalValidar === 'function') cerrarModalValidar();
           else {
             const modalValidar = document.getElementById('modalValidar');
-            if (modalValidar) modalValidar.style.display = 'none';
+            if (modalValidar) modalValidar.classList.remove('open');
           }
           mostrarNotificacion(result.message || 'Imágenes validadas exitosamente', 'success');
           await recargarTabla();
@@ -345,22 +345,54 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ── INTERCEPTAR FORMULARIO DE SUBIR IMÁGENES (SUPERVISOR) ──
 
+// Variable global para prevenir múltiples inicializaciones
+if (typeof window._subirFormInitialized === 'undefined') {
+  window._subirFormInitialized = false;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+  // Prevenir inicialización múltiple
+  if (window._subirFormInitialized) {
+    console.log('[AJAX] Formulario de subir ya inicializado, saltando...');
+    return;
+  }
+  
   const formSubir = document.getElementById('formSubir');
   if (!formSubir) return;
   
+  window._subirFormInitialized = true;
   console.log('Interceptando formulario de subir con AJAX');
+  
+  let isSubmitting = false; // Flag para prevenir doble envío
   
   formSubir.addEventListener('submit', async function(e) {
     e.preventDefault();
+    e.stopImmediatePropagation(); // Prevenir otros listeners
+    
+    // Prevenir doble envío
+    if (isSubmitting) {
+      console.log('[AJAX] Ya se está enviando, ignorando...');
+      return false;
+    }
+    
+    isSubmitting = true;
+    console.log('[AJAX] Iniciando envío...');
     
     const formData = new FormData(this);
     const submitBtn = this.querySelector('button[type="submit"]');
+    
+    // Debug: Log de archivos en FormData
+    const files = formData.getAll('imagenes');
+    console.log(`[AJAX] Archivos en FormData: ${files.length}`);
+    files.forEach((f, idx) => {
+      console.log(`[AJAX] Archivo ${idx}: ${f.name}, ${f.size} bytes`);
+    });
     
     // Deshabilitar botón
     deshabilitarBoton(submitBtn, 'Subiendo...');
     
     try {
+      console.log('[AJAX] Enviando fetch...');
       const response = await fetch(this.action, {
         method: 'POST',
         body: formData,
@@ -369,18 +401,25 @@ document.addEventListener('DOMContentLoaded', function() {
         }
       });
       
+      console.log('[AJAX] Respuesta recibida');
       const contentType = response.headers.get('content-type');
       
       if (contentType && contentType.includes('application/json')) {
         const result = await response.json();
+        console.log('[AJAX] Resultado:', result);
         
         if (result.success) {
           const modalSubir = document.getElementById('modalSubir');
-          if (modalSubir) modalSubir.style.display = 'none';
+          if (modalSubir) modalSubir.classList.remove('open');
           
           mostrarNotificacion(result.message || 'Imágenes subidas exitosamente', 'success');
           await recargarTabla();
           this.reset();
+          
+          // Limpiar preview usando función global
+          if (typeof window.limpiarPreviewSubir === 'function') {
+            window.limpiarPreviewSubir();
+          }
         } else {
           mostrarNotificacion(result.error || 'Error al subir imágenes', 'error');
         }
@@ -389,15 +428,24 @@ document.addEventListener('DOMContentLoaded', function() {
         mostrarNotificacion('Imágenes subidas exitosamente', 'success');
         await recargarTabla();
         const modalSubir = document.getElementById('modalSubir');
-        if (modalSubir) modalSubir.style.display = 'none';
+        if (modalSubir) modalSubir.classList.remove('open');
         this.reset();
+        
+        // Limpiar preview usando función global
+        if (typeof window.limpiarPreviewSubir === 'function') {
+          window.limpiarPreviewSubir();
+        }
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('[AJAX] Error:', error);
       mostrarNotificacion('Error de conexión. Intenta nuevamente.', 'error');
     } finally {
       habilitarBoton(submitBtn);
+      isSubmitting = false; // Resetear flag
+      console.log('[AJAX] Envío completado');
     }
+    
+    return false; // Asegurar que no se envíe el formulario tradicionalmente
   });
 });
 

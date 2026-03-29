@@ -1,38 +1,17 @@
 ﻿from flask import Blueprint, render_template, request, redirect, url_for, session, flash, jsonify
 from functools import wraps
 from extensions import mysql
-from utils.helpers import save_image, sp_exec, sp_one
+from utils.helpers import save_image, sp_exec, sp_one, get_notif_count, modulo_required
 
 supervisor_bp = Blueprint('supervisor', __name__)
 
 def sup_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session or session.get('rol') not in ('Supervisor','Trabajador'):
+        if 'user_id' not in session or session.get('rol') not in ('Supervisor', 'Trabajador'):
             return redirect(url_for('auth.login'))
         return f(*args, **kwargs)
     return decorated
-
-def modulo_required(codigo):
-    def decorator(f):
-        @wraps(f)
-        def decorated(*args, **kwargs):
-            if 'user_id' not in session:
-                return redirect(url_for('auth.login'))
-            if codigo not in session.get('accesos', []):
-                return render_template('auth/sin_acceso.html'), 403
-            return f(*args, **kwargs)
-        return decorated
-    return decorator
-
-def get_notif_count():
-    try:
-        cur  = mysql.connection.cursor()
-        rows = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
-        cur.close()
-        return rows[0]['total'] if rows else 0
-    except:
-        return 0
 
 @supervisor_bp.route('/desvios')
 @sup_required
@@ -58,12 +37,14 @@ def desvios():
     # Definir orden de prioridad de estados
     orden_estados = {
         'Pendiente': 1,
-        'En Proceso': 2,
-        'Enviado': 3,
-        'En Revision': 4,
-        'Culminado': 5,
-        'Rechazado': 6,
-        'Cerrado': 7
+        'Atrasado': 2,
+        'Asignado': 3,
+        'En Proceso': 4,
+        'Enviado': 5,
+        'En Revision': 6,
+        'Culminado': 7,
+        'Rechazado': 8,
+        'Cerrado': 9
     }
     
     # Ordenar registros por prioridad de estado
@@ -150,19 +131,6 @@ def detalle_registro(rid):
 @modulo_required('MIS_REPORTES')
 def subir_levantamiento(rid):
     try:
-        # NOTA: Actualmente solo se permite subir imágenes cuando el estado es PENDIENTE
-        # Si el cliente quiere permitir subir más imágenes después de aprobar,
-        # descomentar la siguiente validación y ajustar la lógica del stored procedure
-        
-        # Verificar estado actual (opcional - descomentar si se necesita validación)
-        # cur = mysql.connection.cursor()
-        # cur.execute("SELECT idEstado FROM Tbl_Registro WHERE IdRegistro=%s", (rid,))
-        # registro = cur.fetchone()
-        # cur.close()
-        # if registro and registro['idEstado'] not in ('EST001',):  # Solo PENDIENTE
-        #     flash('No se pueden subir imágenes en este estado', 'error')
-        #     return redirect(url_for('supervisor.desvios'))
-        
         cur = mysql.connection.cursor()
         cur.execute("SELECT COUNT(*) AS cnt FROM tbl_imagenregistro WHERE idregistro=%s AND idtipoimagen=2 AND idestadoimagen != 3", (rid,))
         cnt_row = cur.fetchone()
@@ -170,9 +138,16 @@ def subir_levantamiento(rid):
         cur.close()
 
         files = request.files.getlist('imagenes')
+        
+        # Debug: Log de archivos recibidos
+        print(f"[DEBUG] Archivos recibidos: {len(files)}")
+        for idx, f in enumerate(files):
+            print(f"[DEBUG] Archivo {idx}: {f.filename if f else 'None'}")
+        
         saved = 0
         for f in files:
             if existing + saved >= 5:
+                print(f"[DEBUG] Límite alcanzado: existing={existing}, saved={saved}")
                 break
             if f and f.filename:
                 ruta, nombre, kb = save_image(f, 'static/uploads', 'levantamientos')
@@ -182,6 +157,9 @@ def subir_levantamiento(rid):
                     mysql.connection.commit()
                     cur.close()
                     saved += 1
+                    print(f"[DEBUG] Imagen guardada: {nombre}")
+
+        print(f"[DEBUG] Total guardadas: {saved}")
 
         if saved > 0:
             # El stored procedure sp_guardarimagen ya cambia el estado a EN PROCESO (EST003)

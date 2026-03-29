@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}ecoSupervisor{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=2">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -26,8 +26,25 @@
       <div class="brand-text">
         <span class="brand-eco">Eco</span><span class="brand-sup">Supervisor</span>
         <small>{{ session.nombre or session.dni }}</small>
-        {% if session.cargo %}<small style="opacity:0.7">{{ session.cargo }}</small>{% endif %}
+        {% if session.area_nombre %}<small style="opacity:0.7">Área: {{ session.area_nombre }}</small>{% endif %}
+        {% if session.cargo %}<small style="opacity:0.7">Cargo: {{ session.cargo }}</small>{% endif %}
         <span class="rol-badge rol-{{ session.rol|lower|replace(' ','') }}">{{ session.rol|upper }}</span>
+          {% if session.rol == 'Administrador' %}
+      <!-- <div class="proyecto-selector">
+        <button class="proyecto-btn" onclick="toggleProyectos()" id="proyectoBtn">
+          <span class="proyecto-icon">📁</span>
+          <span class="proyecto-nombre" id="proyectoNombre">Cargando...</span>
+          <span class="proyecto-arrow">▼</span>
+        </button>
+        
+        <div class="proyecto-dropdown" id="proyectoDropdown">
+          <div class="proyecto-dropdown-header">Cambiar Proyecto</div>
+          <div class="proyecto-list" id="proyectoList">
+            <div class="proyecto-loading">Cargando proyectos...</div>
+          </div>
+        </div>
+      </div> -->
+      {% endif %}
       </div>
     </div>
 
@@ -66,13 +83,54 @@
 
       {# ── GESTIÓN DE RESIDUOS ── #}
       {% if 'GESTION_RESIDUOS' in accesos or 'GENERACION_DIARIA' in accesos %}
-        {% set hijos_gr = [] %}
-        {% set _ = hijos_gr.append(('Dashboard', '/admin/residuos/dashboard', 'layout')) %}
-        {% if 'GENERACION_DIARIA' in accesos %}{% set _ = hijos_gr.append(('Generación Diaria',  '/admin/residuos/generacion',    'calendar'))      %}{% endif %}
-        {% if 'COMERCIALIZABLE'   in accesos %}{% set _ = hijos_gr.append(('Comercializable',    '/admin/residuos/comercializable','package'))      %}{% endif %}
-        {% if 'DISPOSICION_MATPEL'in accesos %}{% set _ = hijos_gr.append(('Disposición Matpel', '/admin/residuos/matpel',        'alert-octagon')) %}{% endif %}
-        {% if 'COMPOSTAJE'        in accesos %}{% set _ = hijos_gr.append(('Compostaje',          '/admin/residuos/compostaje',    'wind'))          %}{% endif %}
-        {{ nav_group('trash-2', 'Gestión de Residuos', hijos_gr) }}
+      {% set gr_activo = request.path.startswith('/admin/residuos') %}
+      {% set gen_activo = request.path.startswith('/admin/residuos/generacion') or request.path == '/admin/residuos/dashboard' %}
+      <div class="nav-group">
+        <button class="nav-item nav-toggle {% if gr_activo %}active{% endif %}" onclick="toggleSubmenu(this)">
+          <span class="nav-icon"><i data-feather="trash-2"></i></span>
+          <span>Gestión de Residuos</span>
+          <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
+        </button>
+        <div class="nav-submenu {% if gr_activo %}open{% endif %}">
+          {% if 'GENERACION_DIARIA' in accesos %}
+          <div class="nav-group" style="margin:0">
+            <button class="nav-subitem nav-toggle {% if gen_activo %}active{% endif %}" style="padding-left:1.5rem" onclick="toggleSubmenu(this)">
+              <span class="nav-icon"><i data-feather="calendar"></i></span>
+              <span>Generación Diaria</span>
+              <span class="nav-arrow"><i data-feather="chevron-down"></i></span>
+            </button>
+            <div class="nav-submenu {% if gen_activo %}open{% endif %}">
+              <a href="/admin/residuos/generacion" class="nav-subitem {% if request.path == '/admin/residuos/generacion' %}active{% endif %}" style="padding-left:2.5rem">
+                <span class="nav-icon"><i data-feather="edit-3"></i></span>
+                <span>Registro Diario</span>
+              </a>
+              <a href="/admin/residuos/dashboard" class="nav-subitem {% if request.path == '/admin/residuos/dashboard' %}active{% endif %}" style="padding-left:2.5rem">
+                <span class="nav-icon"><i data-feather="layout"></i></span>
+                <span>Dashboard</span>
+              </a>
+            </div>
+          </div>
+          {% endif %}
+          {% if 'COMERCIALIZABLE' in accesos %}
+          <a href="/admin/residuos/comercializable" class="nav-subitem {% if request.path == '/admin/residuos/comercializable' %}active{% endif %}">
+            <span class="nav-icon"><i data-feather="package"></i></span>
+            <span>Comercializable</span>
+          </a>
+          {% endif %}
+          {% if 'DISPOSICION_MATPEL' in accesos %}
+          <a href="/admin/residuos/matpel" class="nav-subitem {% if request.path == '/admin/residuos/matpel' %}active{% endif %}">
+            <span class="nav-icon"><i data-feather="alert-octagon"></i></span>
+            <span>Disposición Matpel</span>
+          </a>
+          {% endif %}
+          {% if 'COMPOSTAJE' in accesos %}
+          <a href="/admin/residuos/compostaje" class="nav-subitem {% if request.path == '/admin/residuos/compostaje' %}active{% endif %}">
+            <span class="nav-icon"><i data-feather="package"></i></span>
+            <span>Compostaje</span>
+          </a>
+          {% endif %}
+        </div>
+      </div>
       {% endif %}
 
       {# ── COMPROMISOS ── #}
@@ -83,6 +141,16 @@
         {{ nav_group('check-square', 'Compromisos', hijos_co) }}
       {% endif %}
 
+
+      {# ── GESTIÓN DE AGUAS ── #}
+      {% if 'GESTION_AGUAS' in accesos or 'AGUAS_DASHBOARD' in accesos or 'MONITOREO_AMBIENTAL' in accesos or 'REPORTE_ANA' in accesos %}
+        {% set hijos_ga = [] %}
+        {% if 'AGUAS_DASHBOARD'     in accesos %}{% set _ = hijos_ga.append(('Dashboard',           '/admin/aguas/dashboard', 'layout'))   %}{% endif %}
+        {% if 'MONITOREO_AMBIENTAL' in accesos %}{% set _ = hijos_ga.append(('Monitoreo Ambiental', '/admin/aguas',           'activity')) %}{% endif %}
+        {% if 'REPORTE_ANA'         in accesos %}{% set _ = hijos_ga.append(('Reporte ANA',         '/admin/ana',             'file-text'))%}{% endif %}
+        {{ nav_group('droplet', 'Gestión de Aguas', hijos_ga) }}
+      {% endif %}
+
       {# ── DATA METEOROLÓGICA ── #}
       {% if 'DATA_METEOROLOGICA' in accesos or 'DATA_METRO_INFO' in accesos or 'DATA_METRO_DASH' in accesos %}
         {% set hijos_dm = [] %}
@@ -91,21 +159,12 @@
         {{ nav_group('cloud', 'Data Meteorológica', hijos_dm) }}
       {% endif %}
 
-      {# ── GESTIÓN DE AGUAS ── #}
-      {% if 'GESTION_AGUAS' in accesos or 'MONITOREO_AMBIENTAL' in accesos or 'REPORTE_ANA' in accesos or 'AGUAS_DASHBOARD' in accesos %}
-        {% set hijos_ga = [] %}
-        {% if 'AGUAS_DASHBOARD'     in accesos %}{% set _ = hijos_ga.append(('Dashboard',          '/admin/aguas/dashboard', 'layout'))    %}{% endif %}
-        {% if 'MONITOREO_AMBIENTAL' in accesos %}{% set _ = hijos_ga.append(('Monitoreo Ambiental', '/admin/aguas',           'activity')) %}{% endif %}
-        {% if 'REPORTE_ANA'         in accesos %}{% set _ = hijos_ga.append(('Reportes ANA',        '/admin/ana',             'clipboard'))%}{% endif %}
-        {{ nav_group('droplet', 'Gestión de Aguas', hijos_ga) }}
-      {% endif %}
-
-
       {# ── CONFIGURACIÓN ── #}
-      {% if 'CONFIGURACION' in accesos or 'CONFIG_USUARIOS' in accesos or 'CONFIG_DASH' in accesos %}
+      {% if 'CONFIGURACION' in accesos or 'CONFIG_USUARIOS' in accesos or 'CONFIG_DASH' in accesos or 'ROLES' in accesos %}
         {% set hijos_cfg = [] %}
         {% if 'CONFIG_DASH'     in accesos %}{% set _ = hijos_cfg.append(('Dashboard',                  '/admin/configuracion/dashboard', 'layout')) %}{% endif %}
         {% if 'CONFIG_USUARIOS' in accesos or 'CONFIGURACION' in accesos %}{% set _ = hijos_cfg.append(('Configuración de Usuarios', '/admin/configuracion/usuarios', 'users')) %}{% endif %}
+        {% if 'ROLES' in accesos %}{% set _ = hijos_cfg.append(('Gestión de Roles', '/admin/roles', 'shield')) %}{% endif %}
         {{ nav_group('settings', 'Configuración', hijos_cfg) }}
       {% endif %}
 
@@ -138,7 +197,7 @@
       </button>
       
       <!-- SELECTOR DE PROYECTOS (Solo para Administrador) -->
-      {% if session.rol == 'Administrador' %}
+      <!-- {% if session.rol == 'Administrador' %}
       <div class="proyecto-selector">
         <button class="proyecto-btn" onclick="toggleProyectos()" id="proyectoBtn">
           <span class="proyecto-icon">📁</span>
@@ -153,7 +212,7 @@
           </div>
         </div>
       </div>
-      {% endif %}
+      {% endif %} -->
       
       <div class="top-bar-title">
         <h1>{% block page_title %}{% endblock %}</h1>
@@ -203,7 +262,7 @@
 {% endif %}
 
 <script src="{{ url_for('static', filename='js/main.js') }}?v=3"></script>
-<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}?v=2"></script>
 {% block scripts %}{% endblock %}
 </body>
 </html>
+

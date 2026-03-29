@@ -1,225 +1,178 @@
-# ecoSupervisor - Sistema de Gestión de Desvíos Ambientales
+# 🌿 EcoSupervisor
 
-Sistema web para la gestión y seguimiento de desvíos ambientales en operaciones mineras.
+Sistema de gestión ambiental para supervisión de desvíos, residuos, meteorología y más.
 
-## Características
+## 📋 Descripción
 
-- 📋 Registro y seguimiento de desvíos ambientales
-- 👥 Gestión de usuarios (Administrador, Supervisor, Trabajador)
-- 🖼️ Carga y validación de imágenes (evidencias y levantamientos)
-- 📊 Dashboard con estadísticas en tiempo real
-- 🔔 Sistema de notificaciones
-- 📁 Exportación a Excel con imágenes
-- 🗂️ Historial de reportes archivados
-- 🌙 Modo oscuro/claro
+EcoSupervisor es una aplicación web desarrollada en Flask para la gestión integral de:
+- Desvíos ambientales
+- Gestión de residuos (generación, comercializable, compostaje, MATPEL)
+- Monitoreo meteorológico
+- Gestión de aguas
+- Compromisos ambientales
+- Sistema de usuarios y roles
 
-## Tecnologías
-
-- **Backend**: Flask (Python 3.12)
-- **Base de Datos**: MySQL 8.0
-- **Frontend**: HTML5, CSS3, JavaScript (Vanilla)
-- **Despliegue**: Railway
-
-## Estructura del Proyecto
-
-```
-ecosupervisor/
-├── app.py                    # Aplicación principal
-├── extensions.py             # Extensiones (MySQL)
-├── requirements.txt          # Dependencias
-├── Procfile                  # Comando de inicio (Railway)
-├── runtime.txt               # Versión de Python
-├── railway.json              # Configuración Railway
-├── nixpacks.toml             # Build configuration
-├── schema.sql                # Schema de base de datos
-├── .env.example              # Ejemplo de variables de entorno
-├── routes/                   # Rutas de la aplicación
-│   ├── auth.py              # Autenticación
-│   ├── admin.py             # Rutas de administrador
-│   ├── supervisor.py        # Rutas de supervisor
-│   └── shared.py            # Rutas compartidas
-├── templates/                # Templates HTML
-│   ├── base.html            # Template base
-│   ├── auth/                # Templates de autenticación
-│   ├── admin/               # Templates de administrador
-│   ├── supervisor/          # Templates de supervisor
-│   └── shared/              # Templates compartidos
-├── static/                   # Archivos estáticos
-│   ├── css/                 # Estilos
-│   ├── js/                  # JavaScript
-│   └── uploads/             # Imágenes subidas
-│       ├── evidencias/      # Imágenes de evidencias
-│       └── levantamientos/  # Imágenes de levantamientos
-└── utils/                    # Utilidades
-    ├── helpers.py           # Funciones auxiliares
-    └── case_insensitive_dict.py  # Dict case-insensitive
-```
-
-## Instalación Local
+## 🚀 Inicio Rápido
 
 ### Requisitos
-- Python 3.12+
-- MySQL 8.0+
+- Python 3.8+
+- MySQL 5.7+
 - pip
 
-### Pasos
+### Instalación
 
-1. **Clonar el repositorio**
+1. Clonar el repositorio
 ```bash
-git clone <repository-url>
+git clone <repo-url>
 cd ecosupervisor
 ```
 
-2. **Crear entorno virtual**
-```bash
-python -m venv venv
-source venv/bin/activate  # En Windows: venv\Scripts\activate
-```
-
-3. **Instalar dependencias**
+2. Instalar dependencias
 ```bash
 pip install -r requirements.txt
 ```
 
-4. **Configurar base de datos**
+3. Configurar base de datos
 ```bash
-# Crear base de datos en MySQL
-mysql -u root -p
-CREATE DATABASE desvios_ambientales;
-exit;
+# Crear base de datos
+mysql -u root -p -e "CREATE DATABASE ecosupervisor CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
-# Importar schema
-mysql -u root -p desvios_ambientales < schema.sql
+# Importar esquema
+mysql -u root -p ecosupervisor < sql/schema.sql
+
+# Crear sistema de usuarios
+mysql -u root -p ecosupervisor < sql/crear_sistema_usuarios_completo.sql
+
+# Crear roles
+mysql -u root -p ecosupervisor < sql/crear_nuevos_roles.sql
 ```
 
-5. **Configurar variables de entorno**
+4. Configurar variables de entorno
 ```bash
-# Copiar archivo de ejemplo
 cp .env.example .env
-
 # Editar .env con tus credenciales
-# MYSQL_HOST=localhost
-# MYSQL_USER=root
-# MYSQL_PASSWORD=tu_password
-# MYSQL_DB=desvios_ambientales
-# MYSQL_PORT=3306
-# SECRET_KEY=tu-clave-secreta
 ```
 
-6. **Ejecutar la aplicación**
+5. Ejecutar aplicación
 ```bash
 python app.py
 ```
 
 La aplicación estará disponible en `http://localhost:5000`
 
-## Usuarios de Prueba
+## 📁 Estructura del Proyecto
 
-### Administrador
-- **DNI**: 12345678
-- **Contraseña**: admin123
-
-### Supervisor
-- **DNI**: 87654321
-- **Contraseña**: supervisor123
-
-## Despliegue en Railway
-
-Ver [DEPLOYMENT.md](DEPLOYMENT.md) para instrucciones detalladas de despliegue en Railway.
-
-### Resumen rápido:
-1. Crear servicio MySQL en Railway
-2. Importar schema.sql
-3. Crear servicio web desde GitHub
-4. Configurar variables de entorno
-5. Deploy automático
-
-## Flujo de Trabajo
-
-### Estados de Reportes
-1. **Pendiente (EST001)**: Reporte creado, esperando levantamiento
-2. **En Proceso (EST003)**: Supervisor subió imágenes, esperando validación
-3. **Culminado (EST006)**: Admin aprobó imágenes, reporte completado
-
-### Roles y Permisos
-
-#### Administrador
-- Crear, editar y archivar reportes
-- Validar imágenes de levantamiento
-- Ver dashboard con estadísticas
-- Exportar reportes a Excel
-- Acceso completo al sistema
-
-#### Supervisor/Trabajador
-- Ver reportes asignados
-- Subir imágenes de levantamiento
-- Ver historial personal
-- Recibir notificaciones
-
-## Características Técnicas
-
-### Compatibilidad Linux/Windows
-- Todas las referencias a base de datos en minúsculas
-- Compatible con MySQL case-sensitive (Linux) y case-insensitive (Windows)
-- Uso de `CaseInsensitiveDict` para acceso a resultados de stored procedures
-
-### Seguridad
-- Sesiones seguras con Flask
-- Validación de roles en cada ruta
-- Sanitización de inputs
-- Protección contra SQL injection (uso de stored procedures)
-
-### Optimizaciones
-- Carga lazy de imágenes
-- Compresión de imágenes al subir
-- Paginación en tablas grandes
-- Cache de consultas frecuentes
-
-## Mantenimiento
-
-### Backup de Base de Datos
-```bash
-mysqldump -u root -p desvios_ambientales > backup_$(date +%Y%m%d).sql
+```
+ecosupervisor/
+├── app.py                  # Aplicación principal Flask
+├── config.py               # Configuración general
+├── config_proyectos.py     # Configuración de proyectos
+├── extensions.py           # Extensiones (MySQL, etc.)
+├── requirements.txt        # Dependencias Python
+│
+├── routes/                 # Módulos de rutas
+│   ├── admin.py           # Administración
+│   ├── auth.py            # Autenticación
+│   ├── desvios_ambientales.py
+│   ├── gestion_residuos.py
+│   ├── supervisor.py
+│   └── ...
+│
+├── templates/             # Plantillas HTML
+│   ├── base.html
+│   ├── admin/
+│   ├── auth/
+│   ├── desvios_ambientales/
+│   ├── gestion_residuos/
+│   └── ...
+│
+├── static/                # Archivos estáticos
+│   ├── css/
+│   ├── js/
+│   └── images/
+│
+├── utils/                 # Utilidades
+│   └── helpers.py
+│
+├── sql/                   # Scripts SQL
+│   ├── schema.sql
+│   ├── crear_sistema_usuarios_completo.sql
+│   └── ...
+│
+├── scripts/               # Scripts Python auxiliares
+│   └── actualizar_estados_atrasados.py
+│
+└── docs/                  # Documentación
+    ├── DEPLOYMENT.md
+    ├── ESTADO_ATRASADO.md
+    └── ...
 ```
 
-### Logs
-Los logs de la aplicación se pueden ver en:
-- Local: Terminal donde se ejecuta `python app.py`
-- Railway: Dashboard > Logs
+## 👥 Roles de Usuario
 
-### Actualización de Dependencias
-```bash
-pip list --outdated
-pip install --upgrade <package>
-pip freeze > requirements.txt
+- **Administrador**: Acceso completo al sistema
+- **Supervisor**: Gestión de desvíos y validación de levantamientos
+- **Trabajador**: Visualización y subida de evidencias
+- **Automatizador**: Acceso a APIs y automatizaciones
+
+## 🔧 Configuración
+
+### Variables de Entorno (.env)
+
+```env
+# Base de datos
+MYSQL_HOST=localhost
+MYSQL_USER=tu_usuario
+MYSQL_PASSWORD=tu_contraseña
+MYSQL_DB=ecosupervisor
+
+# Flask
+SECRET_KEY=tu_clave_secreta_aqui
+FLASK_ENV=development
+
+# Uploads
+UPLOAD_FOLDER=static/uploads
+MAX_CONTENT_LENGTH=16777216  # 16MB
 ```
 
-## Solución de Problemas
+### Configuración de Proyectos
 
-### Error: "Table doesn't exist"
-- Verificar que las tablas estén en minúsculas
-- Reimportar schema.sql
+Editar `config_proyectos.py` para configurar los proyectos disponibles.
 
-### Error: "Connection refused"
-- Verificar credenciales en .env
-- Verificar que MySQL esté corriendo
+## 📚 Documentación
 
-### Imágenes no se cargan
-- Verificar permisos en carpeta `static/uploads`
-- Verificar que las rutas sean relativas
+- [Guía de Deployment](docs/DEPLOYMENT.md)
+- [Estado Atrasado](docs/ESTADO_ATRASADO.md)
+- [Limpieza del Proyecto](docs/LIMPIEZA_PROYECTO.md)
 
-## Contribución
+## 🛠️ Desarrollo
 
-1. Fork el proyecto
-2. Crear rama feature (`git checkout -b feature/nueva-funcionalidad`)
-3. Commit cambios (`git commit -am 'Agregar nueva funcionalidad'`)
-4. Push a la rama (`git push origin feature/nueva-funcionalidad`)
-5. Crear Pull Request
+### Ejecutar en modo desarrollo
+```bash
+export FLASK_ENV=development
+python app.py
+```
 
-## Licencia
+### Ejecutar tests
+```bash
+pytest
+```
 
-Este proyecto es privado y confidencial.
+## 🚢 Deployment
 
-## Contacto
+Ver [DEPLOYMENT.md](docs/DEPLOYMENT.md) para instrucciones detalladas de deployment en:
+- Railway
+- Heroku
+- Servidor propio
 
-Para soporte o consultas, contactar al equipo de desarrollo.
+## 📝 Licencia
+
+[Especificar licencia]
+
+## 👨‍💻 Autores
+
+[Especificar autores]
+
+## 🤝 Contribuir
+
+[Instrucciones para contribuir]

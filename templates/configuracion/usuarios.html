@@ -1,522 +1,805 @@
-{% extends 'base.html' %}
-{% block title %}Configuración - Usuarios - ecoSupervisor{% endblock %}
-{% block page_title %}Configuración - Usuarios{% endblock %}
+{% extends "base.html" %}
 
-{% block content %}
-<div class="page-header-section">
-  <div class="page-header-icon">
-    <i data-feather="users"></i>
-  </div>
-  <div>
-    <h2 class="section-title">Configuración de <span class="text-green">Usuarios</span></h2>
-    <p class="section-sub">Gestiona los usuarios del sistema y sus permisos de acceso</p>
-  </div>
-</div>
+{% block title %}Gestión de Usuarios{% endblock %}
 
-<!-- Acciones principales -->
-<div class="action-bar" style="margin-bottom:1.5rem">
-  <button class="btn btn-primary" onclick="abrirModalCrear()">
-    <i data-feather="user-plus"></i> <strong>Nuevo Usuario</strong>
-  </button>
-  <button class="btn btn-blue" onclick="abrirModalCambiarPassword()">
-    <i data-feather="key"></i> <strong>Cambiar Contraseña</strong>
-  </button>
-</div>
+{% block extra_css %}
+<style>
+/* ========== ESTILOS PARA GESTIÓN DE USUARIOS ========== */
 
-<!-- Tabla de usuarios -->
-<div class="card">
-  <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:.75rem">
-    <div>
-      <i data-feather="users"></i>
-      Usuarios Activos
-      <span class="badge-count" id="totalUsuarios">{{ usuarios|length }} usuarios registrados</span>
-    </div>
-    <div class="search-wrapper" style="position:relative">
-      <i data-feather="search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:#94a3b8"></i>
-      <input type="text" id="buscarUsuario" placeholder="Buscar usuario..." 
-             class="form-input" style="padding-left:2rem;width:220px"
-             oninput="filtrarUsuarios(this.value)">
-    </div>
-  </div>
+/* Modal específico para usuarios - mejor ancho */
+#modalCrearUsuario .modal-box {
+    max-width: 1000px;
+}
 
-  <div class="table-wrapper">
-    <table class="data-table" id="tablaUsuarios">
-      <thead>
-        <tr>
-          <th>DNI</th>
-          <th>NOMBRE</th>
-          <th>CORREO</th>
-          <th>ROLES</th>
-          <th>ESTADO</th>
-          <th>ACCIONES</th>
-        </tr>
-      </thead>
-      <tbody id="tbodyUsuarios">
-        {% for u in usuarios %}
-        <tr data-search="{{ u.nombrecompleto|lower }} {{ u.idusuario }}">
-          <td><strong>{{ u.idusuario }}</strong></td>
-          <td>{{ u.nombrecompleto }}</td>
-          <td style="color:#64748b;font-size:.85rem">{{ u.correo or '—' }}</td>
-          <td>
-            <div style="display:flex;flex-wrap:wrap;gap:.3rem">
-              {% if u.roles %}
-                {% for rol in u.roles.split(',') %}
-                  <span class="badge badge-rol badge-{{ rol.strip()|lower|replace(' ','') }}">{{ rol.strip() }}</span>
-                {% endfor %}
-              {% else %}
-                <span style="color:#94a3b8;font-size:.8rem">Sin rol</span>
-              {% endif %}
-            </div>
-          </td>
-          <td>
-            {% if u.activo %}
-              <span class="status-badge status-active">Activo</span>
-            {% else %}
-              <span class="status-badge status-inactive">Inactivo</span>
-            {% endif %}
-          </td>
-          <td>
-            <div style="display:flex;gap:.5rem;align-items:center">
-              <button class="btn-icon btn-icon-edit" title="Editar"
-                onclick="abrirModalEditar('{{ u.idusuario }}','{{ u.nombrecompleto }}','{{ u.correo or '' }}','{{ u.roles_ids.split(',')[0] if u.roles_ids else '' }}','{{ u.idarea or '' }}','{{ u.cargo or '' }}')">
-                <i data-feather="edit-2"></i>
-              </button>
-              <button class="btn-icon {{ 'btn-icon-warning' if u.activo else 'btn-icon-success' }}" 
-                title="{{ 'Desactivar' if u.activo else 'Activar' }}"
-                onclick="toggleUsuario('{{ u.idusuario }}', {{ 'true' if u.activo else 'false' }})">
-                <i data-feather="{{ 'user-x' if u.activo else 'user-check' }}"></i>
-              </button>
-              <button class="btn-icon btn-icon-danger" title="Eliminar"
-                onclick="eliminarUsuario('{{ u.idusuario }}', '{{ u.nombrecompleto }}')">
-                <i data-feather="trash-2"></i>
-              </button>
-            </div>
-          </td>
-        </tr>
-        {% else %}
-        <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:2rem">No hay usuarios registrados</td></tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+/* Mejorar espaciado de form-section en modal de usuarios */
+#modalCrearUsuario .form-section {
+    margin-bottom: 1.5rem;
+}
 
-<!-- ===== MODAL CREAR USUARIO ===== -->
-<div class="modal-overlay" id="modalCrearUsuario">
-  <div class="modal-box" style="max-width:560px">
-    <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Configuración</p>
-        <h2 class="modal-title">Nuevo Usuario</h2>
-      </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModalCrear()" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-    <form id="formCrearUsuario" onsubmit="crearUsuario(event)">
-      <div class="modal-body">
+#modalCrearUsuario .form-section:last-of-type {
+    margin-bottom: 1rem;
+}
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">DNI *</label>
-            <input type="text" id="crear_dni" name="dni" class="form-input" 
-                   placeholder="12345678" maxlength="12" required
-                   oninput="this.value=this.value.replace(/\D/g,'')">
-            <small class="form-hint">Máximo 12 dígitos numéricos</small>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nombre Completo *</label>
-            <input type="text" id="crear_nombre" name="nombre" class="form-input" 
-                   placeholder="Juan Pérez García" required>
-          </div>
-        </div>
+/* Mejorar padding de form-row en modal de usuarios */
+#modalCrearUsuario .form-row {
+    padding: 1.5rem 1.5rem 1.25rem 1.5rem;
+}
 
-        <div class="form-group">
-          <label class="form-label">Correo Electrónico</label>
-          <input type="email" id="crear_correo" name="correo" class="form-input" 
-                 placeholder="correo@ejemplo.com">
-        </div>
+/* Barra de búsqueda */
+.search-bar {
+    background: var(--bg-card);
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+}
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Área</label>
-            <select id="crear_idarea" name="idarea" class="form-select">
-              <option value="">Sin área asignada</option>
-              {% for a in areas %}
-              <option value="{{ a.idarea }}">{{ a.nombre }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Cargo</label>
-            <input type="text" id="crear_cargo" name="cargo" class="form-input"
-                   placeholder="Ej: Supervisor Ambiental">
-            <small class="form-hint">Solo informativo</small>
-          </div>
-        </div>
+.search-input-wrapper {
+    position: relative;
+    flex: 1;
+    max-width: 400px;
+}
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Contraseña</label>
-            <input type="password" id="crear_password" name="password" class="form-input"
-                   placeholder="Dejar vacío para usar 123456" minlength="6">
-            <small class="form-hint">Si no se ingresa, se usará <strong>123456</strong></small>
-          </div>
-        </div>
+.search-input-wrapper input {
+    width: 100%;
+    padding: .55rem .75rem .55rem 2.5rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: .82rem;
+    background: var(--bg-card);
+    color: var(--text);
+    transition: all 0.2s;
+}
 
-        <div class="form-section" style="margin-top:1rem">
-          <h4 class="form-section-title"><i data-feather="shield"></i> Rol y Módulos</h4>
-          <div class="form-group">
-            <label class="form-label">Rol *</label>
-            <select id="crear_rol" name="rol" class="form-select" required
-                    onchange="cargarModulosRol(this.value, 'crear_modulos_container')">
-              <option value="">Seleccionar rol...</option>
-              {% for rol in roles %}
-              <option value="{{ rol.idroles }}">{{ rol.nombrerol }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div id="crear_modulos_container" style="margin-top:.75rem;display:none">
-            <label class="form-label" style="margin-bottom:.5rem">Módulos con acceso</label>
-            <div id="crear_modulos_grid" class="modulos-grid"></div>
-          </div>
-        </div>
+.search-input-wrapper input:focus {
+    outline: none;
+    border-color: var(--black);
+    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
 
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-primary btn-lg">
-          <i data-feather="check"></i> Crear Usuario
-        </button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModalCrear()">
-          Cancelar
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+.search-icon {
+    position: absolute;
+    left: .75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+}
 
-<!-- ===== MODAL EDITAR USUARIO ===== -->
-<div class="modal-overlay" id="modalEditarUsuario">
-  <div class="modal-box" style="max-width:560px">
-    <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Configuración</p>
-        <h2 class="modal-title">Editar Usuario</h2>
-      </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModalEditar()" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-    <form id="formEditarUsuario" onsubmit="editarUsuario(event)">
-      <input type="hidden" id="editar_id" name="id">
-      <div class="modal-body">
+/* Tabla */
+.users-table-container {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    /* border: 1px solid var(--border); */
+    overflow: hidden;
+ 
+}
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">DNI</label>
-            <input type="text" id="editar_dni" name="dni" class="form-input" 
-                   maxlength="12" readonly style="background:var(--bg);opacity:.7">
-            <small class="form-hint">El DNI no puede modificarse</small>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nombre Completo *</label>
-            <input type="text" id="editar_nombre" name="nombre" class="form-input" required>
-          </div>
-        </div>
+.users-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+    table-layout: fixed;
+}
 
-        <div class="form-group">
-          <label class="form-label">Correo Electrónico</label>
-          <input type="email" id="editar_correo" name="correo" class="form-input">
-        </div>
+.data-table {
+    width: 100%;
+    table-layout: fixed;
+}
 
-        <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Área</label>
-            <select id="editar_idarea" name="idarea" class="form-select">
-              <option value="">Sin área asignada</option>
-              {% for a in areas %}
-              <option value="{{ a.idarea }}">{{ a.nombre }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Cargo</label>
-            <input type="text" id="editar_cargo" name="cargo" class="form-input"
-                   placeholder="Ej: Supervisor Ambiental">
-            <small class="form-hint">Solo informativo</small>
-          </div>
-        </div>
+.data-table th,
+.data-table td {
+    padding: .85rem 1rem;
+}
 
-        <div class="form-section" style="margin-top:1rem">
-          <h4 class="form-section-title"><i data-feather="shield"></i> Rol y Módulos</h4>
-          <div class="form-group">
-            <label class="form-label">Rol *</label>
-            <select id="editar_rol" name="rol" class="form-select" required
-                    onchange="cargarModulosRol(this.value, 'editar_modulos_container')">
-              <option value="">Seleccionar rol...</option>
-              {% for rol in roles %}
-              <option value="{{ rol.idroles }}">{{ rol.nombrerol }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          <div id="editar_modulos_container" style="margin-top:.75rem;display:none">
-            <label class="form-label" style="margin-bottom:.5rem">Módulos con acceso</label>
-            <div id="editar_modulos_grid" class="modulos-grid"></div>
-          </div>
-        </div>
+.data-table td {
+    word-break: break-word;
+    white-space: normal;
+}
 
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-yellow btn-lg">
-          <i data-feather="save"></i> Guardar Cambios
-        </button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModalEditar()">
-          Cancelar
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+.data-table tbody tr:hover {
+    background: var(--gray-100);
+    transform: none;
+    box-shadow: none;
+}
 
-<!-- ===== MODAL CAMBIAR CONTRASEÑA ===== -->
-<div class="modal-overlay" id="modalCambiarPassword">
-  <div class="modal-box" style="max-width:440px">
-    <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Configuración</p>
-        <h2 class="modal-title">Cambiar Contraseña</h2>
-      </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="document.getElementById('modalCambiarPassword').style.display='none'" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
-    </div>
-    <form id="formCambiarPassword" onsubmit="cambiarPassword(event)">
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Usuario (DNI) *</label>
-          <select id="pwd_usuario" name="usuario_id" class="form-select" required>
-            <option value="">Seleccionar usuario...</option>
-            {% for u in usuarios %}
-            <option value="{{ u.idusuario }}">{{ u.idusuario }} — {{ u.nombrecompleto }}</option>
-            {% endfor %}
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Nueva Contraseña *</label>
-          <input type="password" id="pwd_nueva" name="nueva_password" class="form-input" 
-                 placeholder="Mínimo 6 caracteres" minlength="6" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Confirmar Contraseña *</label>
-          <input type="password" id="pwd_confirmar" name="confirmar_password" class="form-input" 
-                 placeholder="Repite la contraseña" minlength="6" required>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="submit" class="btn btn-blue btn-lg">
-          <i data-feather="check"></i> Cambiar Contraseña
-        </button>
-        <button type="button" class="btn btn-secondary btn-lg" 
-                onclick="document.getElementById('modalCambiarPassword').style.display='none'">
-          Cancelar
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
+.data-table tbody tr:hover td:first-child {
+    border-left: none;
+    padding-left: 1rem;
+}
 
+.data-table tbody td {
+    border-bottom: 1px solid var(--border);
+}
+
+.users-table thead th:nth-child(1) { width: 24%; }
+.users-table thead th:nth-child(2) { width: 21%; }
+.users-table thead th:nth-child(3) { width: 20%; }
+.users-table thead th:nth-child(4) { width: 13%; }
+.users-table thead th:nth-child(5) { width: 11%; }
+.users-table thead th:nth-child(6) { width: 11%; }
+
+.users-table thead {
+    background: var(--gray-100);
+    color: var(--text);
+}
+
+.users-table thead th {
+    padding: .75rem 1rem;
+    text-align: left;
+    font-weight: 700;
+    font-size: .72rem;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.users-table thead th:nth-child(1) { width: 25%; } /* Usuario */
+.users-table thead th:nth-child(2) { width: 20%; } /* Correo */
+.users-table thead th:nth-child(3) { width: 20%; } /* Roles */
+.users-table thead th:nth-child(4) { width: 12%; } /* Proyectos */
+.users-table thead th:nth-child(5) { width: 10%; } /* Estado */
+.users-table thead th:nth-child(6) { width: 13%; } /* Acciones */
+
+.users-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: all 0.2s;
+}
+
+.users-table tbody tr:hover {
+    background: var(--gray-100);
+}
+
+.users-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.users-table tbody td {
+    padding: .85rem 1rem;
+    vertical-align: middle;
+    color: var(--text);
+}
+
+/* Avatar con iniciales */
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gray-200);
+    color: var(--gray-700);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .85rem;
+    margin-right: .75rem;
+    flex-shrink: 0;
+    border: 2px solid var(--border);
+}
+
+[data-theme="dark"] .user-avatar {
+    background: var(--gray-300);
+    color: var(--gray-800);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.user-name {
+    font-weight: 600;
+    color: var(--text);
+    font-size: .85rem;
+    margin-bottom: .1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-dni {
+    font-size: .75rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Badges de roles */
+.role-badge {
+    display: inline-block;
+    padding: .25rem .65rem;
+    border-radius: var(--radius);
+    font-size: .75rem;
+    font-weight: 600;
+    margin: 2px 4px 2px 0;
+    white-space: nowrap;
+}
+
+.role-admin {
+    background: var(--pastel-red);
+    color: var(--text-red);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.role-supervisor {
+    background: var(--pastel-blue);
+    color: var(--text-blue);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.role-trabajador {
+    background: var(--pastel-green);
+    color: var(--text-green);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+[data-theme="dark"] .role-admin {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .role-supervisor {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .role-trabajador {
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.status-badge {
+    padding: .25rem .65rem;
+    border-radius: var(--radius);
+    font-size: .75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: .35rem;
+    white-space: nowrap;
+}
+
+.status-active {
+    background: var(--pastel-green);
+    color: var(--text-green);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.status-inactive {
+    background: var(--pastel-red);
+    color: var(--text-red);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+[data-theme="dark"] .status-active {
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .status-inactive {
+    background: rgba(239, 68, 68, 0.15);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.status-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+/* Botones de acción */
+/*.action-buttons {
+    display: flex;
+    gap: .5rem;
+}
+
+/* Proyecto items en modal */
+.proyecto-item {
+    border: 1px solid var(--border);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    border-radius: var(--radius-lg);
+    background: var(--bg-card);
+}
+
+.proyecto-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: .85rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.proyecto-item-header strong {
+    font-size: .95rem;
+    color: var(--text);
+    font-weight: 700;
+}
+
+/* Asegurar que form-row dentro de proyecto-item funcione bien */
+.proyecto-item .form-row {
+    margin-bottom: 1rem;
+}
+
+.proyecto-item .form-row:last-child {
+    margin-bottom: 0;
+}
+
+/* Mejorar el espaciado de form-group dentro de proyecto-item */
+.proyecto-item .form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.proyecto-item .form-label {
+    margin-bottom: .5rem;
+}
+
+.proyecto-item .form-select,
+.proyecto-item .form-input {
+    font-size: .85rem;
+    padding: .6rem .85rem;
+}
+
+/* Modal de Detalles de Usuario */
+.details-info {
+    flex: 1;
+}
+
+.details-info h3 {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 .25rem 0;
+}
+
+.details-info p {
+    color: var(--text-muted);
+    font-size: .85rem;
+    margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .search-bar {
+        flex-direction: column;
+        gap: .75rem;
+    }
+    
+    .search-input-wrapper {
+        max-width: 100%;
+    }
+    
+    .users-table-container {
+        overflow-x: auto;
+    }
+    
+    .users-table {
+        min-width: 800px;
+    }
+    
+
+}
+
+@media (max-width: 480px) {
+    .page-header-section {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .action-bar {
+        width: 100%;
+    }
+    
+    .action-bar .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
 {% endblock %}
 
-{% block scripts %}
-<script>
-const URL_USUARIOS = {
-  crear:        "{{ url_for('admin.usuarios_crear') }}",
-  editar:       "{{ url_for('admin.usuarios_editar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
-  toggle:       "{{ url_for('admin.usuarios_toggle', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
-  eliminar:     "{{ url_for('admin.usuarios_eliminar', uid='PLACEHOLDER') }}".replace('PLACEHOLDER',''),
-  password:     "{{ url_for('admin.usuarios_password') }}",
-  modulos_rol:  "/admin/configuracion/roles/ROL_ID/modulos",
-  guardar_modulos: "/admin/configuracion/roles/ROL_ID/modulos/guardar"
-};
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="page-header-section">
+        <div class="page-header-icon">
+            <i data-feather="users"></i>
+        </div>
+        <div>
+            <h2 class="section-title">Gestión de <span class="text-green">Usuarios</span></h2>
+            <p class="section-sub">Administra usuarios, roles y permisos del sistema</p>
+        </div>
+    </div>
 
-// ── Carga módulos del rol seleccionado y los muestra como checkboxes ──
-async function cargarModulosRol(rolId, containerId, marcados = []) {
-  const container = document.getElementById(containerId);
-  const gridId = containerId.replace('_container', '_grid');
-  const grid = document.getElementById(gridId);
-  if (!rolId) { container.style.display = 'none'; return; }
+    <div class="action-bar">
+        <button class="btn btn-primary" onclick="abrirModalCrear()">
+            <i data-feather="user-plus"></i> 
+            Crear Usuario
+        </button>
+    </div>
 
-  grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">Cargando módulos...</p>';
-  container.style.display = 'block';
+    <!-- Barra de búsqueda y filtros -->
+    <div class="filter-bar">
+        <div class="filter-select-wrapper" style="flex: 1; max-width: 400px;">
+            <i data-feather="search"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   class="filter-select" 
+                   placeholder="Buscar por nombre, DNI o correo..." 
+                   onkeyup="filtrarUsuarios()"
+                   style="border: 1px solid var(--border); padding: .5rem .75rem .5rem 2.5rem;">
+        </div>
+        <span class="filter-count"><strong id="totalUsuarios">{{ usuarios|length }}</strong> usuarios</span>
+    </div>
 
-  try {
-    const res = await fetch(URL_USUARIOS.modulos_rol.replace('ROL_ID', rolId));
-    const data = await res.json();
-    if (!data.success) { grid.innerHTML = '<p style="color:red">Error al cargar módulos</p>'; return; }
+    <!-- Tabla de usuarios -->
+    <div class="users-table-container">
+        <table class="data-table users-table" id="tablaUsuarios">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Correo</th>
+                    <th>Roles</th>
+                    <th>Proyectos</th>
+                    <th>Estado</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for usuario in usuarios %}
+                <tr>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-avatar">
+                                {{ usuario.nombrecompleto[:2].upper() }}
+                            </div>
+                            <div class="user-details">
+                                <div class="user-name">{{ usuario.nombrecompleto }}</div>
+                                <div class="user-dni">DNI: {{ usuario.idusuario }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="color: var(--text);">{{ usuario.correo or '-' }}</span>
+                    </td>
+                    <td>
+                        {% if usuario.roles %}
+                            {% for rol in usuario.roles.split(',') %}
+                                <span class="role-badge 
+                                    {% if 'Administrador' in rol %}role-admin
+                                    {% elif 'Supervisor' in rol %}role-supervisor
+                                    {% else %}role-trabajador{% endif %}">
+                                    {{ rol.strip() }}
+                                </span>
+                            {% endfor %}
+                        {% else %}
+                            <span style="color: var(--text-muted);">Sin roles</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span style="color: var(--text); font-weight: 600;">
+                            {{ usuario.cantidadasignaciones or 0 }}
+                        </span>
+                        <span style="color: var(--text-muted); font-size: .75rem;">proyecto(s)</span>
+                    </td>
+                    <td>
+                        {% if usuario.activo %}
+                        <span class="status-badge status-active">
+                            <span class="status-dot"></span>
+                            Activo
+                        </span>
+                        {% else %}
+                        <span class="status-badge status-inactive">
+                            <span class="status-dot"></span>
+                            Inactivo
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="action-buttons">
+                            <button class="btn-icon" onclick="verDetalles('{{ usuario.idusuario }}')" 
+                                    title="Ver detalles">
+                                <i data-feather="eye" style="width: 18px; height: 18px;"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-edit" onclick="editarUsuario('{{ usuario.idusuario }}')" 
+                                    title="Editar">
+                                <i data-feather="edit-2" style="width: 18px; height: 18px;"></i>
+                            </button>
+                            <button class="btn-icon btn-icon-danger" onclick="eliminarUsuario('{{ usuario.idusuario }}')" 
+                                    title="Desactivar">
+                                <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 
-    if (!data.modulos.length) {
-      grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">Sin módulos para este rol</p>';
-      return;
-    }
+<!-- Modal Crear Usuario -->
+<div class="modal-overlay" id="modalCrearUsuario">
+    <div class="modal-box" style="max-width: 1000px;">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-icon-btn">
+                    <i data-feather="user-plus"></i>
+                </span>
+                <div>
+                    <h3 id="modalTitle"><i data-feather="user-plus"></i> Crear Nuevo Usuario</h3>
+                    <p>Completa todos los campos obligatorios (*)</p>
+                </div>
+            </div>
+            <button class="modal-close" onclick="cerrarModal()">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        
+        <div class="modal-body">
+            <form id="formCrearUsuario">
+                <!-- Datos Básicos -->
+                <div class="form-section">
+                    <h4 class="form-section-title">
+                        <i data-feather="user"></i>
+                        Datos Básicos
+                    </h4>
+                    <div class="form-row" style="gap: 1.25rem;">
+                        <div class="form-group">
+                            <label class="form-label">DNI *</label>
+                            <input type="text" id="dni" required placeholder="Ingrese el DNI" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">NOMBRE COMPLETO *</label>
+                            <input type="text" id="nombre" required placeholder="Nombre y apellidos" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row" style="gap: 1.25rem;">
+                        <div class="form-group">
+                            <label class="form-label">CORREO ELECTRÓNICO</label>
+                            <input type="email" id="correo" placeholder="usuario@ejemplo.com" class="form-input">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">CONTRASEÑA</label>
+                            <input type="password" id="password" placeholder="Mínimo 6 caracteres (dejar vacío para no cambiar)" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row" style="gap: 1.25rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">ESTADO</label>
+                            <select id="activo" class="form-select">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Proyectos y Roles -->
+                <div class="form-section">
+                    <h4 class="form-section-title">
+                        <i data-feather="briefcase"></i>
+                        Asignación de Proyectos y Roles
+                    </h4>
+                    <div id="proyectos-container"></div>
+                </div>
+                
+                <button type="button" class="btn btn-primary btn-block" onclick="agregarProyecto()" style="margin-top: .75rem;">
+                    <i data-feather="plus"></i>
+                    Agregar Proyecto
+                </button>
+            </form>
+        </div>
+        
+        <div class="modal-footer">
+            <button class="btn btn-secondary" onclick="cerrarModal()">
+                <i data-feather="x"></i>
+                Cancelar
+            </button>
+            <button type="button" id="guardarUsuarioBtn" class="btn btn-primary btn-lg" onclick="guardarUsuario()">
+                <i data-feather="save"></i>
+                Guardar Usuario
+            </button>
+        </div>
+    </div>
+</div>
 
-    grid.innerHTML = data.modulos.map(m => `
-      <label class="modulo-checkbox-card ${!m.url ? 'modulo-grupo' : ''}">
-        <input type="checkbox" name="modulos" value="${m.idmodulo}"
-               ${marcados.includes(String(m.idmodulo)) || marcados.length === 0 ? 'checked' : ''}>
-        <span class="modulo-card-content">
-          <i data-feather="${m.icono}" style="width:16px;height:16px"></i>
-          <span>${m.nombre}</span>
+<!-- Modal Detalles Usuario -->
+<!-- Modal Detalles Usuario -->
+<div class="modal-overlay" id="modalDetallesUsuario">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn">
+          <i data-feather="user"></i>
         </span>
-      </label>
-    `).join('');
-    feather.replace({ 'stroke-width': 1.5 });
-  } catch(e) {
-    grid.innerHTML = '<p style="color:red">Error de conexión</p>';
-  }
+        <div>
+          <h3>Detalles del Usuario</h3>
+          <p id="detallesSubtitle">Ver información del usuario</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modalDetallesUsuario').classList.remove('open')">
+        <i data-feather="x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Datos básicos -->
+      <div class="form-section">
+        <h4 class="form-section-title">
+          <i data-feather="user"></i> Datos Básicos
+        </h4>
+        <div class="form-row" style="gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">DNI</label>
+            <div id="detallesDni" class="form-input" style="background: var(--gray-100);">--</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre Completo</label>
+            <div id="detallesNombre" class="form-input" style="background: var(--gray-100);">--</div>
+          </div>
+        </div>
+        <div class="form-row" style="gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Correo</label>
+            <div id="detallesCorreo" class="form-input" style="background: var(--gray-100);">--</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <div id="detallesEstado">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asignaciones -->
+      <div class="form-section">
+        <h4 class="form-section-title">
+          <i data-feather="briefcase"></i> Proyectos Asignados
+        </h4>
+        <div id="detallesAsignaciones">
+          <p style="color: var(--text-muted); font-size: .85rem;">Sin asignaciones</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+function filtrarUsuarios() {
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.getElementById('tablaUsuarios').getElementsByTagName('tr');
+    let visibleCount = 0;
+    
+    for (let i = 1; i < rows.length; i++) {
+        const visible = rows[i].textContent.toLowerCase().includes(filter);
+        rows[i].style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
+    }
+    
+    document.getElementById('totalUsuarios').textContent = visibleCount;
 }
 
-// ── Guardar módulos del rol (actualiza tbl_modulo_permiso) ──
-async function guardarModulosRol(rolId, modulosIds) {
-  const url = URL_USUARIOS.guardar_modulos.replace('ROL_ID', rolId);
-  await fetch(url, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-    body: JSON.stringify({ modulos: modulosIds })
-  });
+async function verDetalles(dni) {
+    try {
+        const response = await fetch(`/admin/usuarios/detalle/${dni}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) return;
+
+        const u = data.usuario;
+        document.getElementById('detallesDni').textContent = u.idusuario || '--';
+        document.getElementById('detallesNombre').textContent = u.nombrecompleto || '--';
+        document.getElementById('detallesCorreo').textContent = u.correo || '-';
+        document.getElementById('detallesSubtitle').textContent = `DNI: ${u.idusuario}`;
+        document.getElementById('detallesEstado').innerHTML = u.activo
+            ? '<span class="status-badge status-active"><span class="status-dot"></span>Activo</span>'
+            : '<span class="status-badge status-inactive"><span class="status-dot"></span>Inactivo</span>';
+
+        const asignContainer = document.getElementById('detallesAsignaciones');
+        asignContainer.innerHTML = (data.asignaciones?.length)
+            ? data.asignaciones.map(a => `
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;">
+                    <div style="font-weight:600;color:var(--text);margin-bottom:.5rem;">
+                        ${a.proyecto_nombre || a.proyecto_codigo || 'Proyecto'}
+                    </div>
+                    <div style="color:var(--text-muted);font-size:.85rem;line-height:1.5;">
+                        <div><strong>Rol:</strong> ${a.nombrerol || '-'}</div>
+                        <div><strong>Área:</strong> ${a.area_nombre || '-'}</div>
+                        <div><strong>Cargo:</strong> ${a.cargo || '-'}</div>
+                    </div>
+                </div>`).join('')
+            : '<p style="color:var(--text-muted);font-size:.85rem;">Sin asignaciones</p>';
+
+        document.getElementById('modalDetallesUsuario').classList.add('open');
+        if (typeof feather !== 'undefined') feather.replace();
+
+    } catch (error) {
+        console.error('Error al cargar detalles:', error);
+        mostrarNotificacion('Error al cargar detalles del usuario', 'error');
+    }
 }
 
-function abrirModalCrear() {
-  document.getElementById('formCrearUsuario').reset();
-  document.getElementById('crear_modulos_container').style.display = 'none';
-  document.getElementById('crear_modulos_grid').innerHTML = '';
-  document.getElementById('modalCrearUsuario').style.display = 'flex';
-  feather.replace();
-}
-function cerrarModalCrear() {
-  document.getElementById('modalCrearUsuario').style.display = 'none';
+function editarUsuario(dni) {
+    if (typeof abrirModalEditar === 'function') abrirModalEditar(dni);
 }
 
-function abrirModalEditar(id, nombre, correo, rolId, idarea, cargo) {
-  document.getElementById('editar_id').value     = id;
-  document.getElementById('editar_dni').value    = id;
-  document.getElementById('editar_nombre').value = nombre;
-  document.getElementById('editar_correo').value = correo;
-  document.getElementById('editar_idarea').value = idarea || '';
-  document.getElementById('editar_cargo').value  = cargo || '';
-  // Seleccionar rol actual y cargar sus módulos
-  const rolSelect = document.getElementById('editar_rol');
-  rolSelect.value = rolId || '';
-  if (rolId) cargarModulosRol(rolId, 'editar_modulos_container');
-  else document.getElementById('editar_modulos_container').style.display = 'none';
-  document.getElementById('modalEditarUsuario').style.display = 'flex';
-  feather.replace();
-}
-function cerrarModalEditar() {
-  document.getElementById('modalEditarUsuario').style.display = 'none';
+async function eliminarUsuario(dni) {
+    // Modal de confirmación personalizado en lugar de confirm()
+    const confirmado = await mostrarConfirmacion(
+        '¿Desactivar usuario?',
+        'El usuario podrá ser reactivado editando su estado.'
+    );
+    if (!confirmado) return;
+
+    try {
+        const response = await fetch(`/admin/usuarios/eliminar/${dni}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'No se pudo desactivar el usuario');
+        }
+        mostrarNotificacion(result.message || 'Usuario desactivado correctamente', 'success');
+        setTimeout(() => location.reload(), 1500);
+    } catch (error) {
+        console.error(error);
+        mostrarNotificacion('Error al desactivar usuario: ' + (error.message || error), 'error');
+    }
 }
 
-function abrirModalCambiarPassword() {
-  document.getElementById('formCambiarPassword').reset();
-  document.getElementById('modalCambiarPassword').style.display = 'flex';
-}
+// Confirmación personalizada (reemplaza confirm() nativo)
+function mostrarConfirmacion(titulo, mensaje) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position:fixed;inset:0;background:rgba(0,0,0,0.5);
+            z-index:99999;display:flex;align-items:center;justify-content:center;
+        `;
+        overlay.innerHTML = `
+            <div style="background:var(--bg-card);border:1px solid var(--border);
+                        border-radius:var(--radius-lg);padding:1.5rem;max-width:400px;
+                        width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h4 style="margin:0 0 .5rem;color:var(--text);font-size:1rem;">${titulo}</h4>
+                <p style="margin:0 0 1.25rem;color:var(--text-muted);font-size:.875rem;">${mensaje}</p>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;">
+                    <button id="btnCancelarConfirm" class="btn btn-secondary">Cancelar</button>
+                    <button id="btnAceptarConfirm" class="btn btn-primary" 
+                            style="background:var(--red,#ef4444);border-color:var(--red,#ef4444);">
+                        Desactivar
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
 
-function filtrarUsuarios(q) {
-  q = q.toLowerCase();
-  document.querySelectorAll('#tbodyUsuarios tr[data-search]').forEach(tr => {
-    tr.style.display = tr.dataset.search.includes(q) ? '' : 'none';
-  });
-}
-
-async function crearUsuario(e) {
-  e.preventDefault();
-  const form = e.target;
-  const data = new FormData(form);
-  const rolId = document.getElementById('crear_rol').value;
-  // Guardar módulos seleccionados en el rol
-  const modulosIds = [...document.querySelectorAll('#crear_modulos_grid input[name="modulos"]:checked')]
-    .map(cb => cb.value);
-  if (rolId && modulosIds.length) await guardarModulosRol(rolId, modulosIds);
-  try {
-    const res = await fetch(URL_USUARIOS.crear, { method:'POST', body: data,
-      headers:{'X-Requested-With':'XMLHttpRequest'} });
-    const json = await res.json();
-    if (json.success) { cerrarModalCrear(); location.reload(); }
-    else showToast(json.error || 'Error al crear usuario', 'error');
-  } catch(err) { showToast('Error de conexión', 'error'); }
-}
-
-async function editarUsuario(e) {
-  e.preventDefault();
-  const form = e.target;
-  const uid  = document.getElementById('editar_id').value;
-  const rolId = document.getElementById('editar_rol').value;
-  const data = new FormData(form);
-  // Guardar módulos seleccionados en el rol
-  const modulosIds = [...document.querySelectorAll('#editar_modulos_grid input[name="modulos"]:checked')]
-    .map(cb => cb.value);
-  if (rolId && modulosIds.length) await guardarModulosRol(rolId, modulosIds);
-  try {
-    const res = await fetch(URL_USUARIOS.editar + uid, { method:'POST', body: data,
-      headers:{'X-Requested-With':'XMLHttpRequest'} });
-    const json = await res.json();
-    if (json.success) { cerrarModalEditar(); location.reload(); }
-    else showToast(json.error || 'Error al editar usuario', 'error');
-  } catch(err) { showToast('Error de conexión', 'error'); }
-}
-
-async function toggleUsuario(uid, activo) {
-  if (!confirm(`¿Deseas ${activo ? 'desactivar' : 'activar'} este usuario?`)) return;
-  try {
-    const res = await fetch(URL_USUARIOS.toggle + uid, { method:'POST',
-      headers:{'X-Requested-With':'XMLHttpRequest'} });
-    const json = await res.json();
-    if (json.success) location.reload();
-    else showToast(json.error || 'Error', 'error');
-  } catch(err) { showToast('Error de conexión', 'error'); }
-}
-
-async function eliminarUsuario(uid, nombre) {
-  if (!confirm(`¿Eliminar al usuario "${nombre}"? Esta acción no se puede deshacer.`)) return;
-  try {
-    const res = await fetch(URL_USUARIOS.eliminar + uid, { method:'POST',
-      headers:{'X-Requested-With':'XMLHttpRequest'} });
-    const json = await res.json();
-    if (json.success) location.reload();
-    else showToast(json.error || 'Error al eliminar', 'error');
-  } catch(err) { showToast('Error de conexión', 'error'); }
-}
-
-async function cambiarPassword(e) {
-  e.preventDefault();
-  const nueva     = document.getElementById('pwd_nueva').value;
-  const confirmar = document.getElementById('pwd_confirmar').value;
-  if (nueva !== confirmar) { showToast('Las contraseñas no coinciden', 'error'); return; }
-  const data = new FormData(e.target);
-  try {
-    const res = await fetch(URL_USUARIOS.password, { method:'POST', body: data,
-      headers:{'X-Requested-With':'XMLHttpRequest'} });
-    const json = await res.json();
-    if (json.success) {
-      document.getElementById('modalCambiarPassword').style.display = 'none';
-      showToast('Contraseña actualizada', 'success');
-    } else showToast(json.error || 'Error', 'error');
-  } catch(err) { showToast('Error de conexión', 'error'); }
-}
-
-function showToast(msg, type) {
-  const d = document.createElement('div');
-  d.className = `alert alert-${type}`;
-  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
-  d.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>`;
-  document.body.appendChild(d);
-  feather.replace();
-  setTimeout(() => d.remove(), 4000);
+        overlay.querySelector('#btnAceptarConfirm').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(true);
+        };
+        overlay.querySelector('#btnCancelarConfirm').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(false);
+        };
+    });
 }
 </script>
+
+<script src="{{ url_for('static', filename='js/admin/usuarios.js') }}"></script>
 {% endblock %}

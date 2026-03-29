@@ -1,10 +1,149 @@
 {% extends 'base.html' %}
-{% block title %}Data Meteorológica - Dashboard{% endblock %}
+{% block title %}Data Meteorológica — ecoSupervisor{% endblock %}
 {% block page_title %}Data Meteorológica{% endblock %}
+
 {% block content %}
-<div class="dashboard-placeholder">
-  <i data-feather="cloud" style="width:48px;height:48px;opacity:0.3"></i>
-  <h2>Dashboard de Data Meteorológica</h2>
-  <p>Contenido en construcción.</p>
+<div class="page-header-section">
+  <div class="page-header-icon"><i data-feather="cloud"></i></div>
+  <div>
+    <h2 class="section-title">Dashboard <span class="text-green">Meteorológico</span></h2>
+    <p class="section-sub">Estación automática vía OpenWeather API</p>
+  </div>
 </div>
+
+<!-- Config -->
+<div class="table-card" style="margin-bottom:1rem">
+  <div class="table-header">
+    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap">
+      <span class="table-icon"><i data-feather="settings"></i></span>
+      <div style="display:flex;gap:.75rem;align-items:center;flex-wrap:wrap">
+        <div style="display:flex;flex-direction:column;gap:.2rem">
+          <label class="date-label">API Key OpenWeather</label>
+          <input type="text" id="wx-apikey" class="plant-input" placeholder="Pega tu API key aquí" style="width:260px;text-align:left">
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.2rem">
+          <label class="date-label">Ciudad</label>
+          <input type="text" id="wx-city" class="plant-input" placeholder="Huancayo,PE" value="Huancayo,PE" style="width:180px;text-align:left">
+        </div>
+        <div style="display:flex;gap:.5rem;align-items:flex-end">
+          <button class="btn btn-primary" onclick="wxStart()" style="padding:.4rem .9rem;font-size:.82rem">
+            <i data-feather="wifi" style="width:14px;height:14px"></i> Conectar
+          </button>
+          <button class="btn btn-secondary" onclick="wxManual()" style="padding:.4rem .9rem;font-size:.82rem">Actualizar</button>
+          <button class="btn" onclick="wxExportCSV()" style="padding:.4rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">
+            <i data-feather="download" style="width:14px;height:14px"></i> CSV
+          </button>
+          <button class="btn" onclick="wxClear()" style="padding:.4rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:.5rem">
+      <span id="wx-pulse" style="width:8px;height:8px;border-radius:50%;background:var(--border);display:inline-block;flex-shrink:0"></span>
+      <span id="wx-header-status" style="font-size:.75rem;color:var(--text-muted)">offline</span>
+    </div>
+  </div>
+  <!-- Status bar -->
+  <div id="wx-status-bar" style="margin:.75rem 1.5rem;padding:.6rem 1rem;border-radius:8px;border:1px solid var(--border);background:var(--bg);font-size:.78rem;display:flex;justify-content:space-between;gap:.75rem;flex-wrap:wrap">
+    <span id="wx-status-text" style="color:var(--text-muted)">Ingresa tu API key y ciudad, luego haz clic en Conectar</span>
+    <span id="wx-last-update" style="color:var(--text-muted)"></span>
+  </div>
+  <!-- Timer -->
+  <div style="padding:0 1.5rem .75rem">
+    <div style="display:flex;justify-content:space-between;font-size:.72rem;color:var(--text-muted);margin-bottom:.3rem">
+      <span id="wx-countdown">—</span>
+      <span id="wx-count">0 registros</span>
+    </div>
+    <div style="height:2px;background:var(--border);border-radius:2px;overflow:hidden">
+      <div id="wx-timer-fill" style="height:100%;width:0%;background:var(--green);border-radius:2px;transition:width 1s linear"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Métricas actuales -->
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem;margin-bottom:1.5rem">
+  {% set metrics = [
+    ('wx-temp',   'Temperatura',    '°C',      false),
+    ('wx-range',  'Máx / Mín',      '°C',      false),
+    ('wx-hum',    'Humedad',        '%',       false),
+    ('wx-press',  'Presión',        'hPa',     false),
+    ('wx-wind',   'Viento',         'km/h',    false),
+    ('wx-gust',   'Ráfaga',         'km/h',    false),
+    ('wx-wdir',   'Dirección',      'brújula', false),
+    ('wx-clouds', 'Nubes',          '%',       false),
+    ('wx-vis',    'Visibilidad',    'm',       false),
+    ('wx-rain',   'Lluvia 1h',      'mm',      false),
+    ('wx-dew',    'Pto. Rocío',     '°C',      true),
+    ('wx-hi',     'Sens. Térmica',  '°C',      true),
+    ('wx-wc',     'Wind Chill',     '°C',      true),
+    ('wx-wr',     'Rec. Viento',    'km/30min',true),
+  ] %}
+  {% for id, label, unit, calc in metrics %}
+  <div class="table-card" style="padding:.85rem 1rem;{% if calc %}border-color:#6d28d9;{% endif %}">
+    <div style="font-size:.68rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem">{{ label }}</div>
+    <div id="{{ id }}" style="font-size:1.5rem;font-weight:300;color:{% if calc %}#a78bfa{% else %}var(--text){% endif %};line-height:1">--</div>
+    <div style="font-size:.68rem;color:var(--text-muted);margin-top:.2rem">{{ unit }}</div>
+  </div>
+  {% endfor %}
+</div>
+
+<!-- Leyenda -->
+<div style="display:flex;gap:1rem;margin-bottom:.75rem;flex-wrap:wrap">
+  <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text-muted)">
+    <span style="width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block"></span>
+    Dato directo de OpenWeather
+  </div>
+  <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text-muted)">
+    <span style="width:7px;height:7px;border-radius:50%;background:#a78bfa;display:inline-block"></span>
+    Calculado (Magnus · Rothfusz · NOAA)
+  </div>
+  <div style="display:flex;align-items:center;gap:.4rem;font-size:.72rem;color:var(--text-muted)">
+    <span style="width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block"></span>
+    Precipitación
+  </div>
+</div>
+
+<!-- Tabla historial -->
+<div class="table-card">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon"><i data-feather="list"></i></span>
+      <div>
+        <h3>Historial — cada 30 min</h3>
+        <p id="wx-count2">0 registros · máx 500 en memoria</p>
+      </div>
+    </div>
+  </div>
+  <div style="overflow-x:auto;max-height:460px;overflow-y:auto">
+    <table class="gen-table" style="min-width:1250px">
+      <thead>
+        <tr>
+          <th>Fecha</th><th>Hora</th><th>Temp °C</th><th>Máx</th><th>Mín</th>
+          <th>Hum %</th><th>Presión hPa</th><th>Viento km/h</th><th>Dir</th>
+          <th>Ráfaga km/h</th><th>Nubes %</th><th>Visib. m</th>
+          <th>Lluvia mm</th><th>Nieve mm</th><th>Condición</th>
+          <th style="color:#a78bfa">Rocío °C</th>
+          <th style="color:#a78bfa">Sens. Térm. °C</th>
+          <th style="color:#a78bfa">Wind Chill °C</th>
+          <th style="color:#a78bfa">Rec. Viento km</th>
+        </tr>
+      </thead>
+      <tbody id="wx-tbody">
+        <tr><td colspan="19" style="text-align:center;padding:3rem;color:var(--text-muted)">
+          Sin registros — conecta tu API key para comenzar
+        </td></tr>
+      </tbody>
+    </table>
+  </div>
+  <div style="padding:.75rem 1.5rem;font-size:.72rem;color:var(--text-muted);border-top:1px solid var(--border);display:flex;gap:1.5rem;flex-wrap:wrap">
+    <span>Fuente: OpenWeather API v2.5</span>
+    <span>Intervalo: 30 minutos automático</span>
+    <span id="wx-footer-city"></span>
+    <span>Columnas en morado = calculadas localmente</span>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>window.WX_API_KEY = "{{ wx_api_key }}";</script>
+<script src="{{ url_for('static', filename='js/meteorologia/dashboard.js') }}"></script>
 {% endblock %}

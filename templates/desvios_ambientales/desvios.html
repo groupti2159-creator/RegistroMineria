@@ -14,7 +14,7 @@
 </div>
 
 <div class="action-bar">
-  <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='flex'">
+  <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.add('open')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Reporte Ambiental</strong>
   </button>
   <a href="{{ url_for('da.exportar_excel') }}" class="btn btn-export">
@@ -54,15 +54,16 @@
 <div class="modal-overlay" id="modalCrear">
   <div class="modal-box modal-large">
     <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
-        <h2 class="modal-title">Registrar Nuevo Reporte</h2>
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="file-plus"></i></span>
+        <div>
+          <h3><i data-feather="clipboard"></i> Registrar Nuevo Reporte</h3>
+          <p>Completa todos los campos obligatorios (*)</p>
+        </div>
       </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
+      <button class="modal-close" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.remove('open')">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <form method="POST" action="{{ url_for('da.crear_registro') }}" enctype="multipart/form-data">
       <div class="modal-body">
@@ -154,7 +155,7 @@
           <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
               <label class="form-label">ACCIÓN REALIZADA *</label>
-              <textarea name="accion" class="form-textarea" placeholder="Describe la acción tomada o a tomar" minlength="10"></textarea>
+              <textarea name="accion" class="form-textarea" placeholder=" Recomendacion" minlength="10"></textarea>
               <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
             </div>
           </div>
@@ -207,7 +208,7 @@
           </div>
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">IMÁGENES DE EVIDENCIA *</label>
+              <label class="form-label">EVIDENCIAS *</label>
               <div class="file-upload-area">
                 <input type="file" name="evidencias" multiple accept="image/*" class="file-input" id="fileEvidencias">
                 <label for="fileEvidencias" class="file-label">
@@ -238,7 +239,7 @@
           <i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
           Guardar Reporte
         </button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'">
+        <button type="button" class="btn btn-secondary btn-lg" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.remove('open')">
           <i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
           Cancelar
         </button>
@@ -251,15 +252,16 @@
 <div class="modal-overlay" id="modalEditar">
   <div class="modal-box modal-large">
     <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
-        <h2 class="modal-title">Editar Reporte</h2>
+      <div class="modal-title-group">
+        <span class="modal-icon-btn"><i data-feather="edit-2"></i></span>
+        <div>
+          <h3><i data-feather="edit"></i> Editar Reporte</h3>
+          <p>Modifica los campos necesarios</p>
+        </div>
       </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="document.getElementById('modalEditar').style.display='none'" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
+      <button class="modal-close" onclick="document.getElementById('modalEditar').classList.remove('open')">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <form method="POST" id="formEditar" enctype="multipart/form-data">
       <div class="modal-body">
@@ -341,7 +343,7 @@
           </div>
           <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">ACCIÓN REALIZADA</label>
+              <label class="form-label">ACCIÓN A REALIZAR</label>
               <textarea name="accion" id="edit_accion" class="form-textarea"></textarea>
             </div>
           </div>
@@ -402,7 +404,7 @@
       </div>
       <div class="modal-footer">
         <button type="submit" class="btn btn-yellow btn-lg"><i data-feather="save" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Actualizar Reporte</button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalEditar').style.display='none'"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
+        <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalEditar').classList.remove('open')"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Cancelar</button>
       </div>
     </form>
   </div>
@@ -412,15 +414,10 @@
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal-box modal-large">
     <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
-        <h2 class="modal-title">Detalle del Reporte</h2>
-      </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="document.getElementById('modalDetalle').style.display='none'" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
+      <h3><i data-feather="file-text"></i> Detalle del Reporte</h3>
+      <button class="modal-close" onclick="document.getElementById('modalDetalle').classList.remove('open')">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <div class="modal-body" id="detalleContent">
       <div class="loading-state">Cargando...</div>
@@ -432,15 +429,10 @@
 <div class="modal-overlay" id="modalValidar">
   <div class="modal-box" style="max-width:800px">
     <div class="modal-header">
-      <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
-        <h2 class="modal-title">Validar Imágenes de Levantamiento</h2>
-      </div>
-      <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModalValidar()" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
-      </div>
+      <h3><i data-feather="check-circle"></i> Validar Imágenes de Levantamiento</h3>
+      <button class="modal-close" onclick="cerrarModalValidar()">
+        <i data-feather="x"></i>
+      </button>
     </div>
     <form method="POST" id="formValidar" onsubmit="return validarFormulario()">
       <input type="hidden" name="imagenes_ids" id="validarImagenesIds">
@@ -475,5 +467,6 @@ const VALIDAR_URL_BASE = "{{ url_for('da.validar_levantamiento', rid='PLACEHOLDE
 const ELIMINAR_URL_BASE = "{{ url_for('da.eliminar_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = true;
 </script>
-<script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}"></script>
+<script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}?v=3"></script>
 {% endblock %}

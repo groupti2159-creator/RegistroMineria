@@ -56,7 +56,7 @@
               </button>
               {% else %}
               {# Solo mostrar botón de subir si está en PENDIENTE #}
-              {% if r.estado == 'Pendiente' %}
+              {% if r.estado == 'Pendiente' or r.estado == 'Atrasado' %}
               <button class="btn-icon btn-purple" onclick="abrirSubirModal('{{ r.idregistro }}')" title="Subir levantamiento">
                 <i data-feather="upload-cloud"></i>
               </button>
