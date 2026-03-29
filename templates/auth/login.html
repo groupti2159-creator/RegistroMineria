@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="es" data-theme="light">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ecoSupervisor — Iniciar Sesión</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
-<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-<script src="https://unpkg.com/feather-icons"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ecoSupervisor — Iniciar Sesión</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <script src="https://unpkg.com/feather-icons"></script>
 </head>
+
 <body class="login-body">
   <button class="dark-toggle-login" onclick="toggleDark()" title="Cambiar tema">
     <i data-feather="moon"></i>
@@ -40,7 +43,8 @@
           </label>
           <div class="input-wrapper">
             <span class="input-icon"><i data-feather="credit-card"></i></span>
-            <input type="text" name="dni" class="form-input" placeholder="Ingresa tu DNI (8 dígitos)" maxlength="8" required autocomplete="username">
+            <input type="text" name="dni" class="form-input" placeholder="Ingresa tu DNI (8 dígitos)" maxlength="8"
+              required autocomplete="username">
           </div>
         </div>
         <div class="form-group">
@@ -50,29 +54,31 @@
           </label>
           <div class="input-wrapper">
             <span class="input-icon"><i data-feather="lock"></i></span>
-            <input type="password" name="password" class="form-input" placeholder="Ingresa tu contraseña" required autocomplete="current-password">
+            <input type="password" name="password" class="form-input" placeholder="Ingresa tu contraseña" required
+              autocomplete="current-password">
           </div>
         </div>
+        
         <button type="submit" class="btn btn-primary btn-block btn-lg">
           <i data-feather="log-in"></i>
           Iniciar Sesión
         </button>
       </form>
-      
+
       <div class="login-footer">
         <i data-feather="shield"></i>
         <span>ecoSupervisor - Sistema de Monitoreo Ambiental</span>
       </div>
     </div>
   </div>
-  
+
   <script src="{{ url_for('static', filename='js/main.js') }}"></script>
   <script>
     // Inicializar iconos Feather
     feather.replace({ 'stroke-width': 1.2 });
-    
+
     // Actualizar icono del botón de tema según el tema actual
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
       const theme = localStorage.getItem('theme') || 'light';
       const toggleBtn = document.querySelector('.dark-toggle-login');
       if (theme === 'dark' && toggleBtn) {
@@ -80,10 +86,10 @@
         feather.replace({ 'stroke-width': 1.2 });
       }
     });
-    
+
     // Actualizar icono al cambiar tema
     const originalToggleDark = window.toggleDark;
-    window.toggleDark = function() {
+    window.toggleDark = function () {
       originalToggleDark();
       const theme = document.documentElement.getAttribute('data-theme');
       const toggleBtn = document.querySelector('.dark-toggle-login');
@@ -94,4 +100,5 @@
     };
   </script>
 </body>
+
 </html>

@@ -26,10 +26,11 @@
       <div class="brand-text">
         <span class="brand-eco">Eco</span><span class="brand-sup">Supervisor</span>
         <small>{{ session.nombre or session.dni }}</small>
-        {% if session.cargo %}<small style="opacity:0.7">{{ session.cargo }}</small>{% endif %}
+        {% if session.area_nombre %}<small style="opacity:0.7">Área: {{ session.area_nombre }}</small>{% endif %}
+        {% if session.cargo %}<small style="opacity:0.7">Cargo: {{ session.cargo }}</small>{% endif %}
         <span class="rol-badge rol-{{ session.rol|lower|replace(' ','') }}">{{ session.rol|upper }}</span>
           {% if session.rol == 'Administrador' %}
-      <div class="proyecto-selector">
+      <!-- <div class="proyecto-selector">
         <button class="proyecto-btn" onclick="toggleProyectos()" id="proyectoBtn">
           <span class="proyecto-icon">📁</span>
           <span class="proyecto-nombre" id="proyectoNombre">Cargando...</span>
@@ -42,7 +43,7 @@
             <div class="proyecto-loading">Cargando proyectos...</div>
           </div>
         </div>
-      </div>
+      </div> -->
       {% endif %}
       </div>
     </div>

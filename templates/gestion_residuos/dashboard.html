@@ -13,6 +13,28 @@
 
 {% if registros %}
 
+<!-- ── FILTRO ── -->
+<div class="table-card" style="margin-bottom:1rem">
+  <div class="table-header">
+    <div class="table-title-row">
+      <span class="table-icon"><i data-feather="filter"></i></span>
+      <div><h3>Filtrar por fecha</h3><p>Actualiza el gráfico y la tabla según el rango seleccionado.</p></div>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;margin-top:.75rem">
+      <div style="display:flex;flex-direction:column;gap:.25rem">
+        <label class="date-label" style="font-size:.75rem">Desde</label>
+        <input class="date-input" type="date" id="db-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:.25rem">
+        <label class="date-label" style="font-size:.75rem">Hasta</label>
+        <input class="date-input" type="date" id="db-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
+      </div>
+      <button class="btn btn-secondary" id="db-f-aplicar" style="padding:.38rem .9rem;font-size:.82rem">Filtrar</button>
+      <button class="btn" id="db-f-limpiar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
+    </div>
+  </div>
+</div>
+
 <!-- ── GRÁFICO ── -->
 <div class="table-card" style="margin-bottom:1.5rem">
   <div class="table-header">
@@ -35,7 +57,7 @@
       <span class="table-icon"><i data-feather="list"></i></span>
       <div>
         <h3>Registros CORI PUNO</h3>
-        <p>{{ registros|length }} registro(s)</p>
+        <p id="dashboard-count">{{ registros|length }} registro(s)</p>
       </div>
     </div>
   </div>
@@ -50,7 +72,7 @@
           <th>Total Kg<br><span style="font-weight:400;font-size:.75rem;opacity:.7">(sin aceites)</span></th>
         </tr>
       </thead>
-      <tbody>
+      <tbody id="dashboard-tbody">
         {% for r in registros %}
         <tr>
           <td class="col-sticky">
@@ -67,7 +89,7 @@
         </tr>
         {% endfor %}
       </tbody>
-      <tfoot>
+      <tfoot id="dashboard-tfoot">
         <tr style="font-weight:700;background:var(--bg-sidebar)">
           <td class="col-sticky">TOTAL</td>
           {% for sec in sections %}
@@ -111,21 +133,23 @@ const CHART_DATA = {
     label: sec.label,
     data: CHART_DATA.registros.map(r => parseFloat(r[sec.col] || 0)),
     borderColor: COLORS[i],
-    backgroundColor: COLORS[i] + '22',
-    borderWidth: 2,
-    pointRadius: 3,
-    pointHoverRadius: 5,
+    backgroundColor: COLORS[i],
+    borderWidth: 1,
+    borderRadius: 4,
+    barPercentage: 0.75,
+    categoryPercentage: 0.8,
     tension: 0.3,
-    fill: false,
+    fill: true,
   }));
 
   const ctx = document.getElementById('chart-rrss').getContext('2d');
   const chart = new Chart(ctx, {
-    type: 'line',
+    type: 'bar',
     data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
+      layout: { padding: { top: 8, bottom: 16, left: 8, right: 8 } },
       interaction: { mode: 'index', intersect: false },
       plugins: {
         legend: { display: false },
@@ -138,8 +162,8 @@ const CHART_DATA = {
       },
       scales: {
         x: {
-          ticks: { maxRotation: 45, font: { size: 11 } },
-          grid: { color: 'rgba(255,255,255,.05)' },
+          ticks: { autoSkip: true, maxRotation: 45, minRotation: 0, font: { size: 11 } },
+          grid: { color: 'rgba(255,255,255,.05)', drawBorder: false },
         },
         y: {
           beginAtZero: true,
@@ -168,8 +192,89 @@ const CHART_DATA = {
       chart.update();
     });
     container.appendChild(btn);
+  });function parseDate(fecha) {
+    if (!fecha) return null;
+    return fecha.substring(0, 10);
+  }
+
+  function formatDate(fecha) {
+    if (!fecha) return '';
+    const d = fecha.split('-');
+    return d[2] + '/' + d[1] + '/' + d[0];
+  }
+
+  function filterRegistros() {
+    const desde = document.getElementById('db-f-desde').value;
+    const hasta = document.getElementById('db-f-hasta').value;
+    return CHART_DATA.registros.filter(r => {
+      const fecha = parseDate(r.fecha);
+      if (!fecha) return false;
+      if (desde && fecha < desde) return false;
+      if (hasta && fecha > hasta) return false;
+      return true;
+    });
+  }
+
+  function renderTable(registros) {
+    const tbody = document.getElementById('dashboard-tbody');
+    const tfoot = document.getElementById('dashboard-tfoot');
+    const countLabel = document.getElementById('dashboard-count');
+    const sections = CHART_DATA.sections;
+
+    let html = '';
+    if (registros.length === 0) {
+      html = `<tr><td class="col-sticky" colspan="${sections.length + 2}" style="text-align:center;padding:2rem;color:var(--text-muted)">No hay registros para el rango seleccionado</td></tr>`;
+    } else {
+      registros.forEach(r => {
+        html += `<tr>`;
+        html += `<td class="col-sticky">${formatDate(parseDate(r.fecha))}</td>`;
+        sections.forEach(sec => {
+          const value = parseFloat(r[sec.col] || 0).toFixed(2);
+          html += `<td style="text-align:right">${value}</td>`;
+        });
+        html += `<td class="col-subtotal" style="text-align:right;font-weight:600">${parseFloat(r.total_cp || 0).toFixed(2)}</td>`;
+        html += `</tr>`;
+      });
+    }
+
+    tbody.innerHTML = html;
+
+    let totalFooter = `<tr style="font-weight:700;background:var(--bg-sidebar)"><td class="col-sticky">TOTAL</td>`;
+    sections.forEach(sec => {
+      const sum = registros.reduce((acc, r) => acc + (parseFloat(r[sec.col] || 0) || 0), 0);
+      totalFooter += `<td style="text-align:right">${sum.toFixed(2)}</td>`;
+    });
+    const totalCp = registros.reduce((acc, r) => acc + (parseFloat(r.total_cp || 0) || 0), 0);
+    totalFooter += `<td class="col-subtotal" style="text-align:right">${totalCp.toFixed(2)}</td></tr>`;
+    tfoot.innerHTML = totalFooter;
+    countLabel.textContent = registros.length + ' registro(s)';
+  }
+
+  function renderChart(registros) {
+    const labels = registros.map(r => formatDate(parseDate(r.fecha)));
+    chart.data.labels = labels;
+    chart.data.datasets.forEach((dataset, idx) => {
+      const sec = CHART_DATA.sections[idx];
+      dataset.data = registros.map(r => parseFloat(r[sec.col] || 0));
+    });
+    chart.update();
+  }
+
+  function applyDashboardFilter() {
+    const registros = filterRegistros();
+    renderTable(registros);
+    renderChart(registros);
+  }
+
+  document.getElementById('db-f-aplicar').addEventListener('click', applyDashboardFilter);
+  document.getElementById('db-f-limpiar').addEventListener('click', () => {
+    document.getElementById('db-f-desde').value = '';
+    document.getElementById('db-f-hasta').value = '';
+    renderTable(CHART_DATA.registros);
+    renderChart(CHART_DATA.registros);
   });
-})();
+
+  renderTable(CHART_DATA.registros);})();
 </script>
 
 {% else %}

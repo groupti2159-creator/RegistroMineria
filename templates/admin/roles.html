@@ -511,6 +511,10 @@
 // Variables globales
 window.tabsActivas = {};
 
+function slugCategoria(categoria) {
+    return String(categoria || '').replace(/\s+/g, '-').replace(/'/g, '');
+}
+
 // Función principal para renderizar roles
 function renderRoles(roles, modulos) {
     const container = document.getElementById('rolesContainer');
@@ -574,6 +578,8 @@ function renderRoles(roles, modulos) {
     }, 50);
 }
 
+window.renderRoles = renderRoles;
+
 function renderRolCard(rol, modulosPorCategoria, categorias) {
     const permisosCount = rol.permisos ? Object.keys(rol.permisos).length : 0;
     
@@ -599,10 +605,10 @@ function renderRolCard(rol, modulosPorCategoria, categorias) {
                     </div>
                 </div>
                 <div class="role-actions">
-                    <button class="btn-icon" onclick="event.stopPropagation(); editarRol(${rol.id}, '${escapeHtml(rol.nombre)}', '${escapeHtml(rol.descripcion || '')}')" title="Editar rol">
+                    <button class="btn-icon" onclick="event.stopPropagation(); editarRol(${rol.id}, ${JSON.stringify(rol.nombre)}, ${JSON.stringify(rol.descripcion || '')})" title="Editar rol">
                         <i data-feather="edit-2"></i>
                     </button>
-                    <button class="btn-icon btn-red" onclick="event.stopPropagation(); eliminarRol(${rol.id}, '${escapeHtml(rol.nombre)}')" title="Eliminar rol">
+                    <button class="btn-icon btn-red" onclick="event.stopPropagation(); eliminarRol(${rol.id}, ${JSON.stringify(rol.nombre)})" title="Eliminar rol">
                         <i data-feather="trash-2"></i>
                     </button>
                     <button class="btn btn-primary" onclick="event.stopPropagation(); guardarPermisos(${rol.id})">
@@ -624,14 +630,14 @@ function renderRolCard(rol, modulosPorCategoria, categorias) {
                 </div>
                 <div class="categorias-tabs">
                     ${categorias.map(cat => `
-                        <div class="tab-categoria" data-rol="${rol.id}" data-categoria="${cat.replace(/'/g, "\\'")}" 
-                             onclick="cambiarTab(${rol.id}, '${cat.replace(/'/g, "\\'")}')">
+                        <div class="tab-categoria" data-rol="${rol.id}" data-categoria="${escapeAttr(cat)}" 
+                             onclick="cambiarTab(${rol.id}, ${JSON.stringify(cat)})">
                             ${escapeHtml(cat)}
                         </div>
                     `).join('')}
                 </div>
                 ${categorias.map(cat => `
-                    <div class="permisos-container" id="permisos-${rol.id}-${cat.replace(/\s/g, '-').replace(/'/g, '')}" data-rol="${rol.id}" data-categoria="${cat}">
+                    <div class="permisos-container" id="permisos-${rol.id}-${slugCategoria(cat)}" data-rol="${rol.id}" data-categoria="${escapeAttr(cat)}">
                         <div class="permisos-horizontal">
                             ${renderPermisosHorizontales(modulosPorCategoria[cat] || [], rol.permisos || {})}
                         </div>
@@ -687,7 +693,7 @@ function seleccionarTodos(rolId, seleccionar) {
     const categoriaActiva = window.tabsActivas[rolId];
     if (!categoriaActiva) return;
     
-    const container = document.getElementById(`permisos-${rolId}-${categoriaActiva.replace(/\s/g, '-')}`);
+    const container = document.getElementById(`permisos-${rolId}-${slugCategoria(categoriaActiva)}`);
     if (!container) return;
     
     const checkboxes = container.querySelectorAll('input[type="checkbox"]');
@@ -722,6 +728,10 @@ function cambiarPermiso(moduloId, activado, checkboxElement) {
 
 async function guardarPermisos(rolId) {
     try {
+        if (!window.proyectoActual) {
+            mostrarToast('Primero selecciona un proyecto', 'error');
+            return;
+        }
         // Recopilar todos los checkboxes marcados para este rol
         const modulosSeleccionados = [];
         
@@ -747,7 +757,13 @@ async function guardarPermisos(rolId) {
             })
         });
         
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            mostrarToast('Respuesta inválida del servidor (' + response.status + ')', 'error');
+            return;
+        }
         
         if (result.success) {
             mostrarToast('Permisos guardados correctamente', 'success');
@@ -756,7 +772,7 @@ async function guardarPermisos(rolId) {
                 await window.cargarRolesYModulos(window.proyectoActual);
             }
         } else {
-            mostrarToast('Error: ' + result.error, 'error');
+            mostrarToast('Error: ' + (result.error || response.statusText || 'desconocido'), 'error');
         }
         
     } catch (error) {
@@ -819,8 +835,8 @@ async function actualizarRol(rolId) {
         return;
     }
     
-    // Deshabilitar botón mientras se procesa
-    const btnActualizar = event.target;
+    const btnActualizar = document.querySelector('#modalNuevoRol .modal-footer .btn-primary');
+    if (!btnActualizar) return;
     const textoOriginal = btnActualizar.innerHTML;
     btnActualizar.disabled = true;
     btnActualizar.innerHTML = '<i data-feather="loader" style="width: 16px; height: 16px; margin-right: 6px; animation: spin 1s linear infinite;"></i> Actualizando...';
@@ -936,6 +952,15 @@ function escapeHtml(str) {
     });
 }
 
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;');
+}
+
 function abrirModalNuevoRol() {
     // Validar que haya un proyecto seleccionado
     if (!window.proyectoActual) {
@@ -1007,7 +1032,16 @@ async function crearNuevoRol() {
             })
         });
         
-        const result = await response.json();
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            mostrarToast('Respuesta inválida del servidor (' + response.status + ')', 'error');
+            btnCrear.disabled = false;
+            btnCrear.innerHTML = textoOriginal;
+            feather.replace();
+            return;
+        }
         
         if (result.success) {
             cerrarModalNuevoRol();
@@ -1018,7 +1052,7 @@ async function crearNuevoRol() {
                 await window.cargarRolesYModulos(window.proyectoActual);
             }
         } else {
-            mostrarToast('Error: ' + result.error, 'error');
+            mostrarToast('Error: ' + (result.error || 'desconocido'), 'error');
             btnCrear.disabled = false;
             btnCrear.innerHTML = textoOriginal;
             feather.replace();

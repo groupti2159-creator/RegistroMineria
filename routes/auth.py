@@ -122,6 +122,7 @@ def set_session(user):
     session['rol'] = rol_nombre
     session['rol_id'] = rol_id
     session['area_id'] = user.get('idarea')
+    session['area_nombre'] = user.get('area_nombre')
     session['cargo'] = user.get('cargo')
     session['proyecto_id'] = proyecto_id
     session['proyecto_nombre'] = user.get('nombreproyecto')
@@ -192,12 +193,14 @@ def login():
                             u.idusuario,
                             u.nombrecompleto,
                             ur.idarea,
+                            a.nombre AS area_nombre,
                             ur.cargo,
                             ur.idproyecto,
                             p.nombre AS nombreproyecto
                         FROM tbl_usuariorol ur
                         JOIN tbl_roles r ON r.idroles = ur.idroles
                         JOIN tbl_usuario u ON u.idusuario = ur.idusuario
+                        LEFT JOIN tbl_area a ON a.idarea = ur.idarea
                         LEFT JOIN tbl_proyecto p ON p.idproyecto = ur.idproyecto
                         WHERE u.idusuario = %s AND u.activo = 1
                     """, (user.get('idusuario'),))
@@ -215,6 +218,7 @@ def login():
                                     'idroles': r['idroles'],
                                     'nombrerol': r['nombrerol'],
                                     'idarea': r.get('idarea'),
+                                    'area_nombre': r.get('area_nombre'),
                                     'cargo': r.get('cargo'),
                                     'idproyecto': r.get('idproyecto'),
                                     'nombreproyecto': r.get('nombreproyecto')
@@ -230,6 +234,7 @@ def login():
                         user['idroles'] = roles[0].get('idroles') if roles else None
                         user['nombrerol'] = roles[0].get('nombrerol') if roles else None
                         user['idarea'] = roles[0].get('idarea') if roles else None
+                        user['area_nombre'] = roles[0].get('area_nombre') if roles else None
                         user['cargo'] = roles[0].get('cargo') if roles else None
                         user['idproyecto'] = roles[0].get('idproyecto') if roles else None
                         user['nombreproyecto'] = roles[0].get('nombreproyecto') if roles else None
@@ -287,6 +292,7 @@ def seleccionar_rol():
             'idroles': rol_elegido['idroles'],
             'nombrerol': rol_elegido['nombrerol'],
             'idarea': rol_elegido.get('idarea'),
+            'area_nombre': rol_elegido.get('area_nombre'),
             'cargo': rol_elegido.get('cargo'),
             'idproyecto': rol_elegido.get('idproyecto'),
             'nombreproyecto': rol_elegido.get('nombreproyecto')

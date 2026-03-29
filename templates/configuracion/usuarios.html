@@ -69,9 +69,9 @@
 .users-table-container {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
+    /* border: 1px solid var(--border); */
     overflow: hidden;
-    margin-bottom: 2rem;
+ 
 }
 
 .users-table {
@@ -80,6 +80,43 @@
     border-spacing: 0;
     table-layout: fixed;
 }
+
+.data-table {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.data-table th,
+.data-table td {
+    padding: .85rem 1rem;
+}
+
+.data-table td {
+    word-break: break-word;
+    white-space: normal;
+}
+
+.data-table tbody tr:hover {
+    background: var(--gray-100);
+    transform: none;
+    box-shadow: none;
+}
+
+.data-table tbody tr:hover td:first-child {
+    border-left: none;
+    padding-left: 1rem;
+}
+
+.data-table tbody td {
+    border-bottom: 1px solid var(--border);
+}
+
+.users-table thead th:nth-child(1) { width: 24%; }
+.users-table thead th:nth-child(2) { width: 21%; }
+.users-table thead th:nth-child(3) { width: 20%; }
+.users-table thead th:nth-child(4) { width: 13%; }
+.users-table thead th:nth-child(5) { width: 11%; }
+.users-table thead th:nth-child(6) { width: 11%; }
 
 .users-table thead {
     background: var(--gray-100);
@@ -262,7 +299,7 @@
 }
 
 /* Botones de acción */
-.action-buttons {
+/*.action-buttons {
     display: flex;
     gap: .5rem;
 }
@@ -316,6 +353,24 @@
     padding: .6rem .85rem;
 }
 
+/* Modal de Detalles de Usuario */
+.details-info {
+    flex: 1;
+}
+
+.details-info h3 {
+    color: var(--text);
+    font-size: 1rem;
+    font-weight: 700;
+    margin: 0 0 .25rem 0;
+}
+
+.details-info p {
+    color: var(--text-muted);
+    font-size: .85rem;
+    margin: 0;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .search-bar {
@@ -335,10 +390,7 @@
         min-width: 800px;
     }
     
-    .action-buttons {
-        flex-direction: column;
-        gap: .25rem;
-    }
+
 }
 
 @media (max-width: 480px) {
@@ -395,8 +447,8 @@
     </div>
 
     <!-- Tabla de usuarios -->
-    <div style="overflow-x: auto;">
-        <table class="data-table" id="tablaUsuarios">
+    <div class="users-table-container">
+        <table class="data-table users-table" id="tablaUsuarios">
             <thead>
                 <tr>
                     <th>Usuario</th>
@@ -404,7 +456,7 @@
                     <th>Roles</th>
                     <th>Proyectos</th>
                     <th>Estado</th>
-                    <th style="text-align: center;">Acciones</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -458,7 +510,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <div class="action-buttons" style="justify-content: center;">
+                        <div class="action-buttons">
                             <button class="btn-icon" onclick="verDetalles('{{ usuario.idusuario }}')" 
                                     title="Ver detalles">
                                 <i data-feather="eye" style="width: 18px; height: 18px;"></i>
@@ -468,7 +520,7 @@
                                 <i data-feather="edit-2" style="width: 18px; height: 18px;"></i>
                             </button>
                             <button class="btn-icon btn-icon-danger" onclick="eliminarUsuario('{{ usuario.idusuario }}')" 
-                                    title="Eliminar">
+                                    title="Desactivar">
                                 <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
                             </button>
                         </div>
@@ -489,7 +541,7 @@
                     <i data-feather="user-plus"></i>
                 </span>
                 <div>
-                    <h3><i data-feather="user-plus"></i> Crear Nuevo Usuario</h3>
+                    <h3 id="modalTitle"><i data-feather="user-plus"></i> Crear Nuevo Usuario</h3>
                     <p>Completa todos los campos obligatorios (*)</p>
                 </div>
             </div>
@@ -522,8 +574,17 @@
                             <input type="email" id="correo" placeholder="usuario@ejemplo.com" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">CONTRASEÑA *</label>
-                            <input type="password" id="password" required placeholder="Mínimo 6 caracteres" class="form-input">
+                            <label class="form-label">CONTRASEÑA</label>
+                            <input type="password" id="password" placeholder="Mínimo 6 caracteres (dejar vacío para no cambiar)" class="form-input">
+                        </div>
+                    </div>
+                    <div class="form-row" style="gap: 1.25rem;">
+                        <div class="form-group" style="flex: 1;">
+                            <label class="form-label">ESTADO</label>
+                            <select id="activo" class="form-select">
+                                <option value="1">Activo</option>
+                                <option value="0">Inactivo</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -549,7 +610,7 @@
                 <i data-feather="x"></i>
                 Cancelar
             </button>
-            <button class="btn btn-primary btn-lg" onclick="guardarUsuario()">
+            <button type="button" id="guardarUsuarioBtn" class="btn btn-primary btn-lg" onclick="guardarUsuario()">
                 <i data-feather="save"></i>
                 Guardar Usuario
             </button>
@@ -557,39 +618,186 @@
     </div>
 </div>
 
+<!-- Modal Detalles Usuario -->
+<!-- Modal Detalles Usuario -->
+<div class="modal-overlay" id="modalDetallesUsuario">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <span class="modal-icon-btn">
+          <i data-feather="user"></i>
+        </span>
+        <div>
+          <h3>Detalles del Usuario</h3>
+          <p id="detallesSubtitle">Ver información del usuario</p>
+        </div>
+      </div>
+      <button class="modal-close" onclick="document.getElementById('modalDetallesUsuario').classList.remove('open')">
+        <i data-feather="x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+
+      <!-- Datos básicos -->
+      <div class="form-section">
+        <h4 class="form-section-title">
+          <i data-feather="user"></i> Datos Básicos
+        </h4>
+        <div class="form-row" style="gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">DNI</label>
+            <div id="detallesDni" class="form-input" style="background: var(--gray-100);">--</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Nombre Completo</label>
+            <div id="detallesNombre" class="form-input" style="background: var(--gray-100);">--</div>
+          </div>
+        </div>
+        <div class="form-row" style="gap: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Correo</label>
+            <div id="detallesCorreo" class="form-input" style="background: var(--gray-100);">--</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Estado</label>
+            <div id="detallesEstado">--</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Asignaciones -->
+      <div class="form-section">
+        <h4 class="form-section-title">
+          <i data-feather="briefcase"></i> Proyectos Asignados
+        </h4>
+        <div id="detallesAsignaciones">
+          <p style="color: var(--text-muted); font-size: .85rem;">Sin asignaciones</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
 <script>
-// Función de búsqueda
 function filtrarUsuarios() {
-    const input = document.getElementById('searchInput');
-    const filter = input.value.toLowerCase();
-    const table = document.getElementById('tablaUsuarios');
-    const rows = table.getElementsByTagName('tr');
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+    const rows = document.getElementById('tablaUsuarios').getElementsByTagName('tr');
     let visibleCount = 0;
     
     for (let i = 1; i < rows.length; i++) {
-        const row = rows[i];
-        const text = row.textContent.toLowerCase();
-        
-        if (text.includes(filter)) {
-            row.style.display = '';
-            visibleCount++;
-        } else {
-            row.style.display = 'none';
-        }
+        const visible = rows[i].textContent.toLowerCase().includes(filter);
+        rows[i].style.display = visible ? '' : 'none';
+        if (visible) visibleCount++;
     }
     
     document.getElementById('totalUsuarios').textContent = visibleCount;
 }
 
-// Placeholder para funciones que faltan
-function editarUsuario(dni) {
-    alert('Función de editar usuario en desarrollo. DNI: ' + dni);
+async function verDetalles(dni) {
+    try {
+        const response = await fetch(`/admin/usuarios/detalle/${dni}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) return;
+
+        const u = data.usuario;
+        document.getElementById('detallesDni').textContent = u.idusuario || '--';
+        document.getElementById('detallesNombre').textContent = u.nombrecompleto || '--';
+        document.getElementById('detallesCorreo').textContent = u.correo || '-';
+        document.getElementById('detallesSubtitle').textContent = `DNI: ${u.idusuario}`;
+        document.getElementById('detallesEstado').innerHTML = u.activo
+            ? '<span class="status-badge status-active"><span class="status-dot"></span>Activo</span>'
+            : '<span class="status-badge status-inactive"><span class="status-dot"></span>Inactivo</span>';
+
+        const asignContainer = document.getElementById('detallesAsignaciones');
+        asignContainer.innerHTML = (data.asignaciones?.length)
+            ? data.asignaciones.map(a => `
+                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;">
+                    <div style="font-weight:600;color:var(--text);margin-bottom:.5rem;">
+                        ${a.proyecto_nombre || a.proyecto_codigo || 'Proyecto'}
+                    </div>
+                    <div style="color:var(--text-muted);font-size:.85rem;line-height:1.5;">
+                        <div><strong>Rol:</strong> ${a.nombrerol || '-'}</div>
+                        <div><strong>Área:</strong> ${a.area_nombre || '-'}</div>
+                        <div><strong>Cargo:</strong> ${a.cargo || '-'}</div>
+                    </div>
+                </div>`).join('')
+            : '<p style="color:var(--text-muted);font-size:.85rem;">Sin asignaciones</p>';
+
+        document.getElementById('modalDetallesUsuario').classList.add('open');
+        if (typeof feather !== 'undefined') feather.replace();
+
+    } catch (error) {
+        console.error('Error al cargar detalles:', error);
+        mostrarNotificacion('Error al cargar detalles del usuario', 'error');
+    }
 }
 
-function eliminarUsuario(dni) {
-    if (confirm('¿Está seguro de eliminar este usuario?')) {
-        alert('Función de eliminar usuario en desarrollo. DNI: ' + dni);
+function editarUsuario(dni) {
+    if (typeof abrirModalEditar === 'function') abrirModalEditar(dni);
+}
+
+async function eliminarUsuario(dni) {
+    // Modal de confirmación personalizado en lugar de confirm()
+    const confirmado = await mostrarConfirmacion(
+        '¿Desactivar usuario?',
+        'El usuario podrá ser reactivado editando su estado.'
+    );
+    if (!confirmado) return;
+
+    try {
+        const response = await fetch(`/admin/usuarios/eliminar/${dni}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || 'No se pudo desactivar el usuario');
+        }
+        mostrarNotificacion(result.message || 'Usuario desactivado correctamente', 'success');
+        setTimeout(() => location.reload(), 1500);
+    } catch (error) {
+        console.error(error);
+        mostrarNotificacion('Error al desactivar usuario: ' + (error.message || error), 'error');
     }
+}
+
+// Confirmación personalizada (reemplaza confirm() nativo)
+function mostrarConfirmacion(titulo, mensaje) {
+    return new Promise(resolve => {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position:fixed;inset:0;background:rgba(0,0,0,0.5);
+            z-index:99999;display:flex;align-items:center;justify-content:center;
+        `;
+        overlay.innerHTML = `
+            <div style="background:var(--bg-card);border:1px solid var(--border);
+                        border-radius:var(--radius-lg);padding:1.5rem;max-width:400px;
+                        width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+                <h4 style="margin:0 0 .5rem;color:var(--text);font-size:1rem;">${titulo}</h4>
+                <p style="margin:0 0 1.25rem;color:var(--text-muted);font-size:.875rem;">${mensaje}</p>
+                <div style="display:flex;gap:.75rem;justify-content:flex-end;">
+                    <button id="btnCancelarConfirm" class="btn btn-secondary">Cancelar</button>
+                    <button id="btnAceptarConfirm" class="btn btn-primary" 
+                            style="background:var(--red,#ef4444);border-color:var(--red,#ef4444);">
+                        Desactivar
+                    </button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+
+        overlay.querySelector('#btnAceptarConfirm').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(true);
+        };
+        overlay.querySelector('#btnCancelarConfirm').onclick = () => {
+            document.body.removeChild(overlay);
+            resolve(false);
+        };
+    });
 }
 </script>
 

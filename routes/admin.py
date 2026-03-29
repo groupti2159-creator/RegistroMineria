@@ -1,8 +1,19 @@
-﻿from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, session, jsonify
 from extensions import mysql
 from utils.helpers import admin_required, modulo_required, get_notif_count, sp_exec, sp_one, md5
 
 admin_bp = Blueprint('admin', __name__)
+
+
+def _borrar_notificaciones_por_usuariorol(cur, ids):
+    """Elimina notificaciones ligadas a filas de tbl_usuariorol (FK fk_notif_ur)."""
+    if not ids:
+        return
+    ph = ','.join(['%s'] * len(ids))
+    cur.execute(
+        f'DELETE FROM tbl_notificacion WHERE idusuariorol IN ({ph})',
+        tuple(ids),
+    )
 
 
 # ── Configuración — Dashboard ─────────────────────────────────────────────────
@@ -201,6 +212,149 @@ def usuarios_crear_nuevo():
         finally:
             cur.close()
             
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/usuarios/detalle/<dni>')
+@admin_required
+def usuarios_detalle(dni):
+    try:
+        cur = mysql.connection.cursor()
+        usuario = sp_one(cur, 'sp_detalleusuario', (dni,))
+        cur.close()
+
+        if not usuario:
+            return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
+
+        cur = mysql.connection.cursor()
+        asignaciones = sp_exec(cur, 'sp_asignacionesusuario', (dni,))
+        cur.close()
+
+        def serialize(row):
+            if row is None:
+                return {}
+            return {
+                k.lower(): (v.strftime('%Y-%m-%d') if hasattr(v, 'strftime') else (v if v is not None else ''))
+                for k, v in row.items()
+            }
+
+        return jsonify({
+            'success': True,
+            'usuario': serialize(usuario),
+            'asignaciones': [serialize(a) for a in asignaciones]
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/usuarios/editar/<dni>', methods=['POST'])
+@admin_required
+def usuarios_editar(dni):
+    try:
+        data = request.get_json() or {}
+        nombre = data.get('nombre', '').strip()
+        correo = data.get('correo', None)
+        correo = correo.strip() if isinstance(correo, str) else correo
+        if correo == '':
+            correo = None
+        activo = 1
+        try:
+            activo = int(data.get('activo', 1))
+        except Exception:
+            activo = 1
+        password = data.get('password', '').strip()
+
+        if not nombre:
+            return jsonify({'success': False, 'error': 'El nombre completo es requerido'}), 400
+
+        cur = mysql.connection.cursor()
+        try:
+            # ✅ CALL directo + consumir resultset del SP
+            cur.execute("CALL SP_ActualizarUsuario(%s, %s, %s, %s, %s)",
+                        (dni, nombre, correo, activo, password or None))
+            cur.fetchall()
+            while cur.nextset():
+                pass
+
+            # Asignaciones (sin cambios)
+            asignaciones = data.get('asignaciones')
+            if isinstance(asignaciones, list):
+                if len(asignaciones) == 0:
+                    cur.execute("SELECT idusuariorol FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+                    ids_quitar = [row['idusuariorol'] for row in cur.fetchall()]
+                    _borrar_notificaciones_por_usuariorol(cur, ids_quitar)
+                    cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+                else:
+                    kept_ids = []
+                    for asig in asignaciones:
+                        iur = asig.get('idusuariorol')
+                        if iur is not None and str(iur).strip() != '':
+                            try:
+                                kept_ids.append(int(iur))
+                            except (TypeError, ValueError):
+                                pass
+                    if kept_ids:
+                        ph = ",".join(["%s"] * len(kept_ids))
+                        cur.execute(
+                            f"SELECT idusuariorol FROM tbl_usuariorol WHERE idusuario = %s AND idusuariorol NOT IN ({ph})",
+                            (dni, *kept_ids),
+                        )
+                        ids_quitar = [row['idusuariorol'] for row in cur.fetchall()]
+                        _borrar_notificaciones_por_usuariorol(cur, ids_quitar)
+                        cur.execute(
+                            f"DELETE FROM tbl_usuariorol WHERE idusuario = %s AND idusuariorol NOT IN ({ph})",
+                            (dni, *kept_ids),
+                        )
+                    else:
+                        cur.execute("SELECT idusuariorol FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+                        ids_quitar = [row['idusuariorol'] for row in cur.fetchall()]
+                        _borrar_notificaciones_por_usuariorol(cur, ids_quitar)
+                        cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+
+                for asig in asignaciones:
+                    proyecto_id = asig.get('proyecto_id')
+                    rol_id = asig.get('rol_id')
+                    area_id = asig.get('area_id')
+                    cargo = asig.get('cargo', '').strip() or None
+                    idusuariorol = asig.get('idusuariorol')
+                    if not proyecto_id or not rol_id:
+                        continue
+                    if idusuariorol:
+                        cur.execute("""
+                            UPDATE tbl_usuariorol
+                            SET idproyecto = %s, idroles = %s, idarea = %s, cargo = %s
+                            WHERE idusuariorol = %s AND idusuario = %s
+                        """, (proyecto_id, rol_id, area_id, cargo, idusuariorol, dni))
+                    else:
+                        cur.execute("""
+                            INSERT INTO tbl_usuariorol (idusuario, idproyecto, idroles, idarea, cargo)
+                            VALUES (%s, %s, %s, %s, %s)
+                        """, (dni, proyecto_id, rol_id, area_id, cargo))
+
+            mysql.connection.commit()
+
+        except Exception as e:
+            mysql.connection.rollback()
+            import traceback
+            traceback.print_exc()
+            raise
+        finally:
+            cur.close()
+
+        return jsonify({'success': True, 'message': 'Usuario actualizado correctamente'})
+
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+@admin_bp.route('/usuarios/eliminar/<dni>', methods=['POST'])
+@admin_required
+def usuarios_eliminar(dni):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("UPDATE tbl_usuario SET activo = 0 WHERE idusuario = %s", (dni,))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True, 'message': 'Usuario desactivado correctamente'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 

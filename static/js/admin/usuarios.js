@@ -1,13 +1,100 @@
-// Formulario simple de creación de usuarios
+// Formulario simple de creación y edición de usuarios
+// mostrarNotificacion: en otras pantallas viene de desvíos/ajax_handler.js; aquí no se carga ese script.
+
+if (typeof window.mostrarNotificacion !== 'function') {
+    window.mostrarNotificacion = function (mensaje, tipo = 'success') {
+        const notif = document.createElement('div');
+        notif.className = 'ajax-notificacion notif-' + tipo;
+        const icon = tipo === 'success' ? 'check-circle' : tipo === 'error' ? 'x-circle' : 'info';
+        notif.innerHTML = '<i data-feather="' + icon + '"></i><span>' + String(mensaje) + '</span>';
+        document.body.appendChild(notif);
+        if (typeof feather !== 'undefined') feather.replace();
+        setTimeout(function () {
+            notif.classList.add('fade-out');
+            setTimeout(function () { notif.remove(); }, 300);
+        }, 4000);
+    };
+}
 
 let proyectosAgregados = [];
+let usuarioEditando = null;
+
+function setGuardarUsuarioLoading(loading) {
+    const btn = document.getElementById('guardarUsuarioBtn');
+    if (!btn) return;
+    btn.disabled = !!loading;
+    btn.setAttribute('aria-busy', loading ? 'true' : 'false');
+}
 
 function abrirModalCrear() {
+    usuarioEditando = null;
     const modal = document.getElementById('modalCrearUsuario');
     modal.classList.add('open');
     proyectosAgregados = [];
     document.getElementById('formCrearUsuario').reset();
     document.getElementById('proyectos-container').innerHTML = '';
+    document.getElementById('modalTitle').innerHTML = '<i data-feather="user-plus"></i> Crear Nuevo Usuario';
+    document.getElementById('guardarUsuarioBtn').textContent = 'Guardar Usuario';
+    document.getElementById('dni').disabled = false;
+    document.getElementById('activo').value = '1';
+    setGuardarUsuarioLoading(false);
+    if (typeof feather !== 'undefined') feather.replace();
+}
+
+async function abrirModalEditar(dni) {
+    setGuardarUsuarioLoading(true);
+    try {
+        const response = await fetch(`/admin/usuarios/detalle/${encodeURIComponent(dni)}`);
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'No se pudo cargar el usuario');
+        }
+
+        const u = data.usuario;
+        usuarioEditando = dni;
+
+        const modal = document.getElementById('modalCrearUsuario');
+        modal.classList.add('open');
+        proyectosAgregados = [];
+        document.getElementById('formCrearUsuario').reset();
+        document.getElementById('proyectos-container').innerHTML = '';
+        document.getElementById('modalTitle').innerHTML = '<i data-feather="user-plus"></i> Editar Usuario';
+        document.getElementById('guardarUsuarioBtn').textContent = 'Guardar Cambios';
+        document.getElementById('dni').value = u.idusuario || '';
+        document.getElementById('dni').disabled = true;
+        document.getElementById('nombre').value = u.nombrecompleto || '';
+        document.getElementById('correo').value = u.correo || '';
+        document.getElementById('password').value = '';
+        document.getElementById('activo').value = u.activo ? '1' : '0';
+
+        const bloques = [];
+        if (Array.isArray(data.asignaciones) && data.asignaciones.length) {
+            for (const asig of data.asignaciones) {
+                bloques.push(
+                    agregarProyecto({
+                        proyecto_id: asig.idproyecto,
+                        rol_id: asig.idroles,
+                        area_id: asig.idarea,
+                        cargo: asig.cargo || '',
+                        idusuariorol: asig.idusuariorol
+                    })
+                );
+            }
+        } else {
+            bloques.push(agregarProyecto());
+        }
+
+        await Promise.all(bloques);
+
+        if (typeof feather !== 'undefined') feather.replace();
+    } catch (err) {
+        console.error('Error al cargar usuario:', err);
+        mostrarNotificacion(err.message || 'Error al cargar datos del usuario', 'error');
+        const modal = document.getElementById('modalCrearUsuario');
+        if (modal) modal.classList.remove('open');
+    } finally {
+        setGuardarUsuarioLoading(false);
+    }
 }
 
 function cerrarModal() {
@@ -15,7 +102,7 @@ function cerrarModal() {
     modal.classList.remove('open');
 }
 
-function agregarProyecto() {
+function agregarProyecto(asignacion) {
     const container = document.getElementById('proyectos-container');
     const index = proyectosAgregados.length;
     
@@ -33,7 +120,6 @@ function agregarProyecto() {
                 Eliminar
             </button>
         </div>
-        
         <div class="form-row" style="gap: 1.25rem;">
             <div class="form-group">
                 <label class="form-label">PROYECTO *</label>
@@ -48,8 +134,8 @@ function agregarProyecto() {
                 </select>
             </div>
         </div>
-        
         <div class="form-row" style="gap: 1.25rem;">
+            <input type="hidden" id="idusuariorol_${index}" value="${asignacion?.idusuariorol || ''}">
             <div class="form-group">
                 <label class="form-label">ÁREA *</label>
                 <select id="area_${index}" class="form-select" required>
@@ -66,86 +152,100 @@ function agregarProyecto() {
     container.appendChild(proyectoDiv);
     proyectosAgregados.push({});
     
-    // Reemplazar iconos de feather
-    if (typeof feather !== 'undefined') {
-        feather.replace();
-    }
+    if (typeof feather !== 'undefined') feather.replace();
     
-    // Cargar datos
-    cargarProyectos(index);
-    cargarRoles(index);
-    cargarAreas(index);
+    const hid = asignacion?.idusuariorol;
+    if (hid != null && hid !== '') {
+        const h = document.getElementById(`idusuariorol_${index}`);
+        if (h) h.value = String(hid);
+    }
+
+    const p = cargarProyectos(index, asignacion?.proyecto_id);
+    const r = cargarRoles(index, asignacion?.rol_id);
+    const a = cargarAreas(index, asignacion?.area_id);
+    if (asignacion?.cargo) {
+        const c = document.getElementById(`cargo_${index}`);
+        if (c) c.value = asignacion.cargo;
+    }
+    return Promise.all([p, r, a]);
 }
 
 function eliminarProyecto(index) {
     const item = document.querySelector(`.proyecto-item[data-index="${index}"]`);
-    if (item) {
-        item.remove();
-    }
+    if (item) item.remove();
     proyectosAgregados.splice(index, 1);
     
-    // Reindexar
-    document.querySelectorAll('.proyecto-item').forEach((item, newIndex) => {
-        item.dataset.index = newIndex;
-        const headerStrong = item.querySelector('.proyecto-item-header strong');
+    document.querySelectorAll('.proyecto-item').forEach((row, newIndex) => {
+        row.dataset.index = newIndex;
+        const headerStrong = row.querySelector('.proyecto-item-header strong');
         if (headerStrong) {
             headerStrong.innerHTML = `<i data-feather="folder" style="width: 16px; height: 16px; vertical-align: middle; margin-right: .35rem;"></i>Proyecto ${newIndex + 1}`;
         }
-        const btnEliminar = item.querySelector('.btn');
+        const btnEliminar = row.querySelector('.proyecto-item-header .btn');
         if (btnEliminar) {
             btnEliminar.setAttribute('onclick', `eliminarProyecto(${newIndex})`);
         }
+        const proyecto = row.querySelector('[id^="proyecto_"]');
+        const rol = row.querySelector('[id^="rol_"]');
+        const area = row.querySelector('[id^="area_"]');
+        const cargo = row.querySelector('[id^="cargo_"]');
+        const hid = row.querySelector('[id^="idusuariorol_"]');
+        if (proyecto) proyecto.id = `proyecto_${newIndex}`;
+        if (rol) rol.id = `rol_${newIndex}`;
+        if (area) area.id = `area_${newIndex}`;
+        if (cargo) cargo.id = `cargo_${newIndex}`;
+        if (hid) hid.id = `idusuariorol_${newIndex}`;
     });
     
-    // Reemplazar iconos de feather
-    if (typeof feather !== 'undefined') {
-        feather.replace();
-    }
+    if (typeof feather !== 'undefined') feather.replace();
 }
 
-function cargarProyectos(index) {
-    fetch('/admin/roles/proyectos')
+function cargarProyectos(index, selectedId) {
+    return fetch('/admin/roles/proyectos')
         .then(r => r.json())
         .then(data => {
             const select = document.getElementById(`proyecto_${index}`);
             if (!select) return;
-            
             select.innerHTML = '<option value="">Seleccionar...</option>';
             data.proyectos.forEach(p => {
                 select.innerHTML += `<option value="${p.idproyecto}">${p.nombre}</option>`;
             });
-        })
-        .catch(err => console.error('Error:', err));
+            if (selectedId != null && selectedId !== '') {
+                select.value = String(selectedId);
+            }
+        });
 }
 
-function cargarRoles(index) {
-    fetch('/admin/usuarios/roles')
+function cargarRoles(index, selectedId) {
+    return fetch('/admin/usuarios/roles')
         .then(r => r.json())
         .then(data => {
             const select = document.getElementById(`rol_${index}`);
             if (!select) return;
-            
             select.innerHTML = '<option value="">Seleccionar...</option>';
             data.forEach(r => {
                 select.innerHTML += `<option value="${r.idroles}">${r.nombrerol}</option>`;
             });
-        })
-        .catch(err => console.error('Error:', err));
+            if (selectedId != null && selectedId !== '') {
+                select.value = String(selectedId);
+            }
+        });
 }
 
-function cargarAreas(index) {
-    fetch('/admin/usuarios/areas')
+function cargarAreas(index, selectedId) {
+    return fetch('/admin/usuarios/areas')
         .then(r => r.json())
         .then(data => {
             const select = document.getElementById(`area_${index}`);
             if (!select) return;
-            
             select.innerHTML = '<option value="">Seleccionar...</option>';
             data.forEach(a => {
                 select.innerHTML += `<option value="${a.idarea}">${a.nombrearea}</option>`;
             });
-        })
-        .catch(err => console.error('Error:', err));
+            if (selectedId != null && selectedId !== '') {
+                select.value = String(selectedId);
+            }
+        });
 }
 
 function guardarUsuario() {
@@ -153,70 +253,96 @@ function guardarUsuario() {
     const nombre = document.getElementById('nombre').value.trim();
     const correo = document.getElementById('correo').value.trim();
     const password = document.getElementById('password').value;
-    
-    if (!dni || !nombre || !password) {
-        alert('DNI, nombre y contraseña son obligatorios');
+    const activo = document.getElementById('activo').value;
+    const isEdit = usuarioEditando !== null;
+
+    if (!nombre) {
+        mostrarNotificacion('El nombre completo es obligatorio', 'error');
         return;
     }
-    
-    if (proyectosAgregados.length === 0) {
-        alert('Debes agregar al menos un proyecto');
+    if (!isEdit && !dni) {
+        mostrarNotificacion('El DNI es obligatorio', 'error');
         return;
     }
-    
-    // Recopilar asignaciones
+    if (!isEdit && password.length < 6) {
+        mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+    if (isEdit && password.length > 0 && password.length < 6) {
+        mostrarNotificacion('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+        return;
+    }
+
     const asignaciones = [];
-    for (let i = 0; i < proyectosAgregados.length; i++) {
-        const proyecto = document.getElementById(`proyecto_${i}`)?.value;
-        const rol = document.getElementById(`rol_${i}`)?.value;
-        const area = document.getElementById(`area_${i}`)?.value;
-        const cargo = document.getElementById(`cargo_${i}`)?.value;
-        
+    const items = document.querySelectorAll('#proyectos-container .proyecto-item');
+    for (const item of items) {
+        const selects = item.querySelectorAll('.form-select');
+        const proyecto = selects[0]?.value ?? '';
+        const rol = selects[1]?.value ?? '';
+        const area = selects[2]?.value ?? '';
+        const cargoEl = item.querySelector('input[id^="cargo_"]');
+        const cargo = (cargoEl?.value ?? '').trim();
+        const hid = item.querySelector('input[type="hidden"]');
+        let idusuariorol = (hid?.value ?? '').trim() || null;
+
+        if (!proyecto && !rol && !area && !cargo) continue;
+
         if (!proyecto || !rol || !area || !cargo) {
-            alert('Completa todos los campos de los proyectos');
+            mostrarNotificacion('Completa todos los campos del proyecto o elimina el bloque incompleto', 'error');
             return;
         }
-        
-        asignaciones.push({
-            proyecto_id: proyecto,
-            rol_id: rol,
-            area_id: area,
-            cargo: cargo,
-            modulos: [] // Por ahora sin módulos
-        });
+
+        asignaciones.push({ idusuariorol, proyecto_id: proyecto, rol_id: rol, area_id: area, cargo });
     }
-    
+
+    if (!isEdit && asignaciones.length === 0) {
+        mostrarNotificacion('Debes agregar al menos un proyecto', 'error');
+        return;
+    }
+
     const payload = {
-        dni,
         nombre,
         correo: correo || null,
-        password,
+        activo: Number(activo),
+        password: password || '',
         asignaciones
     };
-    
-    console.log('Guardando:', payload);
-    
-    fetch('/admin/usuarios/crear-nuevo', {
+
+    let url = '/admin/usuarios/crear-nuevo';
+    if (isEdit) {
+        url = `/admin/usuarios/editar/${encodeURIComponent(usuarioEditando)}`;
+    } else {
+        payload.dni = dni;
+    }
+
+    fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
     })
-    .then(r => r.json())
-    .then(data => {
-        if (data.success) {
-            alert('Usuario creado exitosamente');
-            cerrarModal();
-            location.reload();
-        } else {
-            alert('Error: ' + (data.error || 'No se pudo crear el usuario'));
+    .then(async (r) => {
+        let data;
+        try {
+            data = await r.json();
+        } catch (e) {
+            throw new Error(r.status ? `Respuesta no válida (${r.status})` : 'Respuesta no válida');
         }
+        if (!r.ok || !data.success) {
+            throw new Error(data.error || data.message || `Error ${r.status}`);
+        }
+        return data;
+    })
+    .then(() => {
+        mostrarNotificacion(isEdit ? 'Usuario actualizado correctamente' : 'Usuario creado exitosamente', 'success');
+        cerrarModal();
+        location.reload();
     })
     .catch(err => {
         console.error('Error:', err);
-        alert('Error de conexión');
+        mostrarNotificacion(err.message || 'Error de conexión', 'error');
     });
 }
 
-function verDetalles(dni) {
-    alert('Ver detalles de: ' + dni);
+function editarUsuario(dni) {
+    abrirModalEditar(dni);
 }
