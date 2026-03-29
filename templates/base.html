@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{% block title %}ecoSupervisor{% endblock %}</title>
-<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}?v=3">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
@@ -125,7 +125,7 @@
           {% endif %}
           {% if 'COMPOSTAJE' in accesos %}
           <a href="/admin/residuos/compostaje" class="nav-subitem {% if request.path == '/admin/residuos/compostaje' %}active{% endif %}">
-            <span class="nav-icon"><i data-feather="leaf"></i></span>
+            <span class="nav-icon"><i data-feather="package"></i></span>
             <span>Compostaje</span>
           </a>
           {% endif %}
@@ -148,7 +148,7 @@
         {% if 'AGUAS_DASHBOARD'     in accesos %}{% set _ = hijos_ga.append(('Dashboard',           '/admin/aguas/dashboard', 'layout'))   %}{% endif %}
         {% if 'MONITOREO_AMBIENTAL' in accesos %}{% set _ = hijos_ga.append(('Monitoreo Ambiental', '/admin/aguas',           'activity')) %}{% endif %}
         {% if 'REPORTE_ANA'         in accesos %}{% set _ = hijos_ga.append(('Reporte ANA',         '/admin/ana',             'file-text'))%}{% endif %}
-        {{ nav_group('droplets', 'Gestion de Aguas', hijos_ga) }}
+        {{ nav_group('droplet', 'Gestión de Aguas', hijos_ga) }}
       {% endif %}
 
       {# ── DATA METEOROLÓGICA ── #}

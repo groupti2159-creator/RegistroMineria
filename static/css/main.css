@@ -4086,26 +4086,6 @@ input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; }
 }
 .btn-open:hover { opacity: .82; }
 
-/* ─── Overlay ─── */
-.modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(17,17,16,.42);
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  z-index: 1000;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity .2s ease;
-}
-.modal-overlay.open {
-  display: flex;
-  opacity: 1;
-  pointer-events: all;
-}
-
 /* ─── Modal ─── */
 .modal {
   background: var(--surface);
