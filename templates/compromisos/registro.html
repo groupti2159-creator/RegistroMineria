@@ -2,8 +2,8 @@
 {% block title %}Compromisos — ecoSupervisor{% endblock %}
 {% block page_title %}Compromisos{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/compromisos/registro.css') }}">
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/registro.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -56,7 +56,7 @@
           <th style="min-width:220px;">Permisos / Obligaciones Ambientales</th>
           <th style="min-width:200px;">Descripción / Justificación</th>
           <th style="min-width:130px;">Entidad Regulatoria</th>
-          <th style="min-width:120px;text-align:center;">Evidencia</th>
+          <th style="min-width:130px;text-align:center;">Evidencia</th>
           <th style="min-width:160px;">Supervisor</th>
           <th style="min-width:200px;">Observaciones</th>
           <th style="min-width:80px;text-align:center;">Acciones</th>
@@ -65,12 +65,11 @@
       <tbody>
         {% for c in compromisos %}
         {% set cum = cum_dict.get(c.idcompromiso|string) or cum_dict.get(c.idcompromiso) or {} %}
-        {% set tiene_evidencia    = cum.get('tiene_evidencia')   or cum.get('TIENE_EVIDENCIA') %}
-        {% set idusuario_cum      = cum.get('idusuario')         or cum.get('IDUSUARIO') %}
-        {% set nombre_supervisor  = cum.get('nombrecompleto')    or cum.get('NOMBRECOMPLETO') or '' %}
-        {% set observaciones_cum  = cum.get('observaciones')     or cum.get('OBSERVACIONES') or '' %}
-        {% set drive_file_id      = cum.get('drive_file_id')     or cum.get('DRIVE_FILE_ID') or '' %}
-        {% set drive_file_name    = cum.get('drive_file_name')   or cum.get('DRIVE_FILE_NAME') or '' %}
+        {% set tiene_evidencia   = cum.get('tiene_evidencia')  or cum.get('TIENE_EVIDENCIA') %}
+        {% set idusuario_cum     = cum.get('idusuario')        or cum.get('IDUSUARIO') %}
+        {% set nombre_supervisor = cum.get('nombrecompleto')   or cum.get('NOMBRECOMPLETO') or '' %}
+        {% set observaciones_cum = cum.get('observaciones')    or cum.get('OBSERVACIONES') or '' %}
+        {% set nombre_archivo    = cum.get('nombre_archivo')   or cum.get('NOMBRE_ARCHIVO') or '' %}
         {% set es_monitoreo = 'Monitoreo' in c.nombre %}
         <tr {% if es_monitoreo %}class="fila-monitoreo"{% endif %}>
 
@@ -89,32 +88,34 @@
             </span>
           </td>
 
+          {# ── COLUMNA EVIDENCIA ── #}
           <td style="text-align:center;">
-            <div style="display:flex;gap:.4rem;justify-content:center;align-items:center;">
-              {% if tiene_evidencia and drive_file_id %}
-              {# Tiene evidencia en Drive — mostrar botón de ver/descargar #}
-              <a class="btn-icon btn-evidencia-ok"
-                 href="https://drive.google.com/file/d/{{ drive_file_id }}/view"
-                 target="_blank"
-                 title="Ver evidencia: {{ drive_file_name }}">
+            {% if tiene_evidencia %}
+            <div style="display:flex;gap:.35rem;justify-content:center;align-items:center;">
+              {# Botón ver — abre popover si hay varias versiones, directo si hay una sola #}
+              <button class="btn-icon btn-evidencia-ok"
+                title="Ver evidencia{% if nombre_archivo %}: {{ nombre_archivo }}{% endif %}"
+                data-idcompromiso="{{ c.idcompromiso }}"
+                data-mes="{{ mes }}"
+                data-anio="{{ anio }}"
+                onclick="verEvidencia(this, this.dataset.idcompromiso, this.dataset.mes, this.dataset.anio)">
                 <i data-feather="eye"></i>
-              </a>
-              {% elif tiene_evidencia %}
-              {# Tiene evidencia pero sin Drive ID aún (legacy) #}
-              <a class="btn-icon btn-icon-edit" title="Descargar evidencia"
-                href="/admin/compromisos/descargar/{{ c.idcompromiso }}?mes={{ mes }}&anio={{ anio }}">
+              </button>
+              {# Descargar última versión #}
+              <a class="btn-icon btn-icon-edit"
+                 href="/admin/compromisos/descargar/{{ c.idcompromiso }}?mes={{ mes }}&anio={{ anio }}"
+                 title="Descargar última versión{% if nombre_archivo %}: {{ nombre_archivo }}{% endif %}">
                 <i data-feather="download"></i>
               </a>
-              {% else %}
-              {# Sin evidencia #}
-              <span class="evidencia-vacia" title="Sin evidencia cargada">
-                <i data-feather="minus-circle"></i>
-              </span>
-              {% endif %}
             </div>
+            {% else %}
+            <span class="evidencia-vacia" title="Sin evidencia para este período">
+              <i data-feather="minus-circle"></i>
+            </span>
+            {% endif %}
           </td>
 
-          {# Supervisor — solo texto, se edita desde el modal #}
+          {# Supervisor — solo texto #}
           <td>
             {% if nombre_supervisor %}
             <span style="font-size:.82rem;font-weight:500;">{{ nombre_supervisor }}</span>
@@ -123,7 +124,7 @@
             {% endif %}
           </td>
 
-          {# Observaciones — solo texto, se edita desde el modal #}
+          {# Observaciones — solo texto #}
           <td>
             {% if observaciones_cum %}
             <span class="obs-texto" title="{{ observaciones_cum }}">{{ observaciones_cum }}</span>
@@ -132,6 +133,7 @@
             {% endif %}
           </td>
 
+          {# Acciones — solo editar #}
           <td style="text-align:center;">
             <button class="btn-icon btn-icon-edit" title="Editar compromiso"
               data-comp="{{ c.idcompromiso }}"
@@ -142,8 +144,7 @@
               data-nombre-supervisor="{{ nombre_supervisor | e }}"
               data-observaciones="{{ observaciones_cum | e }}"
               data-tiene-evidencia="{{ 'true' if tiene_evidencia else 'false' }}"
-              data-drive-file-id="{{ drive_file_id }}"
-              data-drive-file-name="{{ drive_file_name | e }}"
+              data-nombre-archivo="{{ nombre_archivo | e }}"
               data-mes="{{ mes }}"
               data-anio="{{ anio }}"
               onclick="abrirEditarCompromiso(this.dataset)">
@@ -223,44 +224,52 @@
         </select>
       </div>
 
-      <!-- Editable: evidencia (Google Drive) -->
+      <!-- Evidencia actual -->
       <div>
         <label class="form-label">Evidencia de Cumplimiento</label>
 
-        <!-- Evidencia actual (si existe) -->
-        <div id="editComp_evidenciaActual" style="display:none;
-             padding:.65rem .85rem;background:var(--pastel-green);
-             border-radius:var(--radius);margin-bottom:.75rem;
-             display:flex;align-items:center;gap:.6rem;">
-          <i data-feather="check-circle" style="width:16px;height:16px;stroke:var(--text-green);flex-shrink:0;"></i>
+        <!-- Con evidencia -->
+        <div id="editComp_conEvidencia"
+             style="display:none;padding:.65rem .85rem;background:var(--pastel-green);
+                    border-radius:var(--radius);margin-bottom:.75rem;
+                    align-items:center;gap:.75rem;">
+          <i data-feather="check-circle"
+             style="width:16px;height:16px;stroke:var(--text-green);flex-shrink:0;"></i>
           <div style="flex:1;min-width:0;">
             <p style="font-size:.78rem;font-weight:600;color:var(--text-green);margin:0;">
-              Evidencia cargada
+              Evidencia cargada para este período
             </p>
-            <a id="editComp_driveLink" href="#" target="_blank"
-               style="font-size:.74rem;color:var(--text-green);text-decoration:underline;
-                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">
+            <p id="editComp_nombreArchivo"
+               style="font-size:.74rem;color:var(--text-green);margin:.1rem 0 0;
+                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></p>
+          </div>
+          <div style="display:flex;gap:.4rem;flex-shrink:0;">
+            <a id="editComp_btnVer" href="#" target="_blank"
+               class="btn btn-export" style="padding:.3rem .65rem;font-size:.74rem;">
+              <i data-feather="eye" style="width:13px;height:13px;"></i>
+              Ver
+            </a>
+            <a id="editComp_btnDescargar" href="#"
+               class="btn btn-export" style="padding:.3rem .65rem;font-size:.74rem;">
+              <i data-feather="download" style="width:13px;height:13px;"></i>
+              Bajar
             </a>
           </div>
-          <a id="editComp_driveLinkBtn" href="#" target="_blank"
-             class="btn btn-export" style="padding:.3rem .65rem;font-size:.74rem;flex-shrink:0;">
-            <i data-feather="external-link" style="width:13px;height:13px;"></i>
-            Ver
-          </a>
         </div>
 
         <!-- Sin evidencia -->
         <div id="editComp_sinEvidencia"
-             style="padding:.65rem .85rem;background:var(--pastel-yellow);
+             style="display:none;padding:.65rem .85rem;background:var(--pastel-yellow);
                     border-radius:var(--radius);margin-bottom:.75rem;
-                    display:flex;align-items:center;gap:.6rem;">
-          <i data-feather="alert-circle" style="width:16px;height:16px;stroke:var(--text-yellow);flex-shrink:0;"></i>
+                    align-items:center;gap:.6rem;">
+          <i data-feather="alert-circle"
+             style="width:16px;height:16px;stroke:var(--text-yellow);flex-shrink:0;"></i>
           <p style="font-size:.78rem;color:var(--text-yellow);margin:0;">
             Sin evidencia cargada para este período
           </p>
         </div>
 
-        <!-- Zona de upload -->
+        <!-- Zona upload -->
         <div class="evidencia-dropzone"
              onclick="document.getElementById('editComp_archivo').click()">
           <i data-feather="upload-cloud"
@@ -292,7 +301,8 @@
         </div>
 
         <p style="font-size:.72rem;color:var(--text-muted);margin-top:.4rem;">
-          Se subirá a Google Drive · Formatos: PDF, JPG, PNG · Máx. 10MB
+          Formatos: PDF, JPG, PNG · Máx. 10MB ·
+          Subir un nuevo archivo crea una versión adicional
         </p>
       </div>
 
@@ -304,7 +314,7 @@
                   placeholder="Añadir notas internas sobre el proceso de fiscalización..."></textarea>
       </div>
 
-      <!-- Estado de guardado -->
+      <!-- Estado guardado -->
       <div id="editComp_estado" class="comp-estado-msg"></div>
 
     </div>

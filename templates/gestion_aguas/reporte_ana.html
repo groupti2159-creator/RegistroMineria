@@ -2,6 +2,10 @@
 {% block title %}Reportes ANA — ecoSupervisor{% endblock %}
 {% block page_title %}Reportes ANA{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/reporte_ana.css') }}">
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header-section">
@@ -12,48 +16,44 @@
   </div>
 </div>
 
-<!-- BOTONES -->
 <div class="action-bar">
   <button class="btn btn-primary" onclick="abrirModal()">
     <i data-feather="plus-circle"></i> <strong>Nuevo Reporte ANA</strong>
   </button>
-  <a href="#" class="btn btn-export"
-     onclick="showToast('Exportación próximamente disponible','info');return false;">
+  <a href="/admin/ana/exportar" class="btn btn-export">
     <i data-feather="download"></i> Exportar <strong>.xlsx</strong>
   </a>
 </div>
 
-<!-- FILTROS -->
 <div class="filter-bar">
   <div class="filter-select-wrapper">
     <i data-feather="search"></i>
     <input type="text" id="inputBuscar" class="filter-select"
-           placeholder="Buscar..."
-           oninput="aplicarFiltros()" style="min-width:220px;">
+           placeholder="Buscar..." oninput="aplicarFiltros()" style="min-width:220px;">
   </div>
   <div class="filter-select-wrapper">
     <i data-feather="calendar"></i>
     <input type="date" id="filtroFechaIni" class="filter-select" onchange="aplicarFiltros()">
   </div>
-  <span style="align-self:center;color:var(--text-muted);font-size:.85rem;">hasta</span>
+  <span class="filter-separator">hasta</span>
   <div class="filter-select-wrapper">
     <i data-feather="calendar"></i>
     <input type="date" id="filtroFechaFin" class="filter-select" onchange="aplicarFiltros()">
   </div>
   <button class="btn btn-secondary" onclick="limpiarFiltros()" style="padding:.45rem .9rem;">
-    <i data-feather="x" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>Limpiar
+    <i data-feather="x" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
+    Limpiar
   </button>
   <span class="filter-count" id="contadorRegistros">{{ registros|length }} registros</span>
 </div>
 
-<!-- TABLA -->
 <div class="card" style="overflow:hidden;">
   <div class="card-title">
     <i data-feather="list"></i>
     Reportes ANA
     <span class="badge-count" id="contadorTabla">{{ registros|length }} registros</span>
   </div>
-  <div style="display:block;width:100%;overflow-x:auto;overflow-y:visible;-webkit-overflow-scrolling:touch;">
+  <div style="display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;">
     <table class="data-table ana-table" style="min-width:700px;">
       <thead>
         <tr>
@@ -61,8 +61,8 @@
           <th>Tiempo de Operación<br>(Horas)</th>
           <th>Contómetro Inicial</th>
           <th>Contómetro Final</th>
-          <th>Volumen Captado<br>(m³) <em style="font-weight:400;font-size:.7rem;">= Final − Inicial</em></th>
-          <th>Caudal<br>(m³/seg) <em style="font-weight:400;font-size:.7rem;">= Vol ÷ 86400</em></th>
+          <th>Volumen Captado (m³)<br><em class="th-formula">= Final − Inicial</em></th>
+          <th>Caudal (m³/seg)<br><em class="th-formula">= Vol ÷ 86400</em></th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -70,18 +70,18 @@
         {% for r in registros %}
         <tr data-search="{{ r.fecha }}" data-fecha="{{ r.fecha }}">
           <td>{{ r.fecha }}</td>
-          <td>{{ r.tiempo_operacion }}</td>
-          <td>{{ r.contometro_inicial }}</td>
-          <td>{{ r.contometro_final }}</td>
-          <td>{{ r.volumen_captado }}</td>
-          <td>{{ r.caudal }}</td>
+          <td>{{ r.tiempo_operacion or '—' }}</td>
+          <td>{{ r.contometro_inicial or '—' }}</td>
+          <td>{{ r.contometro_final or '—' }}</td>
+          <td><strong>{{ r.volumen_captado or '—' }}</strong></td>
+          <td><strong>{{ r.caudal or '—' }}</strong></td>
           <td>
-            <div style="display:flex;gap:.4rem;">
-              <button class="btn-icon btn-icon-edit"
+            <div class="action-btns">
+              <button class="btn-icon btn-icon-edit" title="Editar"
                 onclick="editarRegistro('{{ r.id }}')">
                 <i data-feather="edit-2"></i>
               </button>
-              <button class="btn-icon btn-icon-danger"
+              <button class="btn-icon btn-red" title="Eliminar"
                 onclick="eliminarRegistro('{{ r.id }}')">
                 <i data-feather="trash-2"></i>
               </button>
@@ -90,9 +90,8 @@
         </tr>
         {% else %}
         <tr>
-          <td colspan="7" style="text-align:center;color:#94a3b8;padding:2.5rem;">
-            <i data-feather="inbox"
-               style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
+          <td colspan="7" class="empty-cell">
+            <i data-feather="inbox" style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
             No hay reportes ANA registrados
           </td>
         </tr>
@@ -102,88 +101,96 @@
   </div>
 </div>
 
-<!-- ═══ MODAL ═══ -->
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: NUEVO / EDITAR REPORTE ANA
+════════════════════════════════════════════════ -->
 <div class="modal-overlay" id="modalANA" style="display:none;">
-  <div class="modal-box" style="max-width:560px;">
+  <div class="modal-box" style="max-width:520px;">
+
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Gestión de Aguas</p>
-        <h2 class="modal-title" id="modalANA-titulo">Nuevo Reporte ANA</h2>
+        <p style="font-size:.72rem;color:var(--text-muted);font-weight:600;
+                  text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">
+          Gestión de Aguas
+        </p>
+        <h2 id="modalANA-titulo" style="font-size:1.1rem;font-weight:700;color:var(--black);">
+          Nuevo Reporte ANA
+        </h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModal()" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor"
-                  stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
+        <button class="modal-close" onclick="cerrarModal()" aria-label="Cerrar">
+          <i data-feather="x"></i>
         </button>
       </div>
     </div>
 
-    <form id="formANA" method="POST" action="/admin/ana/crear">
-      <div class="modal-body"
-           style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem;">
 
-        <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
-          <div>
-            <label class="date-label">Fecha *</label>
-            <input type="date" name="fecha" class="date-input"
-                   style="width:100%" required>
-          </div>
-          <div>
-            <label class="date-label">Tiempo de Operación *</label>
-            <input type="text" name="tiempo_operacion" class="plant-input"
-                   placeholder="Ej: 24 horas" required>
-          </div>
+      <!-- Fecha + Tiempo -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          <label class="form-label">Fecha *</label>
+          <input type="date" id="ana_fecha" class="form-input" required>
         </div>
-
-        <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
-          <div>
-            <label class="date-label">Contómetro Inicial *</label>
-            <input type="number" step="0.01" name="contometro_inicial"
-                   class="plant-input" placeholder="0.00" required>
-          </div>
-          <div>
-            <label class="date-label">Contómetro Final *</label>
-            <input type="number" step="0.01" name="contometro_final"
-                   class="plant-input" placeholder="0.00" required>
-          </div>
-        </div>
-
-        <!-- Nota: Volumen y Caudal son calculados automáticamente en el servidor -->
-        <div style="background:var(--color-background-secondary);
-                    padding:.75rem 1rem;border-radius:.5rem;
-                    font-size:.8rem;color:var(--text-muted);">
-          <i data-feather="info"
-             style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
-          <strong>Volumen</strong> y <strong>Caudal</strong> se calculan
-          automáticamente —
-          <em>Volumen = Final − Inicial &nbsp;|&nbsp; Caudal = Volumen ÷ 86400</em>
-        </div>
-
-      </div>
-      <div class="modal-footer">
-        <div class="modal-footer__summary">
-          <span class="footer-label">Reportes ANA</span>
-        </div>
-        <div class="modal-footer__actions">
-          <button type="button" class="btn-cancel" onclick="cerrarModal()">
-            Cancelar
-          </button>
-          <button type="submit" class="btn-save">Guardar</button>
+        <div>
+          <label class="form-label">Tiempo de Operación</label>
+          <input type="text" id="ana_tiempo" class="form-input"
+                 value="24 horas" placeholder="Ej: 24 horas">
         </div>
       </div>
-    </form>
+
+      <!-- Contómetros -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          <label class="form-label">Contómetro Inicial *</label>
+          <input type="number" step="0.0001" id="ana_cont_ini" class="form-input"
+                 placeholder="0.0000" oninput="calcularANA()">
+        </div>
+        <div>
+          <label class="form-label">Contómetro Final *</label>
+          <input type="number" step="0.0001" id="ana_cont_fin" class="form-input"
+                 placeholder="0.0000" oninput="calcularANA()">
+        </div>
+      </div>
+
+      <!-- Campos calculados -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          <label class="form-label">Volumen Captado (m³)</label>
+          <input type="text" id="ana_volumen" class="form-input ana-calculado"
+                 readonly placeholder="Calculado automáticamente">
+          <p class="form-hint">= Final − Inicial</p>
+        </div>
+        <div>
+          <label class="form-label">Caudal (m³/seg)</label>
+          <input type="text" id="ana_caudal" class="form-input ana-calculado"
+                 readonly placeholder="Calculado automáticamente">
+          <p class="form-hint">= Volumen ÷ 86400</p>
+        </div>
+      </div>
+
+      <div id="anaEstado" class="comp-estado-msg"></div>
+
+    </div>
+
+    <div class="modal-footer">
+      <div style="display:flex;gap:.75rem;margin-left:auto;">
+        <button type="button" class="btn btn-secondary" onclick="cerrarModal()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" onclick="guardarANA()">
+          <i data-feather="save" style="width:15px;height:15px;vertical-align:middle;margin-right:4px;"></i>
+          Guardar
+        </button>
+      </div>
+    </div>
+
   </div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
-<style>
-.ana-table th { white-space: nowrap; font-size: .8rem; }
-.ana-table td { font-size: .85rem; }
-</style>
-
 <script src="{{ url_for('static', filename='js/gestion_aguas/reporte_ana.js') }}"></script>
 {% endblock %}

@@ -24,10 +24,115 @@ function showToast(msg, type) {
 }
 
 
+// ── POPOVER DE VERSIONES ─────────────────────────────────
+let _popoverActivo = null;
+
+async function verEvidencia(btn, idcompromiso, mes, anio) {
+  // Cerrar cualquier popover abierto
+  cerrarPopover();
+
+  // Consultar versiones disponibles
+  let versiones = [];
+  try {
+    const res  = await fetch(`/admin/compromisos/versiones/${idcompromiso}?mes=${mes}&anio=${anio}`);
+    const json = await res.json();
+    console.log('Respuesta del servidor:', json);
+    if (!json.success) { showToast('Error al cargar versiones', 'error'); return; }
+    versiones = json.versiones;
+    console.log('Versiones encontradas:', versiones.length, versiones);
+  } catch (error) {
+    console.error('Error al cargar versiones:', error);
+    showToast('Error de conexión', 'error');
+    return;
+  }
+
+  // Si solo hay una versión → abrir directo sin popover
+  if (versiones.length === 1) {
+    console.log('Abriendo versión única:', versiones[0].id_evidencia);
+    window.open(`/admin/compromisos/ver-version/${versiones[0].id_evidencia}`, '_blank');
+    return;
+  }
+  
+  console.log('Mostrando popover con', versiones.length, 'versiones');
+
+  // Si hay varias → mostrar popover
+  const popover = document.createElement('div');
+  popover.className = 'versiones-popover';
+  popover.id        = 'versionesPopover';
+
+  const header = `
+    <div class="versiones-popover__header">
+      <span>Versiones de evidencia</span>
+      <button onclick="cerrarPopover()" class="versiones-popover__close">
+        <i data-feather="x" style="width:13px;height:13px;"></i>
+      </button>
+    </div>`;
+
+  const items = versiones.map(v => `
+    <div class="versiones-popover__item">
+      <div class="versiones-popover__info">
+        <span class="versiones-popover__version">
+          v${v.version}
+          ${v.es_ultima_version ? '<span class="versiones-popover__badge">actual</span>' : ''}
+        </span>
+        <span class="versiones-popover__nombre" title="${v.nombre_archivo}">
+          ${v.nombre_archivo}
+        </span>
+        <span class="versiones-popover__fecha">${v.fecha_subida}</span>
+      </div>
+      <div class="versiones-popover__acciones">
+        <a href="/admin/compromisos/ver-version/${v.id_evidencia}"
+           target="_blank"
+           class="versiones-popover__btn versiones-popover__btn--ver"
+           title="Ver en nueva pestaña">
+          <i data-feather="eye" style="width:13px;height:13px;"></i>
+        </a>
+        <a href="/admin/compromisos/descargar-version/${v.id_evidencia}"
+           class="versiones-popover__btn versiones-popover__btn--dl"
+           title="Descargar">
+          <i data-feather="download" style="width:13px;height:13px;"></i>
+        </a>
+      </div>
+    </div>`).join('');
+
+  popover.innerHTML = header + `<div class="versiones-popover__list">${items}</div>`;
+
+  // Posicionar junto al botón
+  document.body.appendChild(popover);
+  feather.replace();
+
+  const rect = btn.getBoundingClientRect();
+  const scrollY = window.scrollY;
+  popover.style.top  = (rect.bottom + scrollY + 6) + 'px';
+  popover.style.left = Math.max(8, rect.left - popover.offsetWidth + rect.width) + 'px';
+
+  _popoverActivo = popover;
+
+  // Cerrar al click fuera
+  setTimeout(() => {
+    document.addEventListener('click', _cerrarPopoverFuera);
+  }, 0);
+}
+
+function cerrarPopover() {
+  const existing = document.getElementById('versionesPopover');
+  if (existing) existing.remove();
+  _popoverActivo = null;
+  document.removeEventListener('click', _cerrarPopoverFuera);
+}
+
+function _cerrarPopoverFuera(e) {
+  const pop = document.getElementById('versionesPopover');
+  if (pop && !pop.contains(e.target)) cerrarPopover();
+}
+
+
 // ── MODAL: EDITAR COMPROMISO ─────────────────────────────
 let _editComp = {};
 
 function abrirEditarCompromiso(ds) {
+  cerrarPopover();
+
   _editComp = {
     id:   ds.comp,
     mes:  ds.mes,
@@ -43,43 +148,36 @@ function abrirEditarCompromiso(ds) {
   document.getElementById('editComp_observaciones').value = ds.observaciones || '';
   document.getElementById('editComp_supervisor').value    = ds.idusuario     || '';
 
-  // Estado evidencia actual
-  const divConEvidencia  = document.getElementById('editComp_evidenciaActual');
-  const divSinEvidencia  = document.getElementById('editComp_sinEvidencia');
-  const driveLink        = document.getElementById('editComp_driveLink');
-  const driveLinkBtn     = document.getElementById('editComp_driveLinkBtn');
+  // Estado evidencia
+  const divCon = document.getElementById('editComp_conEvidencia');
+  const divSin = document.getElementById('editComp_sinEvidencia');
 
-  if (ds.tieneEvidencia === 'true' && ds.driveFileId) {
-    // Tiene evidencia en Drive
-    const url = `https://drive.google.com/file/d/${ds.driveFileId}/view`;
-    driveLink.href        = url;
-    driveLink.textContent = ds.driveFileName || 'Ver archivo';
-    driveLinkBtn.href     = url;
-    divConEvidencia.style.display = 'flex';
-    divSinEvidencia.style.display = 'none';
-  } else if (ds.tieneEvidencia === 'true') {
-    // Evidencia legacy (sin Drive ID)
-    driveLink.href        = `/admin/compromisos/descargar/${ds.comp}?mes=${ds.mes}&anio=${ds.anio}`;
-    driveLink.textContent = 'Archivo cargado (sistema anterior)';
-    driveLinkBtn.href     = driveLink.href;
-    divConEvidencia.style.display = 'flex';
-    divSinEvidencia.style.display = 'none';
+  if (ds.tieneEvidencia === 'true') {
+    const urlVer       = `/admin/compromisos/ver-evidencia/${ds.comp}?mes=${ds.mes}&anio=${ds.anio}`;
+    const urlDescargar = `/admin/compromisos/descargar/${ds.comp}?mes=${ds.mes}&anio=${ds.anio}`;
+
+    document.getElementById('editComp_nombreArchivo').textContent = ds.nombreArchivo || 'Archivo cargado';
+    document.getElementById('editComp_btnVer').href       = urlVer;
+    document.getElementById('editComp_btnDescargar').href = urlDescargar;
+
+    divCon.style.display = 'flex';
+    divSin.style.display = 'none';
   } else {
-    divConEvidencia.style.display = 'none';
-    divSinEvidencia.style.display = 'flex';
+    divCon.style.display = 'none';
+    divSin.style.display = 'flex';
   }
 
   // Limpiar archivo previo
-  document.getElementById('editComp_archivo').value                    = '';
+  document.getElementById('editComp_archivo').value                     = '';
   document.getElementById('editComp_archivoSeleccionado').style.display = 'none';
-  document.getElementById('editComp_archivoLabel').textContent          = '';
+  document.getElementById('editComp_archivoLabel').textContent           = '';
 
   // Limpiar estado
   const estado = document.getElementById('editComp_estado');
   estado.style.display = 'none';
+  estado.className     = 'comp-estado-msg';
   estado.textContent   = '';
 
-  // Abrir modal
   document.getElementById('modalEditarCompromiso').style.display = 'flex';
   feather.replace();
 }
@@ -89,9 +187,9 @@ function cerrarEditarCompromiso() {
 }
 
 function limpiarArchivoEditar() {
-  document.getElementById('editComp_archivo').value                    = '';
+  document.getElementById('editComp_archivo').value                     = '';
   document.getElementById('editComp_archivoSeleccionado').style.display = 'none';
-  document.getElementById('editComp_archivoLabel').textContent          = '';
+  document.getElementById('editComp_archivoLabel').textContent           = '';
 }
 
 async function guardarEditarCompromiso() {
@@ -126,7 +224,7 @@ async function guardarEditarCompromiso() {
     errores.push('datos');
   }
 
-  // 2) Subir archivo a Drive si se seleccionó uno nuevo
+  // 2) Subir archivo si hay uno nuevo
   if (archivo) {
     try {
       const fd = new FormData();
@@ -148,12 +246,11 @@ async function guardarEditarCompromiso() {
 
   // Resultado
   if (errores.length === 0) {
-    estado.className = 'comp-estado-msg comp-estado-ok';
+    estado.className   = 'comp-estado-msg comp-estado-ok';
     estado.textContent = '✅ Guardado correctamente';
-    // Recargar para reflejar cambios en la tabla
     setTimeout(() => { cerrarEditarCompromiso(); location.reload(); }, 1000);
   } else {
-    estado.className = 'comp-estado-msg comp-estado-error';
+    estado.className   = 'comp-estado-msg comp-estado-error';
     estado.textContent = '⚠️ Error al guardar: ' + errores.join(', ');
   }
 }
@@ -163,12 +260,10 @@ async function guardarEditarCompromiso() {
 document.addEventListener('DOMContentLoaded', () => {
   feather.replace();
 
-  // Cerrar modal al click fuera
   document.getElementById('modalEditarCompromiso').addEventListener('click', function (e) {
     if (e.target === this) cerrarEditarCompromiso();
   });
 
-  // Mostrar nombre de archivo seleccionado
   document.getElementById('editComp_archivo').addEventListener('change', function () {
     if (this.files && this.files[0]) {
       document.getElementById('editComp_archivoLabel').textContent          = this.files[0].name;
