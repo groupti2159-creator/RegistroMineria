@@ -2,6 +2,10 @@
 {% block title %}Compromisos — ecoSupervisor{% endblock %}
 {% block page_title %}Compromisos{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/compromisos/registro.css') }}">
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header-section">
@@ -46,80 +50,111 @@
     <span class="badge-count">{{ compromisos|length }} registros</span>
   </div>
   <div style="display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;">
-    <table class="data-table compromisos-table" style="min-width:900px;">
+    <table class="data-table compromisos-table" style="min-width:1020px;">
       <thead>
         <tr>
           <th style="min-width:220px;">Permisos / Obligaciones Ambientales</th>
           <th style="min-width:200px;">Descripción / Justificación</th>
-          <th style="min-width:120px;">Entidad Regulatoria</th>
-          <th style="min-width:110px;text-align:center;">Evidencia</th>
-          <th style="min-width:180px;">Supervisor</th>
+          <th style="min-width:130px;">Entidad Regulatoria</th>
+          <th style="min-width:120px;text-align:center;">Evidencia</th>
+          <th style="min-width:160px;">Supervisor</th>
           <th style="min-width:200px;">Observaciones</th>
+          <th style="min-width:80px;text-align:center;">Acciones</th>
         </tr>
       </thead>
       <tbody>
         {% for c in compromisos %}
         {% set cum = cum_dict.get(c.idcompromiso|string) or cum_dict.get(c.idcompromiso) or {} %}
-        {% set tiene_evidencia   = cum.get('tiene_evidencia')  or cum.get('TIENE_EVIDENCIA') %}
-        {% set idusuario_cum     = cum.get('idusuario')        or cum.get('IDUSUARIO') %}
-        {% set observaciones_cum = cum.get('observaciones')    or cum.get('OBSERVACIONES') or '' %}
+        {% set tiene_evidencia    = cum.get('tiene_evidencia')   or cum.get('TIENE_EVIDENCIA') %}
+        {% set idusuario_cum      = cum.get('idusuario')         or cum.get('IDUSUARIO') %}
+        {% set nombre_supervisor  = cum.get('nombrecompleto')    or cum.get('NOMBRECOMPLETO') or '' %}
+        {% set observaciones_cum  = cum.get('observaciones')     or cum.get('OBSERVACIONES') or '' %}
+        {% set drive_file_id      = cum.get('drive_file_id')     or cum.get('DRIVE_FILE_ID') or '' %}
+        {% set drive_file_name    = cum.get('drive_file_name')   or cum.get('DRIVE_FILE_NAME') or '' %}
         {% set es_monitoreo = 'Monitoreo' in c.nombre %}
-        <tr {% if es_monitoreo %}style="background:var(--color-background-secondary);"{% endif %}>
+        <tr {% if es_monitoreo %}class="fila-monitoreo"{% endif %}>
+
           <td>
             <strong>{{ c.nombre }}</strong>
             {% if c.descripcion %}
             <br><small style="color:var(--text-muted);font-size:.75rem;">{{ c.descripcion }}</small>
             {% endif %}
           </td>
+
           <td style="color:var(--text-muted);font-size:.82rem;">{{ c.descripcion or '—' }}</td>
-          <td style="text-align:center;font-weight:600;font-size:.82rem;">{{ c.entidad_reguladora or '—' }}</td>
+
+          <td style="text-align:center;">
+            <span class="entidad-chip entidad-{{ c.entidad_reguladora|lower|replace('/','_')|replace('-','_')|replace(' ','_') if c.entidad_reguladora else 'default' }}">
+              {{ c.entidad_reguladora or '—' }}
+            </span>
+          </td>
+
           <td style="text-align:center;">
             <div style="display:flex;gap:.4rem;justify-content:center;align-items:center;">
-              <button class="btn-icon btn-icon-edit" title="Adjuntar evidencia"
-                data-comp="{{ c.idcompromiso }}" data-mes="{{ mes }}" data-anio="{{ anio }}"
-                onclick="abrirAdjuntar(this.dataset.comp, this.dataset.mes, this.dataset.anio)">
-                <i data-feather="paperclip"></i>
-              </button>
-              {% if tiene_evidencia %}
-              <a class="btn-icon btn-icon-edit" title="Descargar última versión"
+              {% if tiene_evidencia and drive_file_id %}
+              {# Tiene evidencia en Drive — mostrar botón de ver/descargar #}
+              <a class="btn-icon btn-evidencia-ok"
+                 href="https://drive.google.com/file/d/{{ drive_file_id }}/view"
+                 target="_blank"
+                 title="Ver evidencia: {{ drive_file_name }}">
+                <i data-feather="eye"></i>
+              </a>
+              {% elif tiene_evidencia %}
+              {# Tiene evidencia pero sin Drive ID aún (legacy) #}
+              <a class="btn-icon btn-icon-edit" title="Descargar evidencia"
                 href="/admin/compromisos/descargar/{{ c.idcompromiso }}?mes={{ mes }}&anio={{ anio }}">
                 <i data-feather="download"></i>
               </a>
               {% else %}
-              <button class="btn-icon" title="Sin evidencia" disabled style="opacity:.35;cursor:not-allowed;">
-                <i data-feather="download"></i>
-              </button>
+              {# Sin evidencia #}
+              <span class="evidencia-vacia" title="Sin evidencia cargada">
+                <i data-feather="minus-circle"></i>
+              </span>
               {% endif %}
             </div>
           </td>
+
+          {# Supervisor — solo texto, se edita desde el modal #}
           <td>
-            <select class="form-select supervisor-select" style="font-size:.8rem;"
-                    data-id="{{ c.idcompromiso }}"
-                    data-mes="{{ mes }}"
-                    data-anio="{{ anio }}">
-              <option value="">— Seleccionar —</option>
-              {% for s in supervisores %}
-              <option value="{{ s.idusuario }}"
-                {% if idusuario_cum == s.idusuario %}selected{% endif %}>
-                {{ s.nombrecompleto }}
-              </option>
-              {% endfor %}
-            </select>
+            {% if nombre_supervisor %}
+            <span style="font-size:.82rem;font-weight:500;">{{ nombre_supervisor }}</span>
+            {% else %}
+            <span style="font-size:.8rem;color:var(--text-muted);font-style:italic;">Sin asignar</span>
+            {% endif %}
           </td>
+
+          {# Observaciones — solo texto, se edita desde el modal #}
           <td>
-            <input type="text"
-                   class="form-input obs-input"
-                   style="font-size:.8rem;"
-                   placeholder="Observaciones..."
-                   data-id="{{ c.idcompromiso }}"
-                   data-mes="{{ mes }}"
-                   data-anio="{{ anio }}"
-                   value="{{ observaciones_cum }}">
+            {% if observaciones_cum %}
+            <span class="obs-texto" title="{{ observaciones_cum }}">{{ observaciones_cum }}</span>
+            {% else %}
+            <span style="font-size:.8rem;color:var(--text-muted);font-style:italic;">—</span>
+            {% endif %}
           </td>
+
+          <td style="text-align:center;">
+            <button class="btn-icon btn-icon-edit" title="Editar compromiso"
+              data-comp="{{ c.idcompromiso }}"
+              data-nombre="{{ c.nombre | e }}"
+              data-descripcion="{{ c.descripcion | e if c.descripcion else '' }}"
+              data-entidad="{{ c.entidad_reguladora | e if c.entidad_reguladora else '' }}"
+              data-idusuario="{{ idusuario_cum or '' }}"
+              data-nombre-supervisor="{{ nombre_supervisor | e }}"
+              data-observaciones="{{ observaciones_cum | e }}"
+              data-tiene-evidencia="{{ 'true' if tiene_evidencia else 'false' }}"
+              data-drive-file-id="{{ drive_file_id }}"
+              data-drive-file-name="{{ drive_file_name | e }}"
+              data-mes="{{ mes }}"
+              data-anio="{{ anio }}"
+              onclick="abrirEditarCompromiso(this.dataset)">
+              <i data-feather="edit-2"></i>
+            </button>
+          </td>
+
         </tr>
         {% else %}
         <tr>
-          <td colspan="6" style="text-align:center;color:#94a3b8;padding:2.5rem;">
+          <td colspan="7" style="text-align:center;color:#94a3b8;padding:2.5rem;">
             <i data-feather="inbox" style="width:36px;height:36px;display:block;margin:0 auto .75rem;opacity:.4;"></i>
             No hay compromisos registrados
           </td>
@@ -130,162 +165,167 @@
   </div>
 </div>
 
-<!-- MODAL ADJUNTAR EVIDENCIA -->
-<div class="modal-overlay" id="modalAdjuntar" style="display:none;">
-  <div class="modal-box" style="max-width:480px;">
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: EDITAR COMPROMISO
+════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modalEditarCompromiso" style="display:none;">
+  <div class="modal-box" style="max-width:540px;">
+
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Compromisos</p>
-        <h2 class="modal-title">Adjuntar Evidencia</h2>
+        <p style="font-size:.72rem;color:var(--text-muted);font-weight:600;
+                  text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">
+          Compromisos Ambientales
+        </p>
+        <h2 style="font-size:1.1rem;font-weight:700;color:var(--black);">
+          Editar Compromiso
+        </h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarAdjuntar()" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
+        <button class="modal-close" onclick="cerrarEditarCompromiso()" aria-label="Cerrar">
+          <i data-feather="x"></i>
         </button>
       </div>
     </div>
-    <div class="modal-body" style="padding:1.5rem;display:flex;flex-direction:column;gap:1rem;">
-      <p style="font-size:.85rem;color:var(--text-muted);">
-        Selecciona el archivo PDF o imagen. Si ya existe una evidencia para este período,
-        se guardará como nueva versión y la descarga siempre traerá la más reciente.
-      </p>
+
+    <div class="modal-body" style="display:flex;flex-direction:column;gap:1.25rem;">
+
+      <!-- Read-only: nombre + entidad -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+        <div>
+          <label class="form-label">Permiso</label>
+          <input type="text" id="editComp_nombre" class="form-input" readonly
+                 style="background:var(--gray-100);cursor:default;font-size:.82rem;">
+        </div>
+        <div>
+          <label class="form-label">Entidad Regulatoria</label>
+          <input type="text" id="editComp_entidad" class="form-input" readonly
+                 style="background:var(--gray-100);cursor:default;font-size:.82rem;">
+        </div>
+      </div>
+
+      <!-- Read-only: descripción -->
       <div>
-        <label class="date-label">Archivo *</label>
-        <input type="file" id="inputArchivo" accept=".pdf,.png,.jpg,.jpeg"
-               class="plant-input" style="padding:.4rem;">
+        <label class="form-label">Descripción</label>
+        <textarea id="editComp_descripcion" class="form-textarea" rows="2" readonly
+                  style="background:var(--gray-100);cursor:default;resize:none;font-size:.82rem;"></textarea>
       </div>
-      <div id="adjuntarEstado" style="font-size:.82rem;display:none;"></div>
+
+      <!-- Editable: supervisor -->
+      <div>
+        <label class="form-label">Supervisor Responsable</label>
+        <select id="editComp_supervisor" class="form-select" style="font-size:.82rem;">
+          <option value="">— Seleccionar —</option>
+          {% for s in supervisores %}
+          <option value="{{ s.idusuario }}">{{ s.nombrecompleto }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Editable: evidencia (Google Drive) -->
+      <div>
+        <label class="form-label">Evidencia de Cumplimiento</label>
+
+        <!-- Evidencia actual (si existe) -->
+        <div id="editComp_evidenciaActual" style="display:none;
+             padding:.65rem .85rem;background:var(--pastel-green);
+             border-radius:var(--radius);margin-bottom:.75rem;
+             display:flex;align-items:center;gap:.6rem;">
+          <i data-feather="check-circle" style="width:16px;height:16px;stroke:var(--text-green);flex-shrink:0;"></i>
+          <div style="flex:1;min-width:0;">
+            <p style="font-size:.78rem;font-weight:600;color:var(--text-green);margin:0;">
+              Evidencia cargada
+            </p>
+            <a id="editComp_driveLink" href="#" target="_blank"
+               style="font-size:.74rem;color:var(--text-green);text-decoration:underline;
+                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;">
+            </a>
+          </div>
+          <a id="editComp_driveLinkBtn" href="#" target="_blank"
+             class="btn btn-export" style="padding:.3rem .65rem;font-size:.74rem;flex-shrink:0;">
+            <i data-feather="external-link" style="width:13px;height:13px;"></i>
+            Ver
+          </a>
+        </div>
+
+        <!-- Sin evidencia -->
+        <div id="editComp_sinEvidencia"
+             style="padding:.65rem .85rem;background:var(--pastel-yellow);
+                    border-radius:var(--radius);margin-bottom:.75rem;
+                    display:flex;align-items:center;gap:.6rem;">
+          <i data-feather="alert-circle" style="width:16px;height:16px;stroke:var(--text-yellow);flex-shrink:0;"></i>
+          <p style="font-size:.78rem;color:var(--text-yellow);margin:0;">
+            Sin evidencia cargada para este período
+          </p>
+        </div>
+
+        <!-- Zona de upload -->
+        <div class="evidencia-dropzone"
+             onclick="document.getElementById('editComp_archivo').click()">
+          <i data-feather="upload-cloud"
+             style="width:28px;height:28px;stroke:var(--text-muted);display:block;margin:0 auto .5rem;"></i>
+          <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.6rem;">
+            Arrastra archivos aquí o
+          </p>
+          <button type="button" class="btn btn-secondary"
+                  style="padding:.35rem .85rem;font-size:.78rem;"
+                  onclick="event.stopPropagation();document.getElementById('editComp_archivo').click()">
+            Seleccionar archivo
+          </button>
+        </div>
+        <input type="file" id="editComp_archivo" accept=".pdf,.png,.jpg,.jpeg" style="display:none;">
+
+        <!-- Archivo seleccionado -->
+        <div id="editComp_archivoSeleccionado"
+             style="display:none;margin-top:.6rem;padding:.5rem .75rem;
+                    background:var(--pastel-green);border-radius:var(--radius);
+                    font-size:.8rem;align-items:center;gap:.5rem;">
+          <i data-feather="file-text"
+             style="width:14px;height:14px;stroke:var(--text-green);flex-shrink:0;"></i>
+          <span id="editComp_archivoLabel"
+                style="color:var(--text-green);flex:1;overflow:hidden;
+                       text-overflow:ellipsis;white-space:nowrap;"></span>
+          <button onclick="limpiarArchivoEditar()" type="button"
+                  style="background:none;border:none;cursor:pointer;
+                         color:var(--text-red);font-size:1rem;line-height:1;padding:0;">✕</button>
+        </div>
+
+        <p style="font-size:.72rem;color:var(--text-muted);margin-top:.4rem;">
+          Se subirá a Google Drive · Formatos: PDF, JPG, PNG · Máx. 10MB
+        </p>
+      </div>
+
+      <!-- Editable: observaciones -->
+      <div>
+        <label class="form-label">Observaciones</label>
+        <textarea id="editComp_observaciones" class="form-textarea" rows="3"
+                  style="font-size:.82rem;"
+                  placeholder="Añadir notas internas sobre el proceso de fiscalización..."></textarea>
+      </div>
+
+      <!-- Estado de guardado -->
+      <div id="editComp_estado" class="comp-estado-msg"></div>
+
     </div>
+
     <div class="modal-footer">
-      <div class="modal-footer__summary"><span class="footer-label" id="adjuntarLabel">—</span></div>
-      <div class="modal-footer__actions">
-        <button type="button" class="btn-cancel" onclick="cerrarAdjuntar()">Cancelar</button>
-        <button type="button" class="btn-save" onclick="subirEvidencia()">
-          <i data-feather="upload" style="width:14px;height:14px;vertical-align:middle;"></i>
-          Subir
+      <div style="display:flex;gap:.75rem;margin-left:auto;">
+        <button type="button" class="btn btn-secondary" onclick="cerrarEditarCompromiso()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" onclick="guardarEditarCompromiso()">
+          <i data-feather="save" style="width:15px;height:15px;vertical-align:middle;margin-right:4px;"></i>
+          Guardar Cambios
         </button>
       </div>
     </div>
+
   </div>
 </div>
 
 {% endblock %}
 
 {% block scripts %}
-<style>
-.compromisos-table th { font-size:.78rem; white-space:nowrap; }
-.compromisos-table td { font-size:.83rem; vertical-align:middle; }
-.compromisos-table tbody tr:hover { transform:none !important; box-shadow:none !important; }
-.compromisos-table tbody tr { cursor:default !important; }
-.compromisos-table tbody tr td { height:56px; }
-</style>
-
-<script>
-let _adjIdCompromiso = null;
-let _adjMes = null;
-let _adjAnio = null;
-
-function abrirAdjuntar(idcompromiso, mes, anio) {
-  _adjIdCompromiso = idcompromiso;
-  _adjMes  = mes;
-  _adjAnio = anio;
-  document.getElementById('inputArchivo').value = '';
-  document.getElementById('adjuntarEstado').style.display = 'none';
-  document.getElementById('adjuntarLabel').textContent = `Compromiso #${idcompromiso} — ${mes}/${anio}`;
-  document.getElementById('modalAdjuntar').style.display = 'flex';
-  feather.replace();
-}
-
-function cerrarAdjuntar() {
-  document.getElementById('modalAdjuntar').style.display = 'none';
-}
-
-async function subirEvidencia() {
-  const archivo = document.getElementById('inputArchivo').files[0];
-  if (!archivo) { showToast('Selecciona un archivo', 'error'); return; }
-  const fd = new FormData();
-  fd.append('idcompromiso', _adjIdCompromiso);
-  fd.append('mes',          _adjMes);
-  fd.append('anio',         _adjAnio);
-  fd.append('archivo',      archivo);
-  const estado = document.getElementById('adjuntarEstado');
-  estado.style.display = 'block';
-  estado.style.color   = 'var(--text-muted)';
-  estado.textContent   = 'Subiendo...';
-  try {
-    const res  = await fetch('/admin/compromisos/subir-evidencia', {
-      method: 'POST', headers: {'X-Requested-With': 'XMLHttpRequest'}, body: fd,
-    });
-    const json = await res.json();
-    if (json.success) {
-      estado.style.color = 'var(--color-green)';
-      estado.textContent = `✓ ${json.nombre} (v${json.version}) subido correctamente`;
-      showToast('Evidencia subida correctamente', 'success');
-      setTimeout(() => { cerrarAdjuntar(); location.reload(); }, 1200);
-    } else {
-      estado.style.color = 'var(--color-red)';
-      estado.textContent = `Error: ${json.error}`;
-      showToast(json.error || 'Error al subir', 'error');
-    }
-  } catch(e) { showToast('Error de conexión', 'error'); }
-}
-
-async function guardarCampo(idcompromiso, mes, anio, idusuario, observaciones) {
-  try {
-    await fetch('/admin/compromisos/guardar', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json', 'X-Requested-With': 'XMLHttpRequest'},
-      body: JSON.stringify({ idcompromiso, mes, anio, idusuario, observaciones }),
-    });
-  } catch(e) { console.error('Error guardando compromiso:', e); }
-}
-
-function cambiarPeriodo() {
-  const mes  = document.getElementById('selMes').value;
-  const anio = document.getElementById('selAnio').value;
-  window.location.href = `/admin/compromisos?mes=${mes}&anio=${anio}`;
-}
-
-function showToast(msg, type) {
-  const d = document.createElement('div');
-  d.className = 'alert alert-' + type;
-  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px';
-  d.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>`;
-  document.body.appendChild(d);
-  feather.replace();
-  setTimeout(() => d.remove(), 4000);
-}
-
-document.getElementById('modalAdjuntar').addEventListener('click', function(e) {
-  if (e.target === this) cerrarAdjuntar();
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  feather.replace();
-
-  // Supervisor select — evento via JS puro, sin Jinja2 inline
-  document.querySelectorAll('.supervisor-select').forEach(sel => {
-    sel.addEventListener('change', function() {
-      const id   = this.dataset.id;
-      const mes  = this.dataset.mes;
-      const anio = this.dataset.anio;
-      const obs  = document.querySelector(`.obs-input[data-id="${id}"]`);
-      guardarCampo(id, mes, anio, this.value, obs ? obs.value : '');
-    });
-  });
-
-  // Observaciones input — evento via JS puro, sin Jinja2 inline
-  document.querySelectorAll('.obs-input').forEach(inp => {
-    inp.addEventListener('blur', function() {
-      const id   = this.dataset.id;
-      const mes  = this.dataset.mes;
-      const anio = this.dataset.anio;
-      const sel  = document.querySelector(`.supervisor-select[data-id="${id}"]`);
-      guardarCampo(id, mes, anio, sel ? sel.value : '', this.value);
-    });
-  });
-});
-</script>
+<script src="{{ url_for('static', filename='js/compromisos/registro.js') }}"></script>
 {% endblock %}

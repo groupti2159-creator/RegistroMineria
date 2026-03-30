@@ -1,4 +1,7 @@
 ﻿{% extends 'base.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/desvios_ambientales.css') }}">
+{% endblock %}
 {% block title %}Dashboard — ecoSupervisor{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 

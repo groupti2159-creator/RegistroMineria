@@ -1,8 +1,8 @@
-from flask import Blueprint, jsonify, session
+from flask import jsonify, session
 from extensions import mysql
 from utils.helpers import sp_exec
+from routes.core.shared import shared_bp
 
-shared_bp = Blueprint('shared', __name__)
 
 @shared_bp.route('/notificaciones')
 def get_notificaciones():
@@ -12,15 +12,15 @@ def get_notificaciones():
         cur = mysql.connection.cursor()
         notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
         cur.close()
-        
+
         cur = mysql.connection.cursor()
         cnt = sp_exec(cur, 'sp_contarnotificaciones', (session['usuario_rol'],))
         cur.close()
 
         def serialize(obj):
             out = {}
-            for k,v in obj.items():
-                out[k.lower()] = v.strftime('%Y-%m-%d %H:%M') if hasattr(v,'strftime') else (v if v is not None else '')
+            for k, v in obj.items():
+                out[k.lower()] = v.strftime('%Y-%m-%d %H:%M') if hasattr(v, 'strftime') else (v if v is not None else '')
             return out
 
         return jsonify({

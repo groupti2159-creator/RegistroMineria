@@ -1,10 +1,13 @@
-{% extends 'base.html' %}
-{% block title %}Configuración - Dashboard{% endblock %}
-{% block page_title %}Configuración{% endblock %}
+﻿{% extends 'base.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/configuracion.css') }}">
+{% endblock %}
+{% block title %}ConfiguraciÃ³n - Dashboard{% endblock %}
+{% block page_title %}ConfiguraciÃ³n{% endblock %}
 {% block content %}
 <div class="dashboard-placeholder">
   <i data-feather="settings" style="width:48px;height:48px;opacity:0.3"></i>
-  <h2>Dashboard de Configuración</h2>
-  <p>Contenido en construcción.</p>
+  <h2>Dashboard de ConfiguraciÃ³n</h2>
+  <p>Contenido en construcciÃ³n.</p>
 </div>
 {% endblock %}

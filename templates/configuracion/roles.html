@@ -1,11 +1,14 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/configuracion.css') }}">
+{% endblock %}
 
-{% block title %}Gestión de Roles y Permisos{% endblock %}
+{% block title %}GestiÃ³n de Roles y Permisos{% endblock %}
 
 {% block content %}
 <style>
 /* ====================================================
-   ESTILOS EXCLUSIVOS PARA GESTIÓN DE ROLES
+   ESTILOS EXCLUSIVOS PARA GESTIÃ“N DE ROLES
    Encapsulados para no interferir con el CSS global
 ==================================================== */
 
@@ -35,7 +38,7 @@
     --rp-bg-card: #1e293b;
 }
 
-/* Header del módulo */
+/* Header del mÃ³dulo */
 .roles-permissions-module .module-header {
     display: flex;
     justify-content: space-between;
@@ -196,7 +199,7 @@
     gap: 6px;
 }
 
-/* Área de permisos colapsable */
+/* Ãrea de permisos colapsable */
 .roles-permissions-module .role-permissions {
     max-height: 0;
     overflow: hidden;
@@ -246,7 +249,7 @@
     text-decoration: none;
 }
 
-/* Pestañas horizontales de categorías */
+/* PestaÃ±as horizontales de categorÃ­as */
 .roles-permissions-module .categorias-tabs {
     display: flex;
     gap: 4px;
@@ -334,7 +337,7 @@
 }
 
 /* Botones - Usando estilos del proyecto (main.css) */
-/* Los botones .btn, .btn-primary, .btn-secondary, .btn-icon ya están definidos en main.css */
+/* Los botones .btn, .btn-primary, .btn-secondary, .btn-icon ya estÃ¡n definidos en main.css */
 
 /* Toast */
 .roles-permissions-module .message-toast {
@@ -397,7 +400,7 @@
     }
 }
 
-/* Animación de spin para loader */
+/* AnimaciÃ³n de spin para loader */
 @keyframes spin {
     from {
         transform: rotate(0deg);
@@ -413,7 +416,7 @@
         <div>
             <h2>
                 <i data-feather="shield"></i> 
-                Gestión de Roles y Permisos
+                GestiÃ³n de Roles y Permisos
             </h2>
             <p>Administra los permisos por rol y proyecto</p>
         </div>
@@ -479,13 +482,13 @@
                            autocomplete="off">
                     <span class="form-hint">
                         <i data-feather="info" style="width: 12px; height: 12px;"></i>
-                        Mínimo 3 caracteres
+                        MÃ­nimo 3 caracteres
                     </span>
                 </div>
                 <div class="form-group">
                     <label class="form-label">
                         <i data-feather="file-text" style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
-                        Descripción
+                        DescripciÃ³n
                     </label>
                     <textarea class="form-textarea" 
                               id="nuevoRolDescripcion" 
@@ -515,7 +518,7 @@ function slugCategoria(categoria) {
     return String(categoria || '').replace(/\s+/g, '-').replace(/'/g, '');
 }
 
-// Función principal para renderizar roles
+// FunciÃ³n principal para renderizar roles
 function renderRoles(roles, modulos) {
     const container = document.getElementById('rolesContainer');
     
@@ -534,7 +537,7 @@ function renderRoles(roles, modulos) {
         return;
     }
     
-    // Agrupar módulos por categoría
+    // Agrupar mÃ³dulos por categorÃ­a
     const modulosPorCategoria = {};
     modulos.forEach(modulo => {
         const categoria = modulo.categoria || 'General';
@@ -554,7 +557,7 @@ function renderRoles(roles, modulos) {
     
     feather.replace();
     
-    // Inicializar eventos después de renderizar
+    // Inicializar eventos despuÃ©s de renderizar
     setTimeout(() => {
         roles.forEach(rol => {
             // Evento de colapso del rol
@@ -569,7 +572,7 @@ function renderRoles(roles, modulos) {
                 });
             }
             
-            // Inicializar primera pestaña activa
+            // Inicializar primera pestaÃ±a activa
             if (!window.tabsActivas[rol.id]) {
                 window.tabsActivas[rol.id] = categorias[0] || '';
             }
@@ -670,7 +673,7 @@ function cambiarTab(rolId, categoria) {
 }
 
 function activarTab(rolId, categoria) {
-    // Actualizar pestañas
+    // Actualizar pestaÃ±as
     document.querySelectorAll(`.tab-categoria[data-rol="${rolId}"]`).forEach(tab => {
         if (tab.dataset.categoria === categoria) {
             tab.classList.add('active');
@@ -737,7 +740,7 @@ async function guardarPermisos(rolId) {
         
         const permissionsContainer = document.getElementById(`permissions-${rolId}`);
         if (!permissionsContainer) {
-            mostrarToast('Error: No se encontró el contenedor de permisos', 'error');
+            mostrarToast('Error: No se encontrÃ³ el contenedor de permisos', 'error');
             return;
         }
         
@@ -761,7 +764,7 @@ async function guardarPermisos(rolId) {
         try {
             result = await response.json();
         } catch (e) {
-            mostrarToast('Respuesta inválida del servidor (' + response.status + ')', 'error');
+            mostrarToast('Respuesta invÃ¡lida del servidor (' + response.status + ')', 'error');
             return;
         }
         
@@ -792,7 +795,7 @@ function editarRol(id, nombre, descripcion) {
     document.getElementById('nuevoRolNombre').value = nombre;
     document.getElementById('nuevoRolDescripcion').value = descripcion || '';
     
-    // Cambiar el título y el botón del modal
+    // Cambiar el tÃ­tulo y el botÃ³n del modal
     const modalTitle = document.querySelector('#modalNuevoRol h3');
     const modalSubtitle = document.querySelector('#modalNuevoRol h3 + p');
     const btnGuardar = document.querySelector('#modalNuevoRol .btn-primary');
@@ -882,7 +885,7 @@ async function actualizarRol(rolId) {
 }
 
 function restaurarModalCrear() {
-    // Restaurar título y botón del modal a su estado original
+    // Restaurar tÃ­tulo y botÃ³n del modal a su estado original
     const modalTitle = document.querySelector('#modalNuevoRol h3');
     const modalSubtitle = document.querySelector('#modalNuevoRol h3 + p');
     const btnGuardar = document.querySelector('#modalNuevoRol .btn-primary');
@@ -902,7 +905,7 @@ function restaurarModalCrear() {
 }
 
 function eliminarRol(id, nombre) {
-    if (!confirm(`¿Estás seguro de eliminar el rol "${nombre}"?\n\nEsta acción no se puede deshacer y eliminará todos los permisos asociados.`)) {
+    if (!confirm(`Â¿EstÃ¡s seguro de eliminar el rol "${nombre}"?\n\nEsta acciÃ³n no se puede deshacer y eliminarÃ¡ todos los permisos asociados.`)) {
         return;
     }
     
@@ -972,7 +975,7 @@ function abrirModalNuevoRol() {
     document.getElementById('nuevoRolNombre').value = '';
     document.getElementById('nuevoRolDescripcion').value = '';
     
-    // Mostrar modal usando las clases estándar del proyecto
+    // Mostrar modal usando las clases estÃ¡ndar del proyecto
     const modal = document.getElementById('modalNuevoRol');
     modal.classList.add('open');
     
@@ -989,7 +992,7 @@ function cerrarModalNuevoRol() {
     // Restaurar el modal a su estado original (crear)
     setTimeout(() => {
         restaurarModalCrear();
-    }, 300); // Esperar a que termine la animación de cierre
+    }, 300); // Esperar a que termine la animaciÃ³n de cierre
 }
 
 async function crearNuevoRol() {
@@ -1015,7 +1018,7 @@ async function crearNuevoRol() {
         return;
     }
     
-    // Deshabilitar botón mientras se procesa
+    // Deshabilitar botÃ³n mientras se procesa
     const btnCrear = event.target;
     const textoOriginal = btnCrear.innerHTML;
     btnCrear.disabled = true;
@@ -1036,7 +1039,7 @@ async function crearNuevoRol() {
         try {
             result = await response.json();
         } catch (e) {
-            mostrarToast('Respuesta inválida del servidor (' + response.status + ')', 'error');
+            mostrarToast('Respuesta invÃ¡lida del servidor (' + response.status + ')', 'error');
             btnCrear.disabled = false;
             btnCrear.innerHTML = textoOriginal;
             feather.replace();
@@ -1068,5 +1071,5 @@ async function crearNuevoRol() {
 }
 </script>
 
-<script src="{{ url_for('static', filename='js/admin/roles.js') }}"></script>
+<script src="{{ url_for('static', filename='js/configuracion/roles.js') }}"></script>
 {% endblock %}
