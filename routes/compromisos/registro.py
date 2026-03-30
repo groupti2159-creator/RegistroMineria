@@ -1,9 +1,10 @@
-from flask import render_template, request, redirect, url_for, session, jsonify, send_file
+from flask import render_template, request, jsonify, send_file, session
 from extensions import mysql
 from utils.helpers import sp_exec, sp_one, get_notif_count
 from routes.compromisos import compromisos_bp, _login_required
 from datetime import date
 import io
+
 
 # ── INDEX ────────────────────────────────────────────────
 @compromisos_bp.route('/compromisos')
@@ -50,7 +51,7 @@ def guardar_cumplimiento():
         return jsonify({'success': False, 'error': str(e)}), 400
 
 
-# ── SUBIR EVIDENCIA (guarda BLOB en MySQL) ───────────────
+# ── SUBIR EVIDENCIA ──────────────────────────────────────
 @compromisos_bp.route('/compromisos/subir-evidencia', methods=['POST'])
 @_login_required
 def subir_evidencia():
@@ -86,7 +87,81 @@ def subir_evidencia():
         return jsonify({'success': False, 'error': str(e)}), 400
 
 
-# ── VER EVIDENCIA (inline — abre en nueva pestaña) ───────
+# ── LISTAR VERSIONES (para el popover) ──────────────────
+@compromisos_bp.route('/compromisos/versiones/<int:idcompromiso>')
+@_login_required
+def listar_versiones(idcompromiso):
+    mes  = int(request.args.get('mes',  date.today().month))
+    anio = int(request.args.get('anio', date.today().year))
+    try:
+        cur      = mysql.connection.cursor()
+        versions = sp_exec(cur, 'sp_listarevidencias', (idcompromiso, mes, anio))
+        cur.close()
+
+        result = []
+        for v in versions:
+            # Formatear fecha
+            fecha = v.get('fecha_subida')
+            fecha_str = fecha.strftime('%d/%m/%Y %H:%M') if fecha else '—'
+            result.append({
+                'id_evidencia':      v['id_evidencia'],
+                'version':           v['version'],
+                'nombre_archivo':    v['nombre_archivo'],
+                'tamano_kb':         v.get('tamano_kb') or 0,
+                'fecha_subida':      fecha_str,
+                'es_ultima_version': bool(v.get('es_ultima_version')),
+            })
+
+        return jsonify({'success': True, 'versiones': result})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ── VER EVIDENCIA POR ID (versión específica) ────────────
+@compromisos_bp.route('/compromisos/ver-version/<int:id_evidencia>')
+@_login_required
+def ver_version(id_evidencia):
+    try:
+        cur = mysql.connection.cursor()
+        ev  = sp_one(cur, 'sp_obtenevidencia', (id_evidencia,))
+        cur.close()
+
+        if not ev or not ev.get('datos'):
+            return '<p style="font-family:sans-serif;padding:2rem;">Evidencia no encontrada.</p>', 404
+
+        return send_file(
+            io.BytesIO(ev['datos']),
+            download_name = ev.get('nombre_archivo', 'evidencia'),
+            mimetype      = ev.get('tipo_mime') or 'application/octet-stream',
+            as_attachment = False,
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── DESCARGAR VERSIÓN ESPECÍFICA ─────────────────────────
+@compromisos_bp.route('/compromisos/descargar-version/<int:id_evidencia>')
+@_login_required
+def descargar_version(id_evidencia):
+    try:
+        cur = mysql.connection.cursor()
+        ev  = sp_one(cur, 'sp_obtenevidencia', (id_evidencia,))
+        cur.close()
+
+        if not ev or not ev.get('datos'):
+            return jsonify({'error': 'Evidencia no encontrada'}), 404
+
+        return send_file(
+            io.BytesIO(ev['datos']),
+            download_name = ev.get('nombre_archivo', 'evidencia'),
+            mimetype      = ev.get('tipo_mime') or 'application/octet-stream',
+            as_attachment = True,
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── VER ÚLTIMA EVIDENCIA INLINE ──────────────────────────
 @compromisos_bp.route('/compromisos/ver-evidencia/<int:idcompromiso>')
 @_login_required
 def ver_evidencia(idcompromiso):
@@ -104,13 +179,13 @@ def ver_evidencia(idcompromiso):
             io.BytesIO(ev['datos']),
             download_name = ev.get('nombre_archivo', 'evidencia'),
             mimetype      = ev.get('tipo_mime') or 'application/octet-stream',
-            as_attachment = False,   # ← inline, NO descarga
+            as_attachment = False,
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-# ── DESCARGAR EVIDENCIA (fuerza descarga) ────────────────
+# ── DESCARGAR ÚLTIMA EVIDENCIA ───────────────────────────
 @compromisos_bp.route('/compromisos/descargar/<int:idcompromiso>')
 @_login_required
 def descargar_evidencia(idcompromiso):
@@ -128,7 +203,7 @@ def descargar_evidencia(idcompromiso):
             io.BytesIO(ev['datos']),
             download_name = ev.get('nombre_archivo', 'evidencia'),
             mimetype      = ev.get('tipo_mime') or 'application/octet-stream',
-            as_attachment = True,    # ← fuerza descarga
+            as_attachment = True,
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500

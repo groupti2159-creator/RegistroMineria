@@ -2,8 +2,8 @@
 {% block title %}Compromisos — ecoSupervisor{% endblock %}
 {% block page_title %}Compromisos{% endblock %}
 
-{% block head %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/compromisos/registro.css') }}">
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/registro.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -92,17 +92,19 @@
           <td style="text-align:center;">
             {% if tiene_evidencia %}
             <div style="display:flex;gap:.35rem;justify-content:center;align-items:center;">
-              {# Ver inline — abre en nueva pestaña #}
-              <a class="btn-icon btn-evidencia-ok"
-                 href="/admin/compromisos/ver-evidencia/{{ c.idcompromiso }}?mes={{ mes }}&anio={{ anio }}"
-                 target="_blank"
-                 title="Ver: {{ nombre_archivo }}">
+              {# Botón ver — abre popover si hay varias versiones, directo si hay una sola #}
+              <button class="btn-icon btn-evidencia-ok"
+                title="Ver evidencia{% if nombre_archivo %}: {{ nombre_archivo }}{% endif %}"
+                data-idcompromiso="{{ c.idcompromiso }}"
+                data-mes="{{ mes }}"
+                data-anio="{{ anio }}"
+                onclick="verEvidencia(this, this.dataset.idcompromiso, this.dataset.mes, this.dataset.anio)">
                 <i data-feather="eye"></i>
-              </a>
-              {# Descargar #}
+              </button>
+              {# Descargar última versión #}
               <a class="btn-icon btn-icon-edit"
                  href="/admin/compromisos/descargar/{{ c.idcompromiso }}?mes={{ mes }}&anio={{ anio }}"
-                 title="Descargar: {{ nombre_archivo }}">
+                 title="Descargar última versión{% if nombre_archivo %}: {{ nombre_archivo }}{% endif %}">
                 <i data-feather="download"></i>
               </a>
             </div>
@@ -273,7 +275,7 @@
           <i data-feather="upload-cloud"
              style="width:28px;height:28px;stroke:var(--text-muted);display:block;margin:0 auto .5rem;"></i>
           <p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.6rem;">
-            {% raw %}Arrastra archivos aquí o{% endraw %}
+            Arrastra archivos aquí o
           </p>
           <button type="button" class="btn btn-secondary"
                   style="padding:.35rem .85rem;font-size:.78rem;"
@@ -300,7 +302,7 @@
 
         <p style="font-size:.72rem;color:var(--text-muted);margin-top:.4rem;">
           Formatos: PDF, JPG, PNG · Máx. 10MB ·
-          Si ya existe evidencia, esta nueva versión la reemplazará
+          Subir un nuevo archivo crea una versión adicional
         </p>
       </div>
 
