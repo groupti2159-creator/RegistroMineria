@@ -2,6 +2,10 @@
 {% block title %}Gestión de Aguas — ecoSupervisor{% endblock %}
 {% block page_title %}Gestión de Aguas{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_aguas/monitoreo_ambiental.css') }}">
+{% endblock %}
+
 {% block content %}
 
 <div class="page-header-section">
@@ -12,7 +16,6 @@
   </div>
 </div>
 
-<!-- BOTONES -->
 <div class="action-bar">
   <button class="btn btn-primary" onclick="abrirModal('efluentes')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro Efluentes</strong>
@@ -28,7 +31,6 @@
   </a>
 </div>
 
-<!-- FILTROS -->
 <div class="filter-bar">
   <div class="filter-select-wrapper">
     <i data-feather="filter"></i>
@@ -42,7 +44,7 @@
     <i data-feather="search"></i>
     <input type="text" id="inputBuscar" class="filter-select"
            placeholder="Buscar por efluente o supervisor..."
-           oninput="aplicarFiltros()" style="min-width:320px;">
+           oninput="aplicarFiltros()" style="min-width:280px;">
   </div>
   <div class="filter-select-wrapper">
     <i data-feather="calendar"></i>
@@ -59,7 +61,6 @@
   <span class="filter-count" id="contadorRegistros">0 registros</span>
 </div>
 
-<!-- TABLA -->
 <div class="card" style="overflow:hidden;">
   <div class="card-title">
     <i data-feather="list"></i>
@@ -67,7 +68,7 @@
     <span class="badge-count" id="contadorTabla">0 registros</span>
   </div>
 
-  <div style="display:block; width:100%; overflow-x:auto; overflow-y:visible; -webkit-overflow-scrolling:touch;">
+  <div style="display:block;width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;">
 
     <!-- ── EFLUENTES ── -->
     <table class="data-table agua-table" id="tabla-efluentes" style="min-width:1600px;">
@@ -87,16 +88,16 @@
           <th>CN</th>
           <th>Cr VI</th>
           <th>pH<sub>Lab</sub></th>
-          <th>TSS LMP</th>
-          <th>Cu Tot.<br>LMP</th>
-          <th>Pb Tot.<br>LMP</th>
-          <th>Zn Tot.<br>LMP</th>
-          <th>Fe Tot.<br>LMP</th>
-          <th>As Tot.<br>LMP</th>
-          <th>CN LMP<br>(mg/l)</th>
-          <th>Cr VI LMP</th>
-          <th>pH<sub>min</sub></th>
-          <th>pH<sub>max</sub></th>
+          <th class="col-lmp">TSS LMP</th>
+          <th class="col-lmp">Cu LMP</th>
+          <th class="col-lmp">Pb LMP</th>
+          <th class="col-lmp">Zn LMP</th>
+          <th class="col-lmp">Fe LMP</th>
+          <th class="col-lmp">As LMP</th>
+          <th class="col-lmp">CN LMP</th>
+          <th class="col-lmp">Cr VI LMP</th>
+          <th class="col-lmp">pH<sub>min</sub></th>
+          <th class="col-lmp">pH<sub>max</sub></th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -117,20 +118,26 @@
           <td>{{ r.cn }}</td>
           <td>{{ r.cr_vi }}</td>
           <td>{{ r.ph_lab }}</td>
-          <td>{{ r.tss_lmp }}</td>
-          <td>{{ r.cu_lmp }}</td>
-          <td>{{ r.pb_lmp }}</td>
-          <td>{{ r.zn_lmp }}</td>
-          <td>{{ r.fe_lmp }}</td>
-          <td>{{ r.as_lmp }}</td>
-          <td>{{ r.cn_lmp }}</td>
-          <td>{{ r.cr_vi_lmp }}</td>
-          <td>{{ r.ph_min }}</td>
-          <td>{{ r.ph_max }}</td>
+          <td class="col-lmp">{{ r.tss_lmp }}</td>
+          <td class="col-lmp">{{ r.cu_lmp }}</td>
+          <td class="col-lmp">{{ r.pb_lmp }}</td>
+          <td class="col-lmp">{{ r.zn_lmp }}</td>
+          <td class="col-lmp">{{ r.fe_lmp }}</td>
+          <td class="col-lmp">{{ r.as_lmp }}</td>
+          <td class="col-lmp">{{ r.cn_lmp }}</td>
+          <td class="col-lmp">{{ r.cr_vi_lmp }}</td>
+          <td class="col-lmp">{{ r.ph_min }}</td>
+          <td class="col-lmp">{{ r.ph_max }}</td>
           <td>
-            <div style="display:flex;gap:.4rem;">
-              <button class="btn-icon btn-icon-edit" onclick="editarRegistro('efluentes','{{ r.id }}')"><i data-feather="edit-2"></i></button>
-              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('efluentes','{{ r.id }}')"><i data-feather="trash-2"></i></button>
+            <div class="action-btns">
+              <button class="btn-icon btn-icon-edit" title="Editar"
+                onclick="editarRegistro('efluentes','{{ r.id }}')">
+                <i data-feather="edit-2"></i>
+              </button>
+              <button class="btn-icon btn-red" title="Eliminar"
+                onclick="eliminarRegistro('efluentes','{{ r.id }}')">
+                <i data-feather="trash-2"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -158,13 +165,13 @@
           <th>pH</th>
           <th>DBO</th>
           <th>DQO</th>
-          <th>Turbidez LMP</th>
-          <th>Cloro LMP</th>
-          <th>OD LMP</th>
-          <th>pH 1 LMP</th>
-          <th>pH 2 LMP</th>
-          <th>DBO LMP</th>
-          <th>DQO LMP</th>
+          <th class="col-lmp">Turbidez LMP</th>
+          <th class="col-lmp">Cloro LMP</th>
+          <th class="col-lmp">OD LMP</th>
+          <th class="col-lmp">pH 1 LMP</th>
+          <th class="col-lmp">pH 2 LMP</th>
+          <th class="col-lmp">DBO LMP</th>
+          <th class="col-lmp">DQO LMP</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -182,17 +189,23 @@
           <td>{{ r.ph }}</td>
           <td>{{ r.dbo }}</td>
           <td>{{ r.dqo }}</td>
-          <td>{{ r.turbidez_lmp }}</td>
-          <td>{{ r.cloro_lmp }}</td>
-          <td>{{ r.od_lmp }}</td>
-          <td>{{ r.ph1_lmp }}</td>
-          <td>{{ r.ph2_lmp }}</td>
-          <td>{{ r.dbo_lmp }}</td>
-          <td>{{ r.dqo_lmp }}</td>
+          <td class="col-lmp">{{ r.turbidez_lmp }}</td>
+          <td class="col-lmp">{{ r.cloro_lmp }}</td>
+          <td class="col-lmp">{{ r.od_lmp }}</td>
+          <td class="col-lmp">{{ r.ph1_lmp }}</td>
+          <td class="col-lmp">{{ r.ph2_lmp }}</td>
+          <td class="col-lmp">{{ r.dbo_lmp }}</td>
+          <td class="col-lmp">{{ r.dqo_lmp }}</td>
           <td>
-            <div style="display:flex;gap:.4rem;">
-              <button class="btn-icon btn-icon-edit" onclick="editarRegistro('ptard','{{ r.id }}')"><i data-feather="edit-2"></i></button>
-              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('ptard','{{ r.id }}')"><i data-feather="trash-2"></i></button>
+            <div class="action-btns">
+              <button class="btn-icon btn-icon-edit" title="Editar"
+                onclick="editarRegistro('ptard','{{ r.id }}')">
+                <i data-feather="edit-2"></i>
+              </button>
+              <button class="btn-icon btn-red" title="Eliminar"
+                onclick="eliminarRegistro('ptard','{{ r.id }}')">
+                <i data-feather="trash-2"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -218,11 +231,11 @@
           <th>Cloro</th>
           <th>OD</th>
           <th>pH</th>
-          <th>Turbidez LMP</th>
-          <th>Cloro LMP</th>
-          <th>OD LMP</th>
-          <th>pH 1 LMP</th>
-          <th>pH 2 LMP</th>
+          <th class="col-lmp">Turbidez LMP</th>
+          <th class="col-lmp">Cloro LMP</th>
+          <th class="col-lmp">OD LMP</th>
+          <th class="col-lmp">pH 1 LMP</th>
+          <th class="col-lmp">pH 2 LMP</th>
           <th>Acciones</th>
         </tr>
       </thead>
@@ -238,15 +251,21 @@
           <td>{{ r.cloro }}</td>
           <td>{{ r.od }}</td>
           <td>{{ r.ph }}</td>
-          <td>{{ r.turbidez_lmp }}</td>
-          <td>{{ r.cloro_lmp }}</td>
-          <td>{{ r.od_lmp }}</td>
-          <td>{{ r.ph1_lmp }}</td>
-          <td>{{ r.ph2_lmp }}</td>
+          <td class="col-lmp">{{ r.turbidez_lmp }}</td>
+          <td class="col-lmp">{{ r.cloro_lmp }}</td>
+          <td class="col-lmp">{{ r.od_lmp }}</td>
+          <td class="col-lmp">{{ r.ph1_lmp }}</td>
+          <td class="col-lmp">{{ r.ph2_lmp }}</td>
           <td>
-            <div style="display:flex;gap:.4rem;">
-              <button class="btn-icon btn-icon-edit" onclick="editarRegistro('ptap','{{ r.id }}')"><i data-feather="edit-2"></i></button>
-              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('ptap','{{ r.id }}')"><i data-feather="trash-2"></i></button>
+            <div class="action-btns">
+              <button class="btn-icon btn-icon-edit" title="Editar"
+                onclick="editarRegistro('ptap','{{ r.id }}')">
+                <i data-feather="edit-2"></i>
+              </button>
+              <button class="btn-icon btn-red" title="Eliminar"
+                onclick="eliminarRegistro('ptap','{{ r.id }}')">
+                <i data-feather="trash-2"></i>
+              </button>
             </div>
           </td>
         </tr>
@@ -262,200 +281,209 @@
   </div>
 </div>
 
-<!-- ═══ MODAL EFLUENTES ═══ -->
-<div class="modal-overlay" id="modal-efluentes">
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: EFLUENTES
+════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-efluentes" style="display:none;">
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Gestión de Aguas</p>
-        <h2 class="modal-title">Nuevo Registro — Efluentes</h2>
+        <p style="font-size:.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Gestión de Aguas</p>
+        <h2 class="modal-title" id="titulo-efluentes">Nuevo Registro — Efluentes</h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModal('modal-efluentes')" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
+        <button class="modal-close" onclick="cerrarModal('modal-efluentes')"><i data-feather="x"></i></button>
       </div>
     </div>
-    <form method="POST" action="/admin/aguas/crear/efluentes">
+    <form id="form-efluentes" method="POST" action="/admin/aguas/crear/efluentes">
       <div class="modal-body" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
         <div class="plants-grid" style="grid-template-columns:1fr 1fr 1fr;">
-          <div><label class="date-label">Fecha *</label>
-            <input type="date" name="fecha" class="date-input" style="width:100%" required></div>
-          <div><label class="date-label">Efluente *</label>
-            <select name="efluente" class="plant-input" required>
+          <div><label class="form-label">Fecha *</label>
+            <input type="date" name="fecha" class="form-input" required></div>
+          <div><label class="form-label">Efluente *</label>
+            <select name="efluente" class="form-select" required>
               <option value="">Seleccionar...</option>
               {% for e in efluentes %}<option value="{{ e.idefluente }}">{{ e.nombre }}</option>{% endfor %}
             </select></div>
-          <div><label class="date-label">Supervisor *</label>
-            <select name="supervisor" class="plant-input" required>
+          <div><label class="form-label">Supervisor *</label>
+            <select name="supervisor" class="form-select" required>
               <option value="">Seleccionar...</option>
               {% for u in supervisores %}<option value="{{ u.idusuario }}">{{ u.nombrecompleto }}</option>{% endfor %}
             </select></div>
         </div>
         <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
-          <div><label class="date-label">Caudal Máx Q (l/s)</label><input type="number" step="0.01" name="caudal_max" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Caudal tratado Q (l/s)</label><input type="number" step="0.01" name="caudal_tratado" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Caudal Máx Q (l/s)</label><input type="number" step="0.001" name="caudal_max" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Caudal tratado Q (l/s)</label><input type="number" step="0.001" name="caudal_tratado" class="form-input" placeholder="0.000"></div>
         </div>
-        <p class="date-label" style="margin-bottom:-.5rem">Parámetros</p>
+        <p class="form-label" style="margin-bottom:-.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Parámetros Medidos</p>
         <div class="plants-grid">
-          <div><label class="date-label">TSS</label><input type="number" step="0.001" name="tss" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Cu Tot. (mg/l)</label><input type="number" step="0.001" name="cu_tot" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Pb Tot. (mg/l)</label><input type="number" step="0.001" name="pb_tot" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Zn Tot. (mg/l)</label><input type="number" step="0.001" name="zn_tot" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Fe Tot. (mg/l)</label><input type="number" step="0.001" name="fe_tot" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">As Tot. (mg/l)</label><input type="number" step="0.001" name="as_tot" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">pH Lab</label><input type="number" step="0.01" name="ph_lab" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">TSS</label><input type="number" step="0.001" name="tss" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Cu Tot. (mg/l)</label><input type="number" step="0.001" name="cu_tot" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Pb Tot. (mg/l)</label><input type="number" step="0.001" name="pb_tot" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Zn Tot. (mg/l)</label><input type="number" step="0.001" name="zn_tot" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Fe Tot. (mg/l)</label><input type="number" step="0.001" name="fe_tot" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">As Tot. (mg/l)</label><input type="number" step="0.001" name="as_tot" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">pH Lab</label><input type="number" step="0.01" name="ph_lab" class="form-input" placeholder="0.00"></div>
         </div>
-        <div style="background:var(--color-background-secondary);padding:.75rem 1rem;border-radius:.5rem;font-size:.8rem;color:var(--text-muted);">
+        <div style="padding:.65rem .85rem;background:var(--pastel-green);border-radius:var(--radius);font-size:.8rem;color:var(--text-green);">
           <i data-feather="info" style="width:14px;height:14px;vertical-align:middle;margin-right:4px;"></i>
-          <strong>CN</strong> y <strong>Cr VI</strong> se calculan automáticamente
-          &nbsp;—&nbsp; <em>CN = CuTot + 0.2 &nbsp;|&nbsp; CrVI = CuTot − 0.03</em>
+          <strong>CN</strong> y <strong>Cr VI</strong> se calculan automáticamente —
+          <em>CN = CuTot + 0.2 &nbsp;|&nbsp; CrVI = CuTot − 0.03</em>
         </div>
-        <p class="date-label" style="margin-bottom:-.5rem">Límites Máximos Permisibles (LMP)</p>
+        <p class="form-label" style="margin-bottom:-.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Límites Máximos Permisibles (LMP)</p>
         <div class="plants-grid">
-          <div><label class="date-label">TSS LMP</label><input type="number" step="0.001" name="tss_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Cu Tot. LMP</label><input type="number" step="0.001" name="cu_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Pb Tot. LMP</label><input type="number" step="0.001" name="pb_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Zn Tot. LMP</label><input type="number" step="0.001" name="zn_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Fe Tot. LMP</label><input type="number" step="0.001" name="fe_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">As Tot. LMP</label><input type="number" step="0.001" name="as_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">CN LMP (mg/l)</label><input type="number" step="0.001" name="cn_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">Cr VI LMP</label><input type="number" step="0.001" name="cr_vi_lmp" class="plant-input" placeholder="0.000"></div>
-          <div><label class="date-label">pH mín</label><input type="number" step="0.01" name="ph_min" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH máx</label><input type="number" step="0.01" name="ph_max" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">TSS LMP</label><input type="number" step="0.001" name="tss_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Cu Tot. LMP</label><input type="number" step="0.001" name="cu_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Pb Tot. LMP</label><input type="number" step="0.001" name="pb_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Zn Tot. LMP</label><input type="number" step="0.001" name="zn_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Fe Tot. LMP</label><input type="number" step="0.001" name="fe_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">As Tot. LMP</label><input type="number" step="0.001" name="as_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">CN LMP (mg/l)</label><input type="number" step="0.001" name="cn_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Cr VI LMP</label><input type="number" step="0.001" name="cr_vi_lmp" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">pH mín</label><input type="number" step="0.01" name="ph_min" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH máx</label><input type="number" step="0.01" name="ph_max" class="form-input" placeholder="0.00"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <div class="modal-footer__summary"><span class="footer-label">Efluentes</span></div>
-        <div class="modal-footer__actions">
-          <button type="button" class="btn-cancel" onclick="cerrarModal('modal-efluentes')">Cancelar</button>
-          <button type="submit" class="btn-save">Guardar</button>
+        <div style="display:flex;gap:.75rem;margin-left:auto;">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal('modal-efluentes')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-feather="save" style="width:15px;height:15px;vertical-align:middle;margin-right:4px;"></i>
+            Guardar
+          </button>
         </div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ═══ MODAL PTARD ═══ -->
-<div class="modal-overlay" id="modal-ptard">
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: PTARD
+════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-ptard" style="display:none;">
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Gestión de Aguas</p>
-        <h2 class="modal-title">Nuevo Registro — PTARD</h2>
+        <p style="font-size:.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Gestión de Aguas</p>
+        <h2 class="modal-title" id="titulo-ptard">Nuevo Registro — PTARD</h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModal('modal-ptard')" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
+        <button class="modal-close" onclick="cerrarModal('modal-ptard')"><i data-feather="x"></i></button>
       </div>
     </div>
-    <form method="POST" action="/admin/aguas/crear/ptard">
+    <form id="form-ptard" method="POST" action="/admin/aguas/crear/ptard">
       <div class="modal-body" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
         <div class="plants-grid" style="grid-template-columns:1fr 1fr 1fr;">
-          <div><label class="date-label">Fecha *</label>
-            <input type="date" name="fecha" class="date-input" style="width:100%" required></div>
-          <div><label class="date-label">Efluente *</label>
-            <select name="efluente" class="plant-input" required>
+          <div><label class="form-label">Fecha *</label>
+            <input type="date" name="fecha" class="form-input" required></div>
+          <div><label class="form-label">Efluente *</label>
+            <select name="efluente" class="form-select" required>
               <option value="">Seleccionar...</option>
               {% for e in efluentes %}<option value="{{ e.idefluente }}">{{ e.nombre }}</option>{% endfor %}
             </select></div>
-          <div><label class="date-label">Supervisor *</label>
-            <select name="supervisor" class="plant-input" required>
+          <div><label class="form-label">Supervisor *</label>
+            <select name="supervisor" class="form-select" required>
               <option value="">Seleccionar...</option>
               {% for u in supervisores %}<option value="{{ u.idusuario }}">{{ u.nombrecompleto }}</option>{% endfor %}
             </select></div>
         </div>
         <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
-          <div><label class="date-label">Caudal Máx Q (l/s)</label><input type="number" step="0.01" name="caudal_max" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Caudal tratado Q (l/s)</label><input type="number" step="0.01" name="caudal_tratado" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Caudal Máx Q (l/s)</label><input type="number" step="0.001" name="caudal_max" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Caudal tratado Q (l/s)</label><input type="number" step="0.001" name="caudal_tratado" class="form-input" placeholder="0.000"></div>
         </div>
-        <p class="date-label" style="margin-bottom:-.5rem">Parámetros</p>
+        <p class="form-label" style="margin-bottom:-.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Parámetros</p>
         <div class="plants-grid">
-          <div><label class="date-label">Turbidez</label><input type="number" step="0.01" name="turbidez" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Cloro</label><input type="number" step="0.01" name="cloro" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">OD</label><input type="number" step="0.01" name="od" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH</label><input type="number" step="0.01" name="ph" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">DBO</label><input type="number" step="0.01" name="dbo" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">DQO</label><input type="number" step="0.01" name="dqo" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Turbidez</label><input type="number" step="0.01" name="turbidez" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">Cloro</label><input type="number" step="0.01" name="cloro" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">OD</label><input type="number" step="0.01" name="od" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH</label><input type="number" step="0.01" name="ph" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">DBO</label><input type="number" step="0.01" name="dbo" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">DQO</label><input type="number" step="0.01" name="dqo" class="form-input" placeholder="0.00"></div>
         </div>
-        <p class="date-label" style="margin-bottom:-.5rem">Límites Máximos Permisibles (LMP)</p>
+        <p class="form-label" style="margin-bottom:-.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">LMP</p>
         <div class="plants-grid">
-          <div><label class="date-label">Turbidez LMP</label><input type="number" step="0.01" name="turbidez_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Cloro LMP</label><input type="number" step="0.01" name="cloro_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">OD LMP</label><input type="number" step="0.01" name="od_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH 1 LMP</label><input type="number" step="0.01" name="ph1_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH 2 LMP</label><input type="number" step="0.01" name="ph2_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">DBO LMP</label><input type="number" step="0.01" name="dbo_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">DQO LMP</label><input type="number" step="0.01" name="dqo_lmp" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Turbidez LMP</label><input type="number" step="0.01" name="turbidez_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">Cloro LMP</label><input type="number" step="0.01" name="cloro_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">OD LMP</label><input type="number" step="0.01" name="od_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH 1 LMP</label><input type="number" step="0.01" name="ph1_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH 2 LMP</label><input type="number" step="0.01" name="ph2_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">DBO LMP</label><input type="number" step="0.01" name="dbo_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">DQO LMP</label><input type="number" step="0.01" name="dqo_lmp" class="form-input" placeholder="0.00"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <div class="modal-footer__summary"><span class="footer-label">PTARD</span></div>
-        <div class="modal-footer__actions">
-          <button type="button" class="btn-cancel" onclick="cerrarModal('modal-ptard')">Cancelar</button>
-          <button type="submit" class="btn-save">Guardar</button>
+        <div style="display:flex;gap:.75rem;margin-left:auto;">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal('modal-ptard')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-feather="save" style="width:15px;height:15px;vertical-align:middle;margin-right:4px;"></i>
+            Guardar
+          </button>
         </div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ═══ MODAL PTAP ═══ -->
-<div class="modal-overlay" id="modal-ptap">
+
+<!-- ═══════════════════════════════════════════════
+     MODAL: PTAP
+════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="modal-ptap" style="display:none;">
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Gestión de Aguas</p>
-        <h2 class="modal-title">Nuevo Registro — PTAP</h2>
+        <p style="font-size:.72rem;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem;">Gestión de Aguas</p>
+        <h2 class="modal-title" id="titulo-ptap">Nuevo Registro — PTAP</h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModal('modal-ptap')" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-        </button>
+        <button class="modal-close" onclick="cerrarModal('modal-ptap')"><i data-feather="x"></i></button>
       </div>
     </div>
-    <form method="POST" action="/admin/aguas/crear/ptap">
+    <form id="form-ptap" method="POST" action="/admin/aguas/crear/ptap">
       <div class="modal-body" style="padding:1.5rem;display:flex;flex-direction:column;gap:1.25rem;">
         <div class="plants-grid" style="grid-template-columns:1fr 1fr 1fr;">
-          <div><label class="date-label">Fecha *</label>
-            <input type="date" name="fecha" class="date-input" style="width:100%" required></div>
-          <div><label class="date-label">Efluente *</label>
-            <select name="efluente" class="plant-input" required>
+          <div><label class="form-label">Fecha *</label>
+            <input type="date" name="fecha" class="form-input" required></div>
+          <div><label class="form-label">Efluente *</label>
+            <select name="efluente" class="form-select" required>
               <option value="">Seleccionar...</option>
               {% for e in efluentes %}<option value="{{ e.idefluente }}">{{ e.nombre }}</option>{% endfor %}
             </select></div>
-          <div><label class="date-label">Supervisor *</label>
-            <select name="supervisor" class="plant-input" required>
+          <div><label class="form-label">Supervisor *</label>
+            <select name="supervisor" class="form-select" required>
               <option value="">Seleccionar...</option>
               {% for u in supervisores %}<option value="{{ u.idusuario }}">{{ u.nombrecompleto }}</option>{% endfor %}
             </select></div>
         </div>
         <div class="plants-grid" style="grid-template-columns:1fr 1fr;">
-          <div><label class="date-label">Caudal Máx Q (l/s)</label><input type="number" step="0.01" name="caudal_max" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Caudal tratado Q (l/s)</label><input type="number" step="0.01" name="caudal_tratado" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Caudal Máx Q (l/s)</label><input type="number" step="0.001" name="caudal_max" class="form-input" placeholder="0.000"></div>
+          <div><label class="form-label">Caudal tratado Q (l/s)</label><input type="number" step="0.001" name="caudal_tratado" class="form-input" placeholder="0.000"></div>
         </div>
-        <p class="date-label" style="margin-bottom:-.5rem">Parámetros</p>
+        <p class="form-label" style="margin-bottom:-.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">Parámetros</p>
         <div class="plants-grid">
-          <div><label class="date-label">Turbidez</label><input type="number" step="0.01" name="turbidez" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Cloro</label><input type="number" step="0.01" name="cloro" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">OD</label><input type="number" step="0.01" name="od" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH</label><input type="number" step="0.01" name="ph" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Turbidez</label><input type="number" step="0.01" name="turbidez" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">Cloro</label><input type="number" step="0.01" name="cloro" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">OD</label><input type="number" step="0.01" name="od" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH</label><input type="number" step="0.01" name="ph" class="form-input" placeholder="0.00"></div>
         </div>
-        <p class="date-label" style="margin-bottom:-.5rem">Límites Máximos Permisibles (LMP)</p>
+        <p class="form-label" style="margin-bottom:-.5rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.05em;">LMP</p>
         <div class="plants-grid">
-          <div><label class="date-label">Turbidez LMP</label><input type="number" step="0.01" name="turbidez_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">Cloro LMP</label><input type="number" step="0.01" name="cloro_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">OD LMP</label><input type="number" step="0.01" name="od_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH 1 LMP</label><input type="number" step="0.01" name="ph1_lmp" class="plant-input" placeholder="0.00"></div>
-          <div><label class="date-label">pH 2 LMP</label><input type="number" step="0.01" name="ph2_lmp" class="plant-input" placeholder="0.00"></div>
+          <div><label class="form-label">Turbidez LMP</label><input type="number" step="0.01" name="turbidez_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">Cloro LMP</label><input type="number" step="0.01" name="cloro_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">OD LMP</label><input type="number" step="0.01" name="od_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH 1 LMP</label><input type="number" step="0.01" name="ph1_lmp" class="form-input" placeholder="0.00"></div>
+          <div><label class="form-label">pH 2 LMP</label><input type="number" step="0.01" name="ph2_lmp" class="form-input" placeholder="0.00"></div>
         </div>
       </div>
       <div class="modal-footer">
-        <div class="modal-footer__summary"><span class="footer-label">PTAP</span></div>
-        <div class="modal-footer__actions">
-          <button type="button" class="btn-cancel" onclick="cerrarModal('modal-ptap')">Cancelar</button>
-          <button type="submit" class="btn-save">Guardar</button>
+        <div style="display:flex;gap:.75rem;margin-left:auto;">
+          <button type="button" class="btn btn-secondary" onclick="cerrarModal('modal-ptap')">Cancelar</button>
+          <button type="submit" class="btn btn-primary">
+            <i data-feather="save" style="width:15px;height:15px;vertical-align:middle;margin-right:4px;"></i>
+            Guardar
+          </button>
         </div>
       </div>
     </form>
@@ -465,11 +493,5 @@
 {% endblock %}
 
 {% block scripts %}
-<style>
-.card { overflow: hidden; min-width: 0; }
-.agua-table th { white-space: nowrap; font-size: .75rem; padding: .5rem .6rem; }
-.agua-table td { font-size: .82rem; padding: .5rem .6rem; }
-</style>
-
 <script src="{{ url_for('static', filename='js/gestion_aguas/monitoreo.js') }}"></script>
 {% endblock %}

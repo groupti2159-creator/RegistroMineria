@@ -5,6 +5,7 @@ from routes.compromisos import compromisos_bp, _login_required
 from datetime import date
 import io
 
+# ── INDEX ────────────────────────────────────────────────
 @compromisos_bp.route('/compromisos')
 @_login_required
 def index():
@@ -20,13 +21,15 @@ def index():
     cum_dict = {str(c['idcompromiso']): c for c in cumplimientos}
 
     return render_template('compromisos/registro.html',
-        compromisos=compromisos,
-        supervisores=supervisores,
-        cum_dict=cum_dict,
-        mes=mes,
-        anio=anio,
-        notif_count=get_notif_count())
+        compromisos  = compromisos,
+        supervisores = supervisores,
+        cum_dict     = cum_dict,
+        mes          = mes,
+        anio         = anio,
+        notif_count  = get_notif_count())
 
+
+# ── GUARDAR CUMPLIMIENTO ─────────────────────────────────
 @compromisos_bp.route('/compromisos/guardar', methods=['POST'])
 @_login_required
 def guardar_cumplimiento():
@@ -37,8 +40,8 @@ def guardar_cumplimiento():
             int(data['idcompromiso']),
             int(data['mes']),
             int(data['anio']),
-            data.get('idusuario', '') or '',
-            data.get('observaciones', '') or '',
+            data.get('idusuario',    '') or '',
+            data.get('observaciones','') or '',
         ))
         mysql.connection.commit()
         cur.close()
@@ -46,6 +49,8 @@ def guardar_cumplimiento():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+
+# ── SUBIR EVIDENCIA (guarda BLOB en MySQL) ───────────────
 @compromisos_bp.route('/compromisos/subir-evidencia', methods=['POST'])
 @_login_required
 def subir_evidencia():
@@ -71,6 +76,7 @@ def subir_evidencia():
         ))
         mysql.connection.commit()
         cur.close()
+
         return jsonify({
             'success': True,
             'version': result['version'] if result else 1,
@@ -79,6 +85,32 @@ def subir_evidencia():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+
+# ── VER EVIDENCIA (inline — abre en nueva pestaña) ───────
+@compromisos_bp.route('/compromisos/ver-evidencia/<int:idcompromiso>')
+@_login_required
+def ver_evidencia(idcompromiso):
+    mes  = int(request.args.get('mes',  date.today().month))
+    anio = int(request.args.get('anio', date.today().year))
+    try:
+        cur = mysql.connection.cursor()
+        ev  = sp_one(cur, 'sp_descargarevidencia', (idcompromiso, mes, anio))
+        cur.close()
+
+        if not ev or not ev.get('datos'):
+            return '<p style="font-family:sans-serif;padding:2rem;">Sin evidencia para este período.</p>', 404
+
+        return send_file(
+            io.BytesIO(ev['datos']),
+            download_name = ev.get('nombre_archivo', 'evidencia'),
+            mimetype      = ev.get('tipo_mime') or 'application/octet-stream',
+            as_attachment = False,   # ← inline, NO descarga
+        )
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+# ── DESCARGAR EVIDENCIA (fuerza descarga) ────────────────
 @compromisos_bp.route('/compromisos/descargar/<int:idcompromiso>')
 @_login_required
 def descargar_evidencia(idcompromiso):
@@ -88,13 +120,15 @@ def descargar_evidencia(idcompromiso):
         cur = mysql.connection.cursor()
         ev  = sp_one(cur, 'sp_descargarevidencia', (idcompromiso, mes, anio))
         cur.close()
+
         if not ev or not ev.get('datos'):
             return jsonify({'error': 'Sin evidencia para este período'}), 404
+
         return send_file(
             io.BytesIO(ev['datos']),
-            download_name=ev['nombre_archivo'],
-            mimetype=ev['tipo_mime'] or 'application/octet-stream',
-            as_attachment=True,
+            download_name = ev.get('nombre_archivo', 'evidencia'),
+            mimetype      = ev.get('tipo_mime') or 'application/octet-stream',
+            as_attachment = True,    # ← fuerza descarga
         )
     except Exception as e:
         return jsonify({'error': str(e)}), 500

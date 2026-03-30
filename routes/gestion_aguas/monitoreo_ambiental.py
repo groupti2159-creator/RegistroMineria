@@ -3,6 +3,7 @@ from extensions import mysql
 from utils.helpers import sp_exec, get_notif_count
 from routes.gestion_aguas import gestion_aguas_bp, _login_required, _num, _serializar
 
+
 @gestion_aguas_bp.route('/aguas')
 @_login_required
 def monitoreo_ambiental():
@@ -14,12 +15,15 @@ def monitoreo_ambiental():
     reg_ptap     = sp_exec(cur, 'sp_listarregistrosptap')
     cur.close()
     return render_template('gestion_aguas/monitoreo_ambiental.html',
-        registros_efluentes=reg_ef,
-        registros_ptard=reg_ptard,
-        registros_ptap=reg_ptap,
-        efluentes=efluentes,
-        supervisores=supervisores,
-        notif_count=get_notif_count())
+        registros_efluentes = reg_ef,
+        registros_ptard     = reg_ptard,
+        registros_ptap      = reg_ptap,
+        efluentes           = efluentes,
+        supervisores        = supervisores,
+        notif_count         = get_notif_count())
+
+
+# ── CREAR ────────────────────────────────────────────────
 
 @gestion_aguas_bp.route('/aguas/crear/efluentes', methods=['POST'])
 @_login_required
@@ -46,11 +50,12 @@ def crear_efluentes():
         mysql.connection.commit()
         cur.close()
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-            return jsonify({'success': True, 'cn': cn, 'cr_vi': cr_vi})
+            return jsonify({'success': True})
     except Exception as e:
         if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
             return jsonify({'success': False, 'error': str(e)}), 400
     return redirect(url_for('gestion_aguas.monitoreo_ambiental'))
+
 
 @gestion_aguas_bp.route('/aguas/crear/ptard', methods=['POST'])
 @_login_required
@@ -78,6 +83,7 @@ def crear_ptard():
             return jsonify({'success': False, 'error': str(e)}), 400
     return redirect(url_for('gestion_aguas.monitoreo_ambiental'))
 
+
 @gestion_aguas_bp.route('/aguas/crear/ptap', methods=['POST'])
 @_login_required
 def crear_ptap():
@@ -102,76 +108,9 @@ def crear_ptap():
             return jsonify({'success': False, 'error': str(e)}), 400
     return redirect(url_for('gestion_aguas.monitoreo_ambiental'))
 
-@gestion_aguas_bp.route('/aguas/eliminar/efluentes/<int:rid>', methods=['POST'])
-@_login_required
-def eliminar_efluentes(rid):
-    try:
-        cur = mysql.connection.cursor()
-        sp_exec(cur, 'sp_eliminarregistroefluentes', (rid,))
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
 
-@gestion_aguas_bp.route('/aguas/eliminar/ptard/<int:rid>', methods=['POST'])
-@_login_required
-def eliminar_ptard(rid):
-    try:
-        cur = mysql.connection.cursor()
-        sp_exec(cur, 'sp_eliminarregistroptard', (rid,))
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
+# ── EDITAR ───────────────────────────────────────────────
 
-@gestion_aguas_bp.route('/aguas/eliminar/ptap/<int:rid>', methods=['POST'])
-@_login_required
-def eliminar_ptap(rid):
-    try:
-        cur = mysql.connection.cursor()
-        sp_exec(cur, 'sp_eliminarregistroptap', (rid,))
-        mysql.connection.commit()
-        cur.close()
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'success': False, 'error': str(e)}), 400
-
-@gestion_aguas_bp.route('/aguas/detalle/efluentes/<int:rid>')
-@_login_required
-def detalle_efluentes(rid):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM Tbl_RegistroEfluentes WHERE IdRegistroEfluente=%s", (rid,))
-    row = cur.fetchone()
-    cur.close()
-    if not row:
-        return jsonify({'error': 'No encontrado'}), 404
-    return jsonify(_serializar(row))
-
-@gestion_aguas_bp.route('/aguas/detalle/ptard/<int:rid>')
-@_login_required
-def detalle_ptard(rid):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM Tbl_RegistroPTARD WHERE IdRegistroPTARD=%s", (rid,))
-    row = cur.fetchone()
-    cur.close()
-    if not row:
-        return jsonify({'error': 'No encontrado'}), 404
-    return jsonify(_serializar(row))
-
-@gestion_aguas_bp.route('/aguas/detalle/ptap/<int:rid>')
-@_login_required
-def detalle_ptap(rid):
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM Tbl_RegistroPTAP WHERE IdRegistroPTAP=%s", (rid,))
-    row = cur.fetchone()
-    cur.close()
-    if not row:
-        return jsonify({'error': 'No encontrado'}), 404
-    return jsonify(_serializar(row))
-
-# ── EDITAR — ahora via SPs ───────────────────────────────
 @gestion_aguas_bp.route('/aguas/editar/efluentes/<int:rid>', methods=['POST'])
 @_login_required
 def editar_efluentes(rid):
@@ -200,6 +139,7 @@ def editar_efluentes(rid):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+
 @gestion_aguas_bp.route('/aguas/editar/ptard/<int:rid>', methods=['POST'])
 @_login_required
 def editar_ptard(rid):
@@ -223,6 +163,7 @@ def editar_ptard(rid):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
 
+
 @gestion_aguas_bp.route('/aguas/editar/ptap/<int:rid>', methods=['POST'])
 @_login_required
 def editar_ptap(rid):
@@ -243,3 +184,91 @@ def editar_ptap(rid):
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 400
+
+
+# ── ELIMINAR ─────────────────────────────────────────────
+
+@gestion_aguas_bp.route('/aguas/eliminar/efluentes/<int:rid>', methods=['POST'])
+@_login_required
+def eliminar_efluentes(rid):
+    try:
+        cur = mysql.connection.cursor()
+        sp_exec(cur, 'sp_eliminarregistroefluentes', (rid,))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@gestion_aguas_bp.route('/aguas/eliminar/ptard/<int:rid>', methods=['POST'])
+@_login_required
+def eliminar_ptard(rid):
+    try:
+        cur = mysql.connection.cursor()
+        sp_exec(cur, 'sp_eliminarregistroptard', (rid,))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+@gestion_aguas_bp.route('/aguas/eliminar/ptap/<int:rid>', methods=['POST'])
+@_login_required
+def eliminar_ptap(rid):
+    try:
+        cur = mysql.connection.cursor()
+        sp_exec(cur, 'sp_eliminarregistroptap', (rid,))
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 400
+
+
+# ── DETALLE (tablas ya en minúscula) ─────────────────────
+
+@gestion_aguas_bp.route('/aguas/detalle/efluentes/<int:rid>')
+@_login_required
+def detalle_efluentes(rid):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_registroefluentes WHERE idregistroefluentes = %s", (rid,))
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        return jsonify(_serializar(row))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@gestion_aguas_bp.route('/aguas/detalle/ptard/<int:rid>')
+@_login_required
+def detalle_ptard(rid):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_registroptard WHERE idregistroptard = %s", (rid,))
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        return jsonify(_serializar(row))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+
+@gestion_aguas_bp.route('/aguas/detalle/ptap/<int:rid>')
+@_login_required
+def detalle_ptap(rid):
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_registroptap WHERE idregistroptap = %s", (rid,))
+        row = cur.fetchone()
+        cur.close()
+        if not row:
+            return jsonify({'error': 'No encontrado'}), 404
+        return jsonify(_serializar(row))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

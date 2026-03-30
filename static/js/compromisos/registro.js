@@ -43,43 +43,36 @@ function abrirEditarCompromiso(ds) {
   document.getElementById('editComp_observaciones').value = ds.observaciones || '';
   document.getElementById('editComp_supervisor').value    = ds.idusuario     || '';
 
-  // Estado evidencia actual
-  const divConEvidencia  = document.getElementById('editComp_evidenciaActual');
-  const divSinEvidencia  = document.getElementById('editComp_sinEvidencia');
-  const driveLink        = document.getElementById('editComp_driveLink');
-  const driveLinkBtn     = document.getElementById('editComp_driveLinkBtn');
+  // Estado evidencia
+  const divCon = document.getElementById('editComp_conEvidencia');
+  const divSin = document.getElementById('editComp_sinEvidencia');
 
-  if (ds.tieneEvidencia === 'true' && ds.driveFileId) {
-    // Tiene evidencia en Drive
-    const url = `https://drive.google.com/file/d/${ds.driveFileId}/view`;
-    driveLink.href        = url;
-    driveLink.textContent = ds.driveFileName || 'Ver archivo';
-    driveLinkBtn.href     = url;
-    divConEvidencia.style.display = 'flex';
-    divSinEvidencia.style.display = 'none';
-  } else if (ds.tieneEvidencia === 'true') {
-    // Evidencia legacy (sin Drive ID)
-    driveLink.href        = `/admin/compromisos/descargar/${ds.comp}?mes=${ds.mes}&anio=${ds.anio}`;
-    driveLink.textContent = 'Archivo cargado (sistema anterior)';
-    driveLinkBtn.href     = driveLink.href;
-    divConEvidencia.style.display = 'flex';
-    divSinEvidencia.style.display = 'none';
+  if (ds.tieneEvidencia === 'true') {
+    const urlVer       = `/admin/compromisos/ver-evidencia/${ds.comp}?mes=${ds.mes}&anio=${ds.anio}`;
+    const urlDescargar = `/admin/compromisos/descargar/${ds.comp}?mes=${ds.mes}&anio=${ds.anio}`;
+
+    document.getElementById('editComp_nombreArchivo').textContent = ds.nombreArchivo || 'Archivo cargado';
+    document.getElementById('editComp_btnVer').href       = urlVer;
+    document.getElementById('editComp_btnDescargar').href = urlDescargar;
+
+    divCon.style.display = 'flex';
+    divSin.style.display = 'none';
   } else {
-    divConEvidencia.style.display = 'none';
-    divSinEvidencia.style.display = 'flex';
+    divCon.style.display = 'none';
+    divSin.style.display = 'flex';
   }
 
   // Limpiar archivo previo
-  document.getElementById('editComp_archivo').value                    = '';
+  document.getElementById('editComp_archivo').value                     = '';
   document.getElementById('editComp_archivoSeleccionado').style.display = 'none';
-  document.getElementById('editComp_archivoLabel').textContent          = '';
+  document.getElementById('editComp_archivoLabel').textContent           = '';
 
   // Limpiar estado
   const estado = document.getElementById('editComp_estado');
   estado.style.display = 'none';
+  estado.className     = 'comp-estado-msg';
   estado.textContent   = '';
 
-  // Abrir modal
   document.getElementById('modalEditarCompromiso').style.display = 'flex';
   feather.replace();
 }
@@ -89,9 +82,9 @@ function cerrarEditarCompromiso() {
 }
 
 function limpiarArchivoEditar() {
-  document.getElementById('editComp_archivo').value                    = '';
+  document.getElementById('editComp_archivo').value                     = '';
   document.getElementById('editComp_archivoSeleccionado').style.display = 'none';
-  document.getElementById('editComp_archivoLabel').textContent          = '';
+  document.getElementById('editComp_archivoLabel').textContent           = '';
 }
 
 async function guardarEditarCompromiso() {
@@ -126,7 +119,7 @@ async function guardarEditarCompromiso() {
     errores.push('datos');
   }
 
-  // 2) Subir archivo a Drive si se seleccionó uno nuevo
+  // 2) Subir archivo si hay uno nuevo
   if (archivo) {
     try {
       const fd = new FormData();
@@ -150,7 +143,6 @@ async function guardarEditarCompromiso() {
   if (errores.length === 0) {
     estado.className = 'comp-estado-msg comp-estado-ok';
     estado.textContent = '✅ Guardado correctamente';
-    // Recargar para reflejar cambios en la tabla
     setTimeout(() => { cerrarEditarCompromiso(); location.reload(); }, 1000);
   } else {
     estado.className = 'comp-estado-msg comp-estado-error';
