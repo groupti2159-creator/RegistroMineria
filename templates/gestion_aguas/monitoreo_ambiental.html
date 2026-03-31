@@ -14,13 +14,13 @@
 
 <!-- BOTONES -->
 <div class="action-bar">
-  <button class="btn btn-primary" onclick="abrirModal('efluentes')">
+  <button class="btn btn-primary" onclick="abrirModalAgua('efluentes')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro Efluentes</strong>
   </button>
-  <button class="btn btn-primary" onclick="abrirModal('ptard')">
+  <button class="btn btn-primary" onclick="abrirModalAgua('ptard')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro PTARD</strong>
   </button>
-  <button class="btn btn-primary" onclick="abrirModal('ptap')">
+  <button class="btn btn-primary" onclick="abrirModalAgua('ptap')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro PTAP</strong>
   </button>
   <a href="#" class="btn btn-export"
@@ -532,17 +532,11 @@ function limpiarFiltros() {
   aplicarFiltros();
 }
 
-function abrirModal(tipo) {
-  document.getElementById('selectTipo').value = tipo;
+function abrirModalAgua(tipo) {
+  const select = document.getElementById('selectTipo');
+  if (select) select.value = tipo;
   cambiarTipo(tipo);
-  document.getElementById('modal-'+tipo).classList.add('open');
-  document.body.style.overflow = 'hidden';
-  try { feather.replace(); } catch(e) {}
-}
-
-function cerrarModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
+  abrirModal('modal-' + tipo);
 }
 
 function editarRegistro(tipo, id) {
@@ -575,11 +569,7 @@ function showToast(msg, type) {
   setTimeout(() => d.remove(), 4000);
 }
 
-['modal-efluentes','modal-ptard','modal-ptap'].forEach(id => {
-  document.getElementById(id).addEventListener('click', function(e) {
-    if (e.target === this) cerrarModal(id);
-  });
-});
+
 
 document.addEventListener('DOMContentLoaded', () => {
   aplicarFiltros();

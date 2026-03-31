@@ -1,4 +1,4 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block title %}Desvíos Ambientales — ecoSupervisor{% endblock %}
 {% block page_title %}Desvíos Ambientales{% endblock %}
 
@@ -14,7 +14,7 @@
 </div>
 
 <div class="action-bar">
-  <button class="btn btn-primary" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.add('open')">
+  <button class="btn btn-primary" onclick="resetFormCrear(); abrirModal('modalCrear')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Reporte Ambiental</strong>
   </button>
   <a href="{{ url_for('da.exportar_excel') }}" class="btn btn-export">
@@ -59,16 +59,10 @@
         <h2 class="modal-title">Registrar Nuevo Reporte</h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="resetFormCrear(); document.getElementById('modalCrear').style.display='none'" aria-label="Cerrar">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        <button class="btn-close" onclick="cerrarModal('modalCrear')" aria-label="Cerrar">
+          <svg width="18" height="18" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
-<<<<<<< HEAD
-      <button class="modal-close" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.remove('open')">
-        <i data-feather="x"></i>
-      </button>
-=======
->>>>>>> origin/maria
     </div>
     <form method="POST" action="{{ url_for('da.crear_registro') }}" enctype="multipart/form-data">
       <div class="modal-body">
@@ -244,7 +238,7 @@
           <i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
           Guardar Reporte
         </button>
-        <button type="button" class="btn btn-secondary btn-lg" onclick="resetFormCrear(); document.getElementById('modalCrear').classList.remove('open')">
+        <button type="button" class="btn btn-secondary btn-lg" onclick="cerrarModal('modalCrear')">
           <i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> 
           Cancelar
         </button>
@@ -262,16 +256,10 @@
         <h2 class="modal-title">Editar Reporte</h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="document.getElementById('modalEditar').style.display='none'" aria-label="Cerrar">
+        <button class="btn-close" onclick="cerrarModal('modalEditar')" aria-label="Cerrar">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
-<<<<<<< HEAD
-      <button class="modal-close" onclick="document.getElementById('modalEditar').classList.remove('open')">
-        <i data-feather="x"></i>
-      </button>
-=======
->>>>>>> origin/maria
     </div>
     <form method="POST" id="formEditar" enctype="multipart/form-data">
       <div class="modal-body">
@@ -423,23 +411,15 @@
 <!-- ===== MODAL DETALLE ===== -->
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal modal-large">
-    <div class="modal-header">
-<<<<<<< HEAD
-      <h3><i data-feather="file-text"></i> Detalle del Reporte</h3>
-      <button class="modal-close" onclick="document.getElementById('modalDetalle').classList.remove('open')">
-        <i data-feather="x"></i>
-      </button>
-=======
       <div class="modal-header__info">
         <p class="modal-eyebrow">Desvíos Ambientales</p>
         <h2 class="modal-title">Detalle del Reporte</h2>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="document.getElementById('modalDetalle').style.display='none'" aria-label="Cerrar">
+        <button class="btn-close" onclick="cerrarModal('modalDetalle')" aria-label="Cerrar">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>
->>>>>>> origin/maria
     </div>
     <div class="modal-body" id="detalleContent">
       <div class="loading-state">Cargando...</div>

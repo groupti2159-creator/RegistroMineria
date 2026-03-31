@@ -1,47 +1,5 @@
 {% extends 'base.html' %}
-<<<<<<< HEAD
-{% block title %}Compromisos — ecoSupervisor{% endblock %}
-{% block page_title %}Compromisos{% endblock %}
 
-{% block content %}
-<div class="stats-cards-row">
-  <div class="stat-card">
-    <div class="stat-card-default">
-      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8)">
-        <i data-feather="check-square" style="width:36px;height:36px;color:#fff"></i>
-      </div>
-      <div class="stat-card-title">Total</div>
-      <div class="stat-value">{{ stats.total }}</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-default">
-      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#22c55e,#15803d)">
-        <i data-feather="check" style="width:36px;height:36px;color:#fff"></i>
-      </div>
-      <div class="stat-card-title">Cumplidos</div>
-      <div class="stat-value">{{ stats.cumplidos }}</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-default">
-      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#f59e0b,#b45309)">
-        <i data-feather="clock" style="width:36px;height:36px;color:#fff"></i>
-      </div>
-      <div class="stat-card-title">Pendientes</div>
-      <div class="stat-value">{{ stats.pendientes }}</div>
-    </div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-card-default">
-      <div class="stat-icon-wrap" style="background:linear-gradient(135deg,#ef4444,#b91c1c)">
-        <i data-feather="alert-circle" style="width:36px;height:36px;color:#fff"></i>
-      </div>
-      <div class="stat-card-title">Vencidos</div>
-      <div class="stat-value">{{ stats.vencidos }}</div>
-    </div>
-  </div>
-=======
 {% block title %}Dashboard — Compromisos{% endblock %}
 {% block page_title %}Compromisos{% endblock %}
 
@@ -49,7 +7,6 @@
 <div class="dashboard-intro">
   <h2 class="section-title">Dashboard — <span class="text-green">Compromisos</span></h2>
   <p class="section-sub">Resumen de obligaciones y permisos ambientales</p>
->>>>>>> origin/maria
 </div>
 
 <div class="stats-grid">
@@ -61,66 +18,90 @@
     </div>
     <div class="stat-icon"><i data-feather="check-square"></i></div>
   </div>
+  
   <div class="stat-card stat-green">
     <div class="stat-info">
       <p class="stat-label">Cumplidos</p>
       <h2 class="stat-value">{{ stats.cumplidos or 0 }}</h2>
-      <p class="stat-desc">Con evidencia</p>
+      <p class="stat-desc">Obligaciones finalizadas</p>
     </div>
     <div class="stat-icon"><i data-feather="check-circle"></i></div>
   </div>
+  
   <div class="stat-card stat-yellow">
     <div class="stat-info">
       <p class="stat-label">Pendientes</p>
       <h2 class="stat-value">{{ stats.pendientes or 0 }}</h2>
-      <p class="stat-desc">Sin evidencia</p>
+      <p class="stat-desc">En proceso de ejecución</p>
     </div>
     <div class="stat-icon"><i data-feather="clock"></i></div>
   </div>
+  
   <div class="stat-card stat-red">
     <div class="stat-info">
       <p class="stat-label">Vencidos</p>
       <h2 class="stat-value">{{ stats.vencidos or 0 }}</h2>
-      <p class="stat-desc">Requieren atención</p>
+      <p class="stat-desc">Requieren atención urgente</p>
     </div>
-    <div class="stat-icon"><i data-feather="alert-circle"></i></div>
+    <div class="stat-icon"><i data-feather="alert-triangle"></i></div>
   </div>
 </div>
 
-<div class="dashboard-grid">
-  <div class="card">
-    <h3 class="card-title"><i data-feather="zap"></i> Acciones Rápidas</h3>
-    <div class="quick-actions">
-      <a href="/admin/compromisos" class="quick-btn">
-        <span class="qa-icon"><i data-feather="list"></i></span>
-        <div>
-          <p class="qa-title">Ver Registro</p>
-          <p class="qa-sub">Gestionar obligaciones ambientales</p>
-        </div>
-      </a>
-    </div>
-  </div>
+<style>
+.dashboard-intro { margin-bottom: 2rem; }
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: var(--shadow);
+}
+.stat-card:hover { 
+  transform: translateY(-4px); 
+  box-shadow: var(--shadow-lg); 
+}
+.stat-info .stat-label { 
+  color: var(--text-muted); 
+  font-size: 0.85rem; 
+  font-weight: 500; 
+  margin-bottom: 0.5rem; 
+}
+.stat-info .stat-value { 
+  font-size: 2rem; 
+  font-weight: 700; 
+  color: var(--text); 
+  margin: 0; 
+}
+.stat-info .stat-desc { 
+  font-size: 0.75rem; 
+  color: var(--text-muted); 
+  margin-top: 0.25rem; 
+}
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-alt);
+}
+.stat-icon i { width: 24px; height: 24px; }
 
-  <div class="card">
-    <h3 class="card-title"><i data-feather="activity"></i> Últimos Registros</h3>
-    <div class="activity-list">
-      {% if ultimos %}
-        {% for r in ultimos %}
-        <div class="activity-item">
-          <span class="activity-dot dot-info"></span>
-          <div class="activity-text">
-            <p><strong>{{ r.obligacion }}</strong> — {{ r.entidad_regulatoria }}</p>
-            <small>{{ r.fecha }} · {{ r.supervisor }}</small>
-          </div>
-        </div>
-        {% endfor %}
-      {% else %}
-        <div class="empty-state">
-          <i data-feather="inbox" style="width:48px;height:48px;color:var(--text-muted)"></i>
-          <p>No hay registros recientes</p>
-        </div>
-      {% endif %}
-    </div>
-  </div>
-</div>
+/* Variantes de color */
+.stat-blue .stat-icon { background: var(--pastel-blue); color: var(--text-blue); }
+.stat-green .stat-icon { background: var(--pastel-green); color: var(--text-green); }
+.stat-yellow .stat-icon { background: var(--pastel-yellow); color: var(--text-yellow); }
+.stat-red .stat-icon { background: var(--pastel-red); color: var(--text-red); }
+</style>
 {% endblock %}

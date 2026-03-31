@@ -2,344 +2,309 @@
 
 {% block title %}Gestión de Usuarios{% endblock %}
 
-{% block extra_css %}
-<style>
-/* ========== ESTILOS PARA GESTIÓN DE USUARIOS (Estandarizado) ========== */
-
-#modalCrearUsuario .modal-box { max-width: 900px; }
-#modalCrearUsuario .form-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-}
-#modalCrearUsuario .form-section-title {
-    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
-    padding: 1rem 1.5rem;
-    background: var(--gray-50);
-    border-bottom: 1px solid var(--border);
-    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    gap: .75rem;
-    color: var(--text);
-}
-[data-theme="dark"] #modalCrearUsuario .form-section-title { background: var(--gray-800); }
-
-#modalCrearUsuario .form-row { margin-bottom: 1.25rem; display: flex; gap: 1.25rem; }
-#modalCrearUsuario .form-row:last-child { margin-bottom: 0; }
-#modalCrearUsuario .form-group { flex: 1; display: flex; flex-direction: column; gap: .45rem; }
-
-.search-bar, .filter-bar {
-    background: var(--bg-card);
-    padding: 1rem 1.25rem;
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-}
-
-.users-table-container {
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--border);
-    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-    overflow-x: auto;
-}
-
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th {
-    padding: 1rem 1.25rem;
-    text-align: left;
-    font-size: .75rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .05em;
-    color: var(--text-muted);
-    border-bottom: 2px solid var(--border);
-    background: var(--gray-50);
-}
-[data-theme="dark"] .data-table th { background: var(--gray-800); }
-
-.data-table td {
-    padding: 1rem 1.25rem;
-    border-bottom: 1px solid var(--border);
-    vertical-align: middle;
-    color: var(--text);
-}
-
-.data-table tbody tr { transition: background-color 0.2s; }
-.data-table tbody tr:hover { background: var(--gray-50); }
-[data-theme="dark"] .data-table tbody tr:hover { background: var(--gray-800); }
-.data-table tbody tr:last-child td { border-bottom: none; }
-
-.user-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--green-100), var(--green-50));
-    color: var(--green-600);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 800;
-    font-size: 1.05rem;
-    margin-right: 1.25rem;
-    flex-shrink: 0;
-    border: 2px solid var(--green-400);
-    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.15);
-    text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
-}
-[data-theme="dark"] .user-avatar { 
-    background: linear-gradient(135deg, var(--green-dark), var(--bg-card)); 
-    border-color: var(--green-600);
-    color: var(--green-400);
-}
-
-.user-info { display: flex; align-items: center; }
-.user-name { font-weight: 600; font-size: .9rem; color: var(--text); margin-bottom: .2rem; }
-.user-dni { font-size: .75rem; color: var(--text-muted); }
-
-.role-badge {
-    display: inline-flex;
-    align-items: center;
-    padding: .35rem .75rem;
-    border-radius: 20px;
-    font-size: .75rem;
-    font-weight: 600;
-    margin: 2px 4px 2px 0;
-    white-space: nowrap;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    color: var(--text);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-.role-admin { border-left: 3px solid #ef4444; }
-.role-supervisor { border-left: 3px solid #3b82f6; }
-.role-trabajador { border-left: 3px solid #10b981; }
-
-.status-badge {
-    padding: .4rem .85rem;
-    border-radius: 20px;
-    font-size: .75rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: .5rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-}
-.status-active { color: #10b981; }
-.status-inactive { color: #ef4444; }
-.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
-
-.proyecto-item {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    padding: 1.5rem;
-    margin-bottom: 1.25rem;
-    border-radius: var(--radius-lg);
-    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    position: relative;
-}
-.proyecto-item-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1.25rem;
-    padding-bottom: 1rem;
-    border-bottom: 1px dashed var(--border);
-}
-.proyecto-item-header strong { font-size: 1rem; font-weight: 700; color: var(--text); }
-
-@media (max-width: 768px) {
-    .filter-bar { flex-direction: column; align-items: stretch; }
-}
-</style>
-{% endblock %}
-
 {% block content %}
+<style>
+    /* ========== ESTILOS TABLA USUARIOS (PREMIUM) ========== */
+    .users-page-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding-bottom: 2rem;
+    }
+
+    .users-table-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-sm);
+        overflow: hidden;
+    }
+
+    .table-header-row {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: var(--gray-50);
+    }
+    [data-theme="dark"] .table-header-row { background: var(--gray-800); }
+
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .data-table th {
+        padding: 1rem 1.5rem;
+        text-align: left;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+        border-bottom: 2px solid var(--border);
+        background: var(--gray-50);
+    }
+    [data-theme="dark"] .data-table th { background: var(--gray-800); }
+
+    .data-table td {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+    }
+
+    .data-table tr:hover { background: var(--gray-50); }
+    [data-theme="dark"] .data-table tr:hover { background: var(--gray-800); }
+
+    /* Componentes de Celda */
+    .user-cell {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .user-avatar-small {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: var(--green-500);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+
+    .user-name-main {
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text);
+        margin-bottom: 2px;
+    }
+
+    .user-id-sub {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    .role-badges-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .role-badge-soft {
+        padding: 2px 8px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        background: var(--gray-100);
+        color: var(--text-muted);
+        border: 1px solid var(--border);
+    }
+    [data-theme="dark"] .role-badge-soft { background: var(--gray-700); }
+
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+    .status-active { background: rgba(34, 197, 94, 0.1); color: #15803d; }
+    .status-inactive { background: rgba(239, 68, 68, 0.1); color: #b91c1c; }
+    .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+    /* Modal Form UI */
+    .proyecto-item {
+        background: var(--gray-50);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+    }
+    [data-theme="dark"] .proyecto-item { background: var(--gray-800); }
+
+    /* Estilos para botones de icono */
+    .btn-icon {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: var(--bg-card);
+        color: var(--text-muted);
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+    }
+    .btn-icon:hover {
+        background: var(--gray-50);
+        color: var(--text);
+        border-color: var(--gray-400);
+    }
+    .btn-icon-edit:hover {
+        background: rgba(34, 197, 94, 0.1);
+        color: var(--green-600);
+        border-color: var(--green-200);
+    }
+    .btn-icon-danger:hover {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--red-600);
+        border-color: var(--red-200);
+    }
+    .btn-icon i, .btn-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+</style>
+
 <div class="container-fluid">
-    <!-- Header -->
-    <div class="page-header-section">
-        <div class="page-header-icon">
-            <i data-feather="users"></i>
+    <div class="users-page-container">
+        
+        <!-- Header -->
+        <div class="page-header-section" style="margin-bottom: 0;">
+            <div class="page-header-icon">
+                <i data-feather="users"></i>
+            </div>
+            <div>
+                <h2 class="section-title">Gestión de <span class="text-green">Usuarios</span></h2>
+                <p class="section-sub">Lista completa de personal y accesos al sistema</p>
+            </div>
         </div>
-        <div>
-            <h2 class="section-title">Gestión de <span class="text-green">Usuarios</span></h2>
-            <p class="section-sub">Administra usuarios, roles y permisos del sistema</p>
+
+        <!-- Action Bar -->
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 1rem;">
+            <div class="search-wrapper" style="flex: 1; max-width: 400px; position: relative;">
+                <i data-feather="search" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 16px;"></i>
+                <input type="text" id="tableSearch" class="form-input" placeholder="Buscar por nombre, DNI o correo..." onkeyup="filtrarTablaUsuarios()" style="padding-left: 2.5rem;">
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button class="btn btn-outline" onclick="location.reload()" title="Recargar">
+                    <i data-feather="refresh-cw"></i>
+                </button>
+                <button class="btn btn-primary" onclick="abrirModalCrear()">
+                    <i data-feather="user-plus"></i> Crear Usuario
+                </button>
+            </div>
         </div>
-    </div>
 
-    <div class="action-bar">
-        <button class="btn btn-primary" onclick="abrirModalCrear()">
-            <i data-feather="user-plus"></i> 
-            Crear Usuario
-        </button>
-    </div>
-
-    <!-- Barra de búsqueda y filtros -->
-    <div class="filter-bar">
-        <div class="filter-select-wrapper" style="flex: 1; max-width: 400px;">
-            <i data-feather="search"></i>
-            <input type="text" 
-                   id="searchInput" 
-                   class="filter-select" 
-                   placeholder="Buscar por nombre, DNI o correo..." 
-                   onkeyup="filtrarUsuarios()"
-                   style="border: 1px solid var(--border); padding: .5rem .75rem .5rem 2.5rem;">
-        </div>
-        <span class="filter-count"><strong id="totalUsuarios">{{ usuarios|length }}</strong> usuarios</span>
-    </div>
-
-    <!-- Tabla de usuarios -->
-    <div class="users-table-container">
-        <table class="data-table users-table" id="tablaUsuarios">
-            <thead>
-                <tr>
-                    <th>Usuario</th>
-                    <th>Correo</th>
-                    <th>Roles</th>
-                    <th>Proyectos</th>
-                    <th>Estado</th>
-                    <th>Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for usuario in usuarios %}
-                <tr>
-                    <td>
-                        <div class="user-info">
-                            <div class="user-avatar">
-                                {{ usuario.nombrecompleto[:2].upper() }}
+        <!-- TABLE CARD -->
+        <div class="users-table-card">
+            <div class="table-header-row">
+                <span style="font-size: 0.85rem; font-weight: 600; color: var(--text-muted);">
+                    Mostrando <span id="visibleCount">{{ usuarios|length }}</span> usuarios en total
+                </span>
+            </div>
+            <table class="data-table" id="usersMainTable">
+                <thead>
+                    <tr>
+                        <th style="width: 30%;">Usuario</th>
+                        <th>Correo Electrónico</th>
+                        <th>Roles Asignados</th>
+                        <th class="text-center">Proyectos</th>
+                        <th>Estado</th>
+                        <th class="text-right">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in usuarios %}
+                    <tr data-searchable="{{ u.nombrecompleto }} {{ u.idusuario }} {{ u.correo or '' }}">
+                        <td>
+                            <div class="user-cell">
+                                <div class="user-avatar-small">{{ u.nombrecompleto[:2] }}</div>
+                                <div>
+                                    <div class="user-name-main">{{ u.nombrecompleto }}</div>
+                                    <div class="user-id-sub">DNI: {{ u.idusuario }}</div>
+                                </div>
                             </div>
-                            <div class="user-details">
-                                <div class="user-name">{{ usuario.nombrecompleto }}</div>
-                                <div class="user-dni">DNI: {{ usuario.idusuario }}</div>
+                        </td>
+                        <td style="color: var(--text-muted); font-size: 0.85rem;">
+                            {{ u.correo or '-' }}
+                        </td>
+                        <td>
+                            <div class="role-badges-container">
+                                {% if u.roles %}
+                                    {% for r in u.roles.split(',') %}
+                                        <span class="role-badge-soft">{{ r.strip() }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span style="font-size: 0.75rem; color: var(--gray-400);">Sin roles</span>
+                                {% endif %}
                             </div>
-                        </div>
-                    </td>
-                    <td>
-                        <span style="color: var(--text);">{{ usuario.correo or '-' }}</span>
-                    </td>
-                    <td>
-                        {% if usuario.roles %}
-                            {% for rol in usuario.roles.split(',') %}
-                                <span class="role-badge 
-                                    {% if 'Administrador' in rol %}role-admin
-                                    {% elif 'Supervisor' in rol %}role-supervisor
-                                    {% else %}role-trabajador{% endif %}">
-                                    {{ rol.strip() }}
-                                </span>
-                            {% endfor %}
-                        {% else %}
-                            <span style="color: var(--text-muted);">Sin roles</span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <span style="color: var(--text); font-weight: 600;">
-                            {{ usuario.cantidadasignaciones or 0 }}
-                        </span>
-                        <span style="color: var(--text-muted); font-size: .75rem;">proyecto(s)</span>
-                    </td>
-                    <td>
-                        {% if usuario.activo %}
-                        <span class="status-badge status-active">
-                            <span class="status-dot"></span>
-                            Activo
-                        </span>
-                        {% else %}
-                        <span class="status-badge status-inactive">
-                            <span class="status-dot"></span>
-                            Inactivo
-                        </span>
-                        {% endif %}
-                    </td>
-                    <td>
-                        <div class="action-buttons">
-                            <button class="btn-icon" onclick="verDetalles('{{ usuario.idusuario }}')" 
-                                    title="Ver detalles">
-                                <i data-feather="eye" style="width: 18px; height: 18px;"></i>
-                            </button>
-                            <button class="btn-icon btn-icon-edit" onclick="editarUsuario('{{ usuario.idusuario }}')" 
-                                    title="Editar">
-                                <i data-feather="edit-2" style="width: 18px; height: 18px;"></i>
-                            </button>
-                            <!-- Botón Desactivar -->
-                            <button class="btn-icon" onclick="desactivarUsuario('{{ usuario.idusuario }}')" 
-                                    title="Desactivar" style="color: var(--yellow, #f59e0b);">
-                                <i data-feather="user-x" style="width: 18px; height: 18px;"></i>
-                            </button>
-                            <!-- Botón Eliminar Permanente -->
-                            <button class="btn-icon btn-icon-danger" onclick="eliminarUsuarioFisico('{{ usuario.idusuario }}')" 
-                                    title="Eliminar permanentemente">
-                                <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge-soft badge-green">{{ u.cantidadasignaciones or 0 }}</span>
+                        </td>
+                        <td>
+                            <span class="status-badge {{ 'status-active' if u.activo else 'status-inactive' }}">
+                                <span class="status-dot"></span>
+                                {{ 'Activo' if u.activo else 'Inactivo' }}
+                            </span>
+                        </td>
+                        <td class="text-right">
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                                <button class="btn-icon" onclick="verDetallesTabla('{{ u.idusuario }}')" title="Ver detalle">
+                                    <i data-feather="eye"></i>
+                                </button>
+                                <button class="btn-icon btn-icon-edit" onclick="abrirModalEditar('{{ u.idusuario }}')" title="Editar">
+                                    <i data-feather="edit-2"></i>
+                                </button>
+                                <button class="btn-icon btn-icon-danger" onclick="eliminarUsuarioFisico('{{ u.idusuario }}')" title="Eliminar">
+                                    <i data-feather="trash-2"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
-<!-- Modal Crear Usuario -->
+<!-- Modal Crear/Editar Usuario -->
 <div class="modal-overlay" id="modalCrearUsuario">
-    <div class="modal-box" style="max-width: 1000px;">
+    <div class="modal-box" style="max-width: 800px;">
         <div class="modal-header">
-            <div class="modal-title-group">
-                <span class="modal-icon-btn">
-                    <i data-feather="user-plus"></i>
-                </span>
-                <div>
-                    <h3 id="modalTitle"><i data-feather="user-plus"></i> Crear Nuevo Usuario</h3>
-                    <p>Completa todos los campos obligatorios (*)</p>
-                </div>
-            </div>
+            <h3 id="modalTitle"><i data-feather="user-plus"></i> Crear Nuevo Usuario</h3>
             <button class="modal-close" onclick="cerrarModal()">
                 <i data-feather="x"></i>
             </button>
         </div>
-        
         <div class="modal-body">
             <form id="formCrearUsuario">
-                <!-- Datos Básicos -->
                 <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i data-feather="user"></i>
-                        Datos Básicos
-                    </h4>
-                    <div class="form-row" style="gap: 1.25rem;">
+                    <h4 class="form-section-title"><i data-feather="info"></i> Datos del Perfil</h4>
+                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">DNI *</label>
-                            <input type="text" id="dni" required placeholder="8 dígitos" class="form-input" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+                            <input type="text" id="dni" required class="form-input" maxlength="8">
                         </div>
                         <div class="form-group">
                             <label class="form-label">NOMBRE COMPLETO *</label>
-                            <input type="text" id="nombre" required placeholder="Nombre y apellidos" class="form-input">
+                            <input type="text" id="nombre" required class="form-input">
                         </div>
                     </div>
-                    <div class="form-row" style="gap: 1.25rem;">
+                    <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">CORREO ELECTRÓNICO</label>
-                            <input type="email" id="correo" placeholder="usuario@ejemplo.com" class="form-input">
+                            <input type="email" id="correo" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">CONTRASEÑA *</label>
-                            <input type="password" id="password" placeholder="Mínimo 6 caracteres" class="form-input">
+                            <label class="form-label">CONTRASEÑA</label>
+                            <input type="password" id="password" class="form-input" placeholder="Min 6 caracteres">
+                            <small class="form-hint" id="pswHint">Dejar en blanco para no cambiar si editas</small>
                         </div>
                     </div>
-                    <div class="form-row" style="gap: 1.25rem;">
-                        <div class="form-group" style="flex: 1;">
+                    <div class="form-row">
+                        <div class="form-group">
                             <label class="form-label">ESTADO</label>
                             <select id="activo" class="form-select">
                                 <option value="1">Activo</option>
@@ -348,246 +313,98 @@
                         </div>
                     </div>
                 </div>
-                
-                <!-- Proyectos y Roles -->
+
                 <div class="form-section">
-                    <h4 class="form-section-title">
-                        <i data-feather="briefcase"></i>
-                        Asignación de Proyectos y Roles
-                    </h4>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem;">
+                        <h4 class="form-section-title" style="margin:0;"><i data-feather="briefcase"></i> Proyectos Asignados</h4>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="agregarProyecto()">
+                            <i data-feather="plus"></i> Agregar
+                        </button>
+                    </div>
                     <div id="proyectos-container"></div>
                 </div>
-                
-                <button type="button" class="btn btn-primary btn-block" onclick="agregarProyecto()" style="margin-top: .75rem;">
-                    <i data-feather="plus"></i>
-                    Agregar Proyecto
-                </button>
             </form>
         </div>
-        
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="cerrarModal()">
-                <i data-feather="x"></i>
-                Cancelar
-            </button>
-            <button type="button" id="guardarUsuarioBtn" class="btn btn-primary btn-lg" onclick="guardarUsuario()">
-                <i data-feather="save"></i>
-                Guardar Usuario
-            </button>
+            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button type="button" id="guardarUsuarioBtn" class="btn btn-primary" onclick="guardarUsuario()">Guardar Cambios</button>
         </div>
     </div>
 </div>
 
-<!-- Modal Detalles Usuario -->
-<!-- Modal Detalles Usuario -->
-<div class="modal-overlay" id="modalDetallesUsuario">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title-group">
-        <span class="modal-icon-btn">
-          <i data-feather="user"></i>
-        </span>
-        <div>
-          <h3>Detalles del Usuario</h3>
-          <p id="detallesSubtitle">Ver información del usuario</p>
+<!-- Modal Detalles (Solo lectura) -->
+<div class="modal-overlay" id="modalVerDetalle">
+    <div class="modal-box" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3><i data-feather="user"></i> Información del Usuario</h3>
+            <button class="modal-close" onclick="document.getElementById('modalVerDetalle').classList.remove('open')">
+                <i data-feather="x"></i>
+            </button>
         </div>
-      </div>
-      <button class="modal-close" onclick="document.getElementById('modalDetallesUsuario').classList.remove('open')">
-        <i data-feather="x"></i>
-      </button>
+        <div class="modal-body" id="detalleUsuarioContainer">
+            <!-- Cargado vía JS -->
+        </div>
     </div>
-
-    <div class="modal-body">
-
-      <!-- Datos básicos -->
-      <div class="form-section">
-        <h4 class="form-section-title">
-          <i data-feather="user"></i> Datos Básicos
-        </h4>
-        <div class="form-row" style="gap: 1.25rem;">
-          <div class="form-group">
-            <label class="form-label">DNI</label>
-            <div id="detallesDni" class="form-input" style="background: var(--gray-100);">--</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Nombre Completo</label>
-            <div id="detallesNombre" class="form-input" style="background: var(--gray-100);">--</div>
-          </div>
-        </div>
-        <div class="form-row" style="gap: 1.25rem;">
-          <div class="form-group">
-            <label class="form-label">Correo</label>
-            <div id="detallesCorreo" class="form-input" style="background: var(--gray-100);">--</div>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Estado</label>
-            <div id="detallesEstado">--</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Asignaciones -->
-      <div class="form-section">
-        <h4 class="form-section-title">
-          <i data-feather="briefcase"></i> Proyectos Asignados
-        </h4>
-        <div id="detallesAsignaciones">
-          <p style="color: var(--text-muted); font-size: .85rem;">Sin asignaciones</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
 </div>
 
 <script>
-function filtrarUsuarios() {
-    const filter = document.getElementById('searchInput').value.toLowerCase();
-    const rows = document.getElementById('tablaUsuarios').getElementsByTagName('tr');
-    let visibleCount = 0;
-    
-    for (let i = 1; i < rows.length; i++) {
-        const visible = rows[i].textContent.toLowerCase().includes(filter);
-        rows[i].style.display = visible ? '' : 'none';
-        if (visible) visibleCount++;
-    }
-    
-    document.getElementById('totalUsuarios').textContent = visibleCount;
-}
-
-async function verDetalles(dni) {
-    try {
-        const response = await fetch(`/admin/usuarios/detalle/${dni}`);
-        const data = await response.json();
-        if (!response.ok || !data.success) return;
-
-        const u = data.usuario;
-        document.getElementById('detallesDni').textContent = u.idusuario || '--';
-        document.getElementById('detallesNombre').textContent = u.nombrecompleto || '--';
-        document.getElementById('detallesCorreo').textContent = u.correo || '-';
-        document.getElementById('detallesSubtitle').textContent = `DNI: ${u.idusuario}`;
-        document.getElementById('detallesEstado').innerHTML = u.activo
-            ? '<span class="status-badge status-active"><span class="status-dot"></span>Activo</span>'
-            : '<span class="status-badge status-inactive"><span class="status-dot"></span>Inactivo</span>';
-
-        const asignContainer = document.getElementById('detallesAsignaciones');
-        asignContainer.innerHTML = (data.asignaciones?.length)
-            ? data.asignaciones.map(a => `
-                <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:.75rem;margin-bottom:.75rem;">
-                    <div style="font-weight:600;color:var(--text);margin-bottom:.5rem;">
-                        ${a.proyecto_nombre || a.proyecto_codigo || 'Proyecto'}
-                    </div>
-                    <div style="color:var(--text-muted);font-size:.85rem;line-height:1.5;">
-                        <div><strong>Rol:</strong> ${a.nombrerol || '-'}</div>
-                        <div><strong>Área:</strong> ${a.area_nombre || '-'}</div>
-                        <div><strong>Cargo:</strong> ${a.cargo || '-'}</div>
-                    </div>
-                </div>`).join('')
-            : '<p style="color:var(--text-muted);font-size:.85rem;">Sin asignaciones</p>';
-
-        document.getElementById('modalDetallesUsuario').classList.add('open');
-        if (typeof feather !== 'undefined') feather.replace();
-
-    } catch (error) {
-        console.error('Error al cargar detalles:', error);
-        mostrarNotificacion('Error al cargar detalles del usuario', 'error');
-    }
-}
-
-function editarUsuario(dni) {
-    if (typeof abrirModalEditar === 'function') abrirModalEditar(dni);
-}
-
-async function desactivarUsuario(dni) {
-    const confirmado = await mostrarConfirmacion(
-        '¿Desactivar usuario?',
-        'El usuario no podrá entrar al sistema, pero sus datos se conservarán. Podrás reactivarlo editando su estado.',
-        'Desactivar',
-        'var(--yellow, #f59e0b)'
-    );
-    if (!confirmado) return;
-
-    try {
-        const response = await fetch(`/admin/usuarios/desactivar/${dni}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
+    function filtrarTablaUsuarios() {
+        const query = document.getElementById('tableSearch').value.toLowerCase();
+        const rows = document.querySelectorAll('#usersMainTable tbody tr');
+        let count = 0;
+        rows.forEach(row => {
+            const visible = row.dataset.searchable.toLowerCase().includes(query);
+            row.style.display = visible ? '' : 'none';
+            if (visible) count++;
         });
-        const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.error);
-        
-        mostrarNotificacion(result.message || 'Usuario desactivado', 'success');
-        setTimeout(() => location.reload(), 1200);
-    } catch (error) {
-        mostrarNotificacion('Error: ' + error.message, 'error');
+        document.getElementById('visibleCount').textContent = count;
     }
-}
 
-async function eliminarUsuarioFisico(dni) {
-    const confirmado = await mostrarConfirmacion(
-        '¡ATENCIÓN! ¿Eliminar totalmente?',
-        'Esta acción borrará al usuario y TODAS sus asignaciones y notificaciones de forma permanente. No se puede deshacer.',
-        'ELIMINAR TODO',
-        '#ef4444'
-    );
-    if (!confirmado) return;
+    async function verDetallesTabla(dni) {
+        const modal = document.getElementById('modalVerDetalle');
+        const container = document.getElementById('detalleUsuarioContainer');
+        container.innerHTML = '<div style="padding:2rem;text-align:center;"><i data-feather="loader" class="feather-spin"></i></div>';
+        modal.classList.add('open');
+        feather.replace({ 'stroke-width': 1.2 });
 
-    try {
-        const response = await fetch(`/admin/usuarios/eliminar-fisico/${dni}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' }
-        });
-        const result = await response.json();
-        if (!response.ok || !result.success) throw new Error(result.error);
-        
-        mostrarNotificacion(result.message || 'Usuario eliminado físicamente', 'success');
-        setTimeout(() => location.reload(), 1200);
-    } catch (error) {
-        mostrarNotificacion('Error: ' + error.message, 'error');
+        try {
+            const res = await fetch(`/admin/usuarios/detalle/${dni}`);
+            const data = await res.json();
+            if (!data.success) throw new Error(data.error);
+
+            const u = data.usuario;
+            const asign = data.asignaciones;
+
+            container.innerHTML = `
+                <div style="display:flex; gap:1.5rem; align-items:center; margin-bottom:2rem; padding:1rem; background:var(--gray-50); border-radius:var(--radius);">
+                    <div style="width:60px;height:60px;border-radius:15px;background:var(--green-500);color:white;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;">
+                        ${u.nombrecompleto.substring(0,2).toUpperCase()}
+                    </div>
+                    <div>
+                        <h4 style="margin:0;font-size:1.1rem;">${u.nombrecompleto}</h4>
+                        <p style="margin:4px 0 0; color:var(--text-muted); font-size:0.85rem;">DNI: ${u.idusuario}</p>
+                    </div>
+                </div>
+                <div style="margin-bottom:2rem;">
+                    <h5 style="font-size:0.8rem; text-transform:uppercase; color:var(--text-muted); margin-bottom:1rem;">Proyectos Asignados</h5>
+                    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                        ${asign.map(a => `
+                            <div style="padding:1rem; border:1px solid var(--border); border-radius:var(--radius); background:var(--bg-card);">
+                                <div style="font-weight:700; margin-bottom:4px; color:var(--green-600);">${a.proyecto_nombre}</div>
+                                <div style="font-size:0.8rem; color:var(--text-muted);">
+                                    <strong>Rol:</strong> ${a.nombrerol} | <strong>Área:</strong> ${a.area_nombre}
+                                </div>
+                            </div>
+                        `).join('')}
+                        ${asign.length === 0 ? '<p style="color:var(--text-muted); font-style:italic;">Sin asignaciones.</p>' : ''}
+                    </div>
+                </div>
+            `;
+            feather.replace({ 'stroke-width': 1.2 });
+        } catch (e) {
+            container.innerHTML = `<p style="color:red;padding:2rem;">Error: ${e.message}</p>`;
+        }
     }
-}
-
-// Confirmación personalizada (reemplaza confirm() nativo)
-function mostrarConfirmacion(titulo, mensaje, btnText = 'Aceptar', btnColor = 'var(--red, #ef4444)') {
-    return new Promise(resolve => {
-        const overlay = document.createElement('div');
-        overlay.style.cssText = `
-            position:fixed;inset:0;background:rgba(0,0,0,0.5);
-            z-index:99999;display:flex;align-items:center;justify-content:center;
-            backdrop-filter: blur(4px);
-        `;
-        overlay.innerHTML = `
-            <div style="background:var(--bg-card);border:1px solid var(--border);
-                        border-radius:var(--radius-lg);padding:1.5rem;max-width:400px;
-                        width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center;">
-                <div style="width: 50px; height: 50px; background: ${btnColor}20; color: ${btnColor}; 
-                            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
-                            margin: 0 auto 1rem;">
-                    <i data-feather="alert-triangle"></i>
-                </div>
-                <h4 style="margin:0 0 .5rem;color:var(--text);font-size:1.15rem;">${titulo}</h4>
-                <p style="margin:0 0 1.5rem;color:var(--text-muted);font-size:.875rem;line-height:1.5;">${mensaje}</p>
-                <div style="display:flex;gap:.75rem;">
-                    <button id="btnCancelarConfirm" class="btn btn-secondary" style="flex:1">Cancelar</button>
-                    <button id="btnAceptarConfirm" class="btn btn-primary" 
-                            style="flex:1; background:${btnColor}; border-color:${btnColor}; color:white;">
-                        ${btnText}
-                    </button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(overlay);
-        if (typeof feather !== 'undefined') feather.replace();
-
-        overlay.querySelector('#btnAceptarConfirm').onclick = () => {
-            document.body.removeChild(overlay);
-            resolve(true);
-        };
-        overlay.querySelector('#btnCancelarConfirm').onclick = () => {
-            document.body.removeChild(overlay);
-            resolve(false);
-        };
-    });
-}
 </script>
 
 <script src="{{ url_for('static', filename='js/configuracion/usuarios.js') }}"></script>

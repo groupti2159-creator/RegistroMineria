@@ -1,68 +1,7 @@
-// ── PROYECTO SELECTOR ──────────────────────────────────────────────────────────
-async function initProyectoSelector() {
-    const container = document.getElementById('proyectoSelectorContainer');
-    const list = document.getElementById('proyectoList');
-    if (!container || !list) return;
+// ── CONSTANTES GLOBALES ──────────────────────────────────────────────────────────
+const _previewInstances = {};
 
-    try {
-        const res = await fetch('/admin/v1/mis-proyectos');
-        const data = await res.json();
-        
-        if (data.proyectos && data.proyectos.length > 1) {
-            container.style.display = 'block'; // Mostrar solo si hay más de 1
-            list.innerHTML = '';
-            
-            data.proyectos.forEach(p => {
-                const item = document.createElement('div');
-                item.className = 'proyecto-item';
-                item.innerHTML = `
-                    <div class="p-info">
-                        <strong>${p.nombre_proyecto}</strong>
-                        <small>${p.nombre_rol}</small>
-                    </div>
-                    <i data-feather="chevron-right"></i>
-                `;
-                item.onclick = () => cambiarProyecto(p.idusuariorol);
-                list.appendChild(item);
-            });
-            if (typeof feather !== 'undefined') feather.replace();
-        } else {
-            container.style.display = 'none';
-        }
-    } catch (e) {
-        console.error('Error al cargar proyectos:', e);
-    }
-}
 
-function toggleProyectos() {
-    const dropdown = document.getElementById('proyectoDropdown');
-    dropdown.classList.toggle('show');
-    
-    // Cerrar si se hace click fuera
-    if (dropdown.classList.contains('show')) {
-        const handler = (e) => {
-            if (!e.target.closest('.proyecto-selector')) {
-                dropdown.classList.remove('show');
-                window.removeEventListener('click', handler);
-            }
-        };
-        setTimeout(() => window.addEventListener('click', handler), 10);
-    }
-}
-
-async function cambiarProyecto(idusuariorol) {
-    try {
-        const res = await fetch(`/admin/v1/cambiar-contexto/${idusuariorol}`, { method: 'POST' });
-        const data = await res.json();
-        if (data.success) {
-            window.location.reload(); // Recargar para reconstruir el sidebar
-        } else {
-            console.error(data.error);
-        }
-    } catch (e) {
-        console.error('Error al cambiar de proyecto:', e);
-    }
-}
 
 // ── DARK MODE ──
 function toggleDark() {
@@ -207,32 +146,49 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 });
 
-// ── INICIALIZAR ICONOS FEATHER ──
-function initFeatherIcons() {
+// ── MODALES GLOBALES ─────────────────────────────────────────────────────────────
+function abrirModal(id) {
+  const modal = document.getElementById(id);
+  if (!modal) return;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  // Reinicializar iconos dentro del modal
   if (typeof feather !== 'undefined') {
-    feather.replace({ 'stroke-width': 1.2 });
+    setTimeout(() => feather.replace({ 'stroke-width': 1.2 }), 10);
   }
 }
 
-// Inicializar iconos cuando el DOM esté listo
-document.addEventListener('DOMContentLoaded', initFeatherIcons);
-
-// Reinicializar iconos cuando se abren modales
-function observeModals() {
-  const modals = document.querySelectorAll('.modal-overlay');
-  modals.forEach(modal => {
-    const observer = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        if (mutation.attributeName === 'style' && modal.style.display === 'flex') {
-          setTimeout(initFeatherIcons, 50);
-        }
-      });
-    });
-    observer.observe(modal, { attributes: true });
-  });
+function cerrarModal(id) {
+  const modal = typeof id === 'string' ? document.getElementById(id) : id;
+  if (!modal) return;
+  modal.classList.remove('open');
+  
+  // Verificar si quedan otros modales abiertos antes de restaurar el scroll
+  const openModals = document.querySelectorAll('.modal-overlay.open');
+  if (openModals.length === 0) {
+    document.body.style.overflow = '';
+  }
 }
 
-document.addEventListener('DOMContentLoaded', observeModals);
+document.addEventListener('DOMContentLoaded', () => {
+    // Cerrar modales al hacer clic en el overlay (fondo)
+    document.addEventListener('click', e => {
+      if (e.target.classList.contains('modal-overlay')) {
+        cerrarModal(e.target);
+      }
+    });
+
+    // Cerrar modales con la tecla Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        const openModal = document.querySelector('.modal-overlay.open');
+        if (openModal) cerrarModal(openModal);
+      }
+    });
+});
+
+
+
 
 // ── NOTIFICATIONS ──
 function toggleNotifPanel() {
@@ -286,12 +242,7 @@ document.addEventListener('click', e => {
   }
 });
 
-// Close modals on overlay click
-document.addEventListener('click', e => {
-  if (e.target.classList.contains('modal-overlay')) {
-    e.target.classList.remove('open');
-  }
-});
+
 
 // File input labels
 document.addEventListener('change', e => {
@@ -334,8 +285,7 @@ setTimeout(() => {
 }, 4000);
 
 
-// ── PREVIEW DE IMÁGENES ──
-const _previewInstances = {};
+
 
 function removePreviewImage(inputId, previewContainerId, index) {
   const instance = _previewInstances[inputId];
@@ -636,8 +586,14 @@ function cargarSidebarProyecto(codigo) {
 
 // Cargar nombre del proyecto al cargar la página
 document.addEventListener('DOMContentLoaded', function() {
+  // Inicializar iconos Feather globalmente
+  if (typeof feather !== 'undefined') {
+    feather.replace({ 'stroke-width': 1.5 });
+  }
+
   // Cargar nombre del proyecto (solo si existe el selector)
   const nombreEl = document.getElementById('proyectoNombre');
+  const selectorContainer = document.getElementById('proyectoSelectorContainer');
   if (nombreEl) {
     fetch('/proyectos/api/proyectos-disponibles')
       .then(r => r.json())
@@ -645,11 +601,20 @@ document.addEventListener('DOMContentLoaded', function() {
         if (data.success && data.proyectos && data.proyectos.length > 0) {
           const proyectoActual = data.proyectos.find(p => p.activo) || data.proyectos[0];
           nombreEl.textContent = proyectoActual.nombre;
+          
+          // MOSTRAR SELECTOR SOLO SI HAY MÁS DE 1 PROYECTO
+          if (selectorContainer && data.proyectos.length > 1) {
+            selectorContainer.style.display = 'block';
+          }
         } else {
           nombreEl.textContent = 'Sin proyecto';
+          if (selectorContainer) selectorContainer.style.display = 'none';
         }
       })
-      .catch(() => { nombreEl.textContent = 'Error'; });
+      .catch(() => { 
+        nombreEl.textContent = 'Error';
+        if (selectorContainer) selectorContainer.style.display = 'none';
+      });
   }
 
   // Cerrar dropdown de proyectos al hacer clic fuera
@@ -662,6 +627,11 @@ document.addEventListener('DOMContentLoaded', function() {
       btn.classList.remove('open');
     }
   });
+
+  // Global Feather Icons Initialization
+  if (typeof feather !== 'undefined') {
+    feather.replace({ 'stroke-width': 1.2 });
+  }
 });
 
 
