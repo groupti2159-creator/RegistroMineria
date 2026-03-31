@@ -94,12 +94,17 @@
 
 <!-- Modal Detalle Registro -->
 <div class="modal-overlay" id="modalDetalle">
-  <div class="modal-box modal-large">
+  <div class="modal modal-large">
     <div class="modal-header">
-      <h3><i data-feather="file-text"></i> Detalle del Reporte</h3>
-      <button class="modal-close" onclick="document.getElementById('modalDetalle').style.display='none'">
-        <i data-feather="x"></i>
-      </button>
+      <div class="modal-header__info">
+        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <h2 class="modal-title">Detalle del Reporte</h2>
+      </div>
+      <div class="modal-header__controls">
+        <button class="btn-close" onclick="document.getElementById('modalDetalle').style.display='none'" aria-label="Cerrar">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </button>
+      </div>
     </div>
     <div class="modal-body" id="detalleContent">
       <div class="loading-state">Cargando...</div>

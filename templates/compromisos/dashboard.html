@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+<<<<<<< HEAD
 {% block title %}Compromisos — ecoSupervisor{% endblock %}
 {% block page_title %}Compromisos{% endblock %}
 
@@ -38,6 +39,87 @@
       </div>
       <div class="stat-card-title">Vencidos</div>
       <div class="stat-value">{{ stats.vencidos }}</div>
+    </div>
+  </div>
+=======
+{% block title %}Dashboard — Compromisos{% endblock %}
+{% block page_title %}Compromisos{% endblock %}
+
+{% block content %}
+<div class="dashboard-intro">
+  <h2 class="section-title">Dashboard — <span class="text-green">Compromisos</span></h2>
+  <p class="section-sub">Resumen de obligaciones y permisos ambientales</p>
+>>>>>>> origin/maria
+</div>
+
+<div class="stats-grid">
+  <div class="stat-card stat-blue">
+    <div class="stat-info">
+      <p class="stat-label">Total Compromisos</p>
+      <h2 class="stat-value">{{ stats.total or 0 }}</h2>
+      <p class="stat-desc">Registros totales</p>
+    </div>
+    <div class="stat-icon"><i data-feather="check-square"></i></div>
+  </div>
+  <div class="stat-card stat-green">
+    <div class="stat-info">
+      <p class="stat-label">Cumplidos</p>
+      <h2 class="stat-value">{{ stats.cumplidos or 0 }}</h2>
+      <p class="stat-desc">Con evidencia</p>
+    </div>
+    <div class="stat-icon"><i data-feather="check-circle"></i></div>
+  </div>
+  <div class="stat-card stat-yellow">
+    <div class="stat-info">
+      <p class="stat-label">Pendientes</p>
+      <h2 class="stat-value">{{ stats.pendientes or 0 }}</h2>
+      <p class="stat-desc">Sin evidencia</p>
+    </div>
+    <div class="stat-icon"><i data-feather="clock"></i></div>
+  </div>
+  <div class="stat-card stat-red">
+    <div class="stat-info">
+      <p class="stat-label">Vencidos</p>
+      <h2 class="stat-value">{{ stats.vencidos or 0 }}</h2>
+      <p class="stat-desc">Requieren atención</p>
+    </div>
+    <div class="stat-icon"><i data-feather="alert-circle"></i></div>
+  </div>
+</div>
+
+<div class="dashboard-grid">
+  <div class="card">
+    <h3 class="card-title"><i data-feather="zap"></i> Acciones Rápidas</h3>
+    <div class="quick-actions">
+      <a href="/admin/compromisos" class="quick-btn">
+        <span class="qa-icon"><i data-feather="list"></i></span>
+        <div>
+          <p class="qa-title">Ver Registro</p>
+          <p class="qa-sub">Gestionar obligaciones ambientales</p>
+        </div>
+      </a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="card-title"><i data-feather="activity"></i> Últimos Registros</h3>
+    <div class="activity-list">
+      {% if ultimos %}
+        {% for r in ultimos %}
+        <div class="activity-item">
+          <span class="activity-dot dot-info"></span>
+          <div class="activity-text">
+            <p><strong>{{ r.obligacion }}</strong> — {{ r.entidad_regulatoria }}</p>
+            <small>{{ r.fecha }} · {{ r.supervisor }}</small>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="empty-state">
+          <i data-feather="inbox" style="width:48px;height:48px;color:var(--text-muted)"></i>
+          <p>No hay registros recientes</p>
+        </div>
+      {% endif %}
     </div>
   </div>
 </div>
