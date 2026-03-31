@@ -18,23 +18,21 @@ Config.print_config()
 # Configurar MySQL
 mysql.init_app(app)
 
-from routes.auth       import auth_bp
-from routes.admin      import admin_bp
+from routes.core.auth       import auth_bp
+from routes.configuracion   import admin_bp
 from routes.desvios_ambientales import da_bp
 from routes.gestion_residuos    import gr_bp
-from routes.gestion_generacion  import gen_bp
 from routes.compromisos         import compromisos_bp
 from routes.meteorologia        import meteorologia_bp
 from routes.gestion_aguas       import gestion_aguas_bp
-from routes.supervisor import supervisor_bp
-from routes.shared     import shared_bp
-from routes.proyectos  import proyectos_bp
+from routes.core.supervisor import supervisor_bp
+from routes.core.shared     import shared_bp
+from routes.core.proyectos  import proyectos_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp,        url_prefix='/admin')
 app.register_blueprint(da_bp,           url_prefix='/admin')
 app.register_blueprint(gr_bp,           url_prefix='/admin')
-app.register_blueprint(gen_bp,          url_prefix='/admin')
 app.register_blueprint(compromisos_bp,  url_prefix='/admin')
 app.register_blueprint(meteorologia_bp, url_prefix='/admin')
 app.register_blueprint(gestion_aguas_bp, url_prefix='/admin')

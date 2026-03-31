@@ -1,4 +1,7 @@
 ﻿{% extends 'base.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/desvios_ambientales.css') }}">
+{% endblock %}
 {% block title %}Dashboard — ecoSupervisor{% endblock %}
 {% block page_title %}Dashboard{% endblock %}
 
@@ -94,7 +97,7 @@
 
 <!-- Modal Detalle Registro -->
 <div class="modal-overlay" id="modalDetalle">
-  <div class="modal modal-large">
+  <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
         <p class="modal-eyebrow">Desvíos Ambientales</p>

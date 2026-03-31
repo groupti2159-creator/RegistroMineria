@@ -210,11 +210,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── INICIALIZAR ICONOS FEATHER ──
 function initFeatherIcons() {
   if (typeof feather !== 'undefined') {
-    try {
-      feather.replace({ 'stroke-width': 1.2 });
-    } catch(e) {
-      console.warn('Feather icons error:', e);
-    }
+    feather.replace({ 'stroke-width': 1.2 });
   }
 }
 

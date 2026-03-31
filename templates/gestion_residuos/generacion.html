@@ -1,4 +1,7 @@
 ﻿{% extends 'base.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_residuos.css') }}">
+{% endblock %}
 {% block title %}Generacion Diaria - ecoSupervisor{% endblock %}
 {% block page_title %}Generacion Diaria{% endblock %}
 {% block content %}

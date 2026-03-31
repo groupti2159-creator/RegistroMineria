@@ -1,0 +1,75 @@
+/* ════════════════════════════════════════════════════════
+   ecoSupervisor — Gestión de Aguas / reporte_ana.css
+════════════════════════════════════════════════════════ */
+
+.ana-table th { white-space: nowrap; font-size: .78rem; }
+.ana-table td { font-size: .85rem; }
+
+.ana-table tbody tr { cursor: default !important; }
+.ana-table tbody tr:hover { transform: none !important; box-shadow: none !important; }
+.ana-table tbody tr:hover td:first-child {
+  border-left: 3px solid var(--green-600);
+  padding-left: calc(1.25rem - 3px);
+}
+
+.th-formula {
+  font-weight: 400;
+  font-size: .7rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: .1rem;
+}
+
+.empty-cell {
+  text-align: center;
+  color: #94a3b8;
+  padding: 2.5rem;
+}
+
+.filter-separator {
+  align-self: center;
+  color: var(--text-muted);
+  font-size: .85rem;
+}
+
+/* Campos calculados en el modal */
+.ana-calculado {
+  background: var(--gray-100) !important;
+  cursor: default;
+  font-weight: 600;
+  color: var(--text-green);
+}
+
+[data-theme="dark"] .ana-calculado {
+  background: var(--gray-200) !important;
+}
+
+/* Estado guardado */
+.comp-estado-msg {
+  display: none;
+  font-size: .82rem;
+  padding: .55rem .85rem;
+  border-radius: var(--radius);
+  font-weight: 500;
+}
+.comp-estado-loading { background: var(--gray-100); color: var(--text-muted); }
+.comp-estado-ok      { background: var(--pastel-green); color: var(--text-green); }
+.comp-estado-error   { background: var(--pastel-red); color: var(--text-red); }
+
+[data-theme="dark"] .comp-estado-ok    { background: rgba(34,197,94,.15); }
+[data-theme="dark"] .comp-estado-error { background: rgba(239,68,68,.15); }
+
+/* Badge contador */
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .15rem .6rem;
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: .5rem;
+}

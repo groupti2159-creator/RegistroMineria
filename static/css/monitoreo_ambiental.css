@@ -1,0 +1,73 @@
+/* ════════════════════════════════════════════════════════
+   ecoSupervisor — Gestión de Aguas / monitoreo_ambiental.css
+════════════════════════════════════════════════════════ */
+
+.agua-table th {
+  white-space: nowrap;
+  font-size: .75rem;
+  padding: .5rem .6rem;
+}
+
+.agua-table td {
+  font-size: .82rem;
+  padding: .5rem .6rem;
+}
+
+.agua-table tbody tr { cursor: default !important; }
+.agua-table tbody tr:hover { transform: none !important; box-shadow: none !important; }
+.agua-table tbody tr:hover td:first-child {
+  border-left: 3px solid var(--green-600);
+  padding-left: calc(.6rem - 3px);
+}
+
+/* Columnas LMP con fondo diferenciado */
+.agua-table th.col-lmp,
+.agua-table td.col-lmp {
+  background: var(--gray-100);
+}
+[data-theme="dark"] .agua-table th.col-lmp,
+[data-theme="dark"] .agua-table td.col-lmp {
+  background: rgba(255,255,255,.03);
+}
+
+/* Botones modales */
+.modal-footer .btn-cancel {
+  padding: .6rem 1.25rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--gray-100);
+  color: var(--text);
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 500;
+  font-family: inherit;
+}
+.modal-footer .btn-cancel:hover { background: var(--gray-200); }
+
+.modal-footer .btn-save {
+  padding: .6rem 1.25rem;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--black);
+  color: white;
+  cursor: pointer;
+  font-size: .85rem;
+  font-weight: 500;
+  font-family: inherit;
+}
+.modal-footer .btn-save:hover { background: var(--gray-900); }
+
+/* Badge contador */
+.badge-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .15rem .6rem;
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: .72rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-left: .5rem;
+}

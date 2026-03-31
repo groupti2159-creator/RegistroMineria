@@ -1,24 +1,27 @@
-{% extends 'base.html' %}
-{% block title %}Dashboard Gestión de Residuos{% endblock %}
-{% block page_title %}Gestión de Residuos{% endblock %}
+﻿{% extends 'base.html' %}
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_residuos.css') }}">
+{% endblock %}
+{% block title %}Dashboard GestiÃ³n de Residuos{% endblock %}
+{% block page_title %}GestiÃ³n de Residuos{% endblock %}
 {% block content %}
 
 <div class="page-header-section">
   <div class="page-header-icon"><i data-feather="trash-2"></i></div>
   <div>
     <h2 class="section-title">Dashboard <span class="text-green">CORI PUNO</span></h2>
-    <p class="section-sub">Generación de residuos por tipo — planta CORI PUNO</p>
+    <p class="section-sub">GeneraciÃ³n de residuos por tipo â€” planta CORI PUNO</p>
   </div>
 </div>
 
 {% if registros %}
 
-<!-- ── FILTRO ── -->
+<!-- â”€â”€ FILTRO â”€â”€ -->
 <div class="table-card" style="margin-bottom:1rem">
   <div class="table-header">
     <div class="table-title-row">
       <span class="table-icon"><i data-feather="filter"></i></span>
-      <div><h3>Filtrar por fecha</h3><p>Actualiza el gráfico y la tabla según el rango seleccionado.</p></div>
+      <div><h3>Filtrar por fecha</h3><p>Actualiza el grÃ¡fico y la tabla segÃºn el rango seleccionado.</p></div>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;margin-top:.75rem">
       <div style="display:flex;flex-direction:column;gap:.25rem">
@@ -35,12 +38,12 @@
   </div>
 </div>
 
-<!-- ── GRÁFICO ── -->
+<!-- â”€â”€ GRÃFICO â”€â”€ -->
 <div class="table-card" style="margin-bottom:1.5rem">
   <div class="table-header">
     <div class="table-title-row">
       <span class="table-icon"><i data-feather="trending-up"></i></span>
-      <div><h3>Tendencia por tipo de RRSS</h3><p>CORI PUNO — valores en Kg / gal</p></div>
+      <div><h3>Tendencia por tipo de RRSS</h3><p>CORI PUNO â€” valores en Kg / gal</p></div>
     </div>
     <!-- Toggle para mostrar/ocultar series -->
     <div id="legend-toggles" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.75rem"></div>
@@ -50,7 +53,7 @@
   </div>
 </div>
 
-<!-- ── TABLA ── -->
+<!-- â”€â”€ TABLA â”€â”€ -->
 <div class="table-card">
   <div class="table-header">
     <div class="table-title-row">
@@ -106,7 +109,7 @@
   </div>
 </div>
 
-<!-- ── DATOS PARA EL GRÁFICO ── -->
+<!-- â”€â”€ DATOS PARA EL GRÃFICO â”€â”€ -->
 <script>
 const CHART_DATA = {
   labels: {{ registros | map(attribute='fecha') | map('truncate', 10, False, '') | list | tojson }},
@@ -280,9 +283,9 @@ const CHART_DATA = {
 {% else %}
 <div class="empty-state" style="padding:4rem">
   <i data-feather="inbox" style="width:64px;height:64px;color:var(--text-muted)"></i>
-  <p style="margin-top:1rem;font-weight:600">Sin registros aún</p>
+  <p style="margin-top:1rem;font-weight:600">Sin registros aÃºn</p>
   <p style="color:var(--text-muted);font-size:.85rem;margin-top:.4rem">
-    Agrega registros desde el módulo de Generación Diaria
+    Agrega registros desde el mÃ³dulo de GeneraciÃ³n Diaria
   </p>
 </div>
 {% endif %}
