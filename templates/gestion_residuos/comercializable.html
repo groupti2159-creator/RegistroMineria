@@ -26,12 +26,12 @@
       </div>
       <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:.25rem">
-          <label class="date-label" style="font-size:.75rem">Desde</label>
-          <input class="date-input" type="date" id="com-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
+          <label class="form-label" style="font-size:.75rem">Desde</label>
+          <input class="form-input" type="date" id="com-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
         </div>
         <div style="display:flex;flex-direction:column;gap:.25rem">
-          <label class="date-label" style="font-size:.75rem">Hasta</label>
-          <input class="date-input" type="date" id="com-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
+          <label class="form-label" style="font-size:.75rem">Hasta</label>
+          <input class="form-input" type="date" id="com-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
         </div>
         <button class="btn btn-secondary" id="com-f-aplicar" style="padding:.38rem .9rem;font-size:.82rem">Filtrar</button>
         <button class="btn" id="com-f-limpiar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
@@ -64,7 +64,19 @@
           <td>{{ r.tipo_residuo or '—' }}</td>
           <td style="text-align:right">{{ '%.2f'|format(r.precio or 0) }}</td>
           <td>{{ r.nro_guia or '—' }}</td>
-          <td>{{ r.factura or '—' }}</td>
+          <td>
+            {% if r.factura %}
+              {% if 'uploads/' in r.factura %}
+                <a href="{{ '/static/' ~ r.factura.replace('static/', '') }}" target="_blank" style="color:var(--green);font-size:0.85rem;display:flex;align-items:center;gap:4px">
+                  <i data-feather="file" style="width:14px;height:14px"></i> Ver Archivo
+                </a>
+              {% else %}
+                {{ r.factura }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </td>
           <td style="text-align:right;font-weight:600;color:var(--green)">{{ '%.2f'|format(r.peso or 0) }} Kg</td>
           <td style="max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.observacion }}">{{ r.observacion or '—' }}</td>
           <td class="col-acciones">
@@ -115,17 +127,18 @@
     </div>
     <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
       <input type="hidden" id="com-id">
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Fecha</label>
-        <input class="date-input" type="date" id="com-fecha">
+      <input type="hidden" id="com-factura-old">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input class="form-input" type="date" id="com-fecha">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Supervisor que registra</label>
-        <input class="plant-input" type="text" id="com-supervisor" placeholder="Nombre del supervisor">
+      <div class="form-group">
+        <label class="form-label">Supervisor que registra</label>
+        <input class="form-input" type="text" id="com-supervisor" placeholder="Nombre del supervisor">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Tipo de Residuo</label>
-        <select class="plant-input" id="com-tipo">
+      <div class="form-group">
+        <label class="form-label">Tipo de Residuo</label>
+        <select class="form-select" id="com-tipo">
           <option value="">— Seleccionar —</option>
           <option>RRSS Papel y cartón</option><option>RRSS Plástico</option>
           <option>RRSS Vidrio</option><option>RRSS Madera</option>
@@ -133,25 +146,39 @@
           <option>Borras</option><option>Aceites</option><option>Varios</option>
         </select>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Precio (S/)</label>
-        <input class="plant-input" type="number" min="0" step="0.01" id="com-precio" placeholder="0.00">
+      <div class="form-group">
+        <label class="form-label">Precio (S/)</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="com-precio" placeholder="0.00">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">N° Guía</label>
-        <input class="plant-input" type="text" id="com-guia" placeholder="Ej: G-001-2025">
+      <div class="form-group">
+        <label class="form-label">N° Guía</label>
+        <input class="form-input" type="text" id="com-guia" placeholder="Ej: G-001-2025">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Factura</label>
-        <input class="plant-input" type="text" id="com-factura" placeholder="Ej: F001-00123">
+      <div class="form-group">
+        <label class="form-label">Factura (Imagen/PDF)</label>
+        <div class="file-upload-area" style="margin-top:.2rem">
+          <input type="file" id="com-factura" accept="image/*,application/pdf" style="display:none">
+          <label for="com-factura" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.4rem .6rem;border:1px dashed var(--border);border-radius:6px;background:var(--bg-card);transition:border-color 0.2s">
+            <span class="btn" style="padding:.2rem .5rem;font-size:.75rem;background:var(--bg-hover);color:var(--text);border:1px solid var(--border);border-radius:4px"><i data-feather="upload" style="width:12px;height:12px"></i> Buscar</span>
+            <span id="com-factura-name" style="font-size:.8rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">Sin archivo seleccionado</span>
+          </label>
+        </div>
+        <div id="com-factura-preview" style="display:none;margin-top:.4rem">
+           <img id="com-factura-img" style="max-width:100%;max-height:140px;border-radius:4px;border:1px solid var(--border);object-fit:cover">
+           <div id="com-factura-pdf" style="display:none;font-size:.8rem;color:var(--green);align-items:center;gap:4px">
+             <i data-feather="file-text" style="width:14px;height:14px"></i> Documento PDF seleccionado
+           </div>
+        </div>
+        <div id="com-factura-old-link" style="display:none;margin-top:.3rem;font-size:.8rem">
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Peso (Kg)</label>
-        <input class="plant-input" type="number" min="0" step="0.01" id="com-peso" placeholder="0.00">
+      <div class="form-group">
+        <label class="form-label">Peso (Kg)</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="com-peso" placeholder="0.00">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
-        <label class="date-label">Observación</label>
-        <textarea class="plant-input" id="com-obs" rows="2" style="resize:vertical;font-family:inherit;font-size:.85rem" placeholder="Observaciones..."></textarea>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Observación</label>
+        <textarea class="form-input" id="com-obs" rows="2" style="resize:vertical;font-family:inherit;font-size:.85rem" placeholder="Observaciones..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -241,11 +268,23 @@
     $('com-tipo').value       = r ? r.tipo        : '';
     $('com-precio').value     = r ? r.precio      : '';
     $('com-guia').value       = r ? r.guia        : '';
-    $('com-factura').value    = r ? r.factura     : '';
+    $('com-factura').value = '';
+    $('com-factura-name').textContent = 'Sin archivo seleccionado';
+    $('com-factura-preview').style.display = 'none';
+    $('com-factura-old').value = r ? r.factura : '';
+    
+    if (r && r.factura) {
+       $('com-factura-old-link').style.display = 'block';
+       const href = r.factura.includes('uploads') ? '/static/' + r.factura.replace('static/', '') : '#';
+       $('com-factura-old-link').innerHTML = '<span style="color:var(--text-muted)">Archivo actual: </span><a href="' + href + '" target="_blank" style="color:var(--green);text-decoration:none"><i data-feather="external-link" style="width:12px;height:12px;margin-right:2px"></i>Ver documento</a>';
+    } else {
+       $('com-factura-old-link').style.display = 'none';
+    }
     $('com-peso').value       = r ? r.peso        : '';
     $('com-obs').value        = r ? r.obs         : '';
     updatePreview();
     $('modal-com-overlay').classList.add('open');
+    if (window.feather) feather.replace();
   }
   function closeModal() { $('modal-com-overlay').classList.remove('open'); }
   function updatePreview() {
@@ -257,14 +296,22 @@
     const id    = $('com-id').value;
     const fecha = $('com-fecha').value;
     if (!fecha) { alert('La fecha es obligatoria.'); return; }
-    const payload = {
-      fecha, supervisor: $('com-supervisor').value.trim(),
-      tipo: $('com-tipo').value, precio: $('com-precio').value,
-      guia: $('com-guia').value, factura: $('com-factura').value,
-      peso: $('com-peso').value, obs: $('com-obs').value,
-    };
+    const formData = new FormData();
+    formData.append('fecha', fecha);
+    formData.append('supervisor', $('com-supervisor').value.trim());
+    formData.append('tipo', $('com-tipo').value);
+    formData.append('precio', $('com-precio').value);
+    formData.append('guia', $('com-guia').value);
+    formData.append('peso', $('com-peso').value);
+    formData.append('obs', $('com-obs').value);
+    formData.append('factura', $('com-factura-old').value);
+    
+    if ($('com-factura').files.length > 0) {
+      formData.append('factura_file', $('com-factura').files[0]);
+    }
+
     const url = id ? '/admin/residuos/comercializable/editar/' + id : '/admin/residuos/comercializable/guardar';
-    const res  = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const res  = await fetch(url, { method:'POST', body: formData });
     const json = await res.json();
     if (json.success) { closeModal(); location.reload(); }
     else alert('Error: ' + json.error);
@@ -289,6 +336,29 @@
         obs: btn.dataset.obs,
       });
     });
+  });
+
+  $('com-factura').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      $('com-factura-name').textContent = file.name;
+      $('com-factura-preview').style.display = 'block';
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => { 
+          $('com-factura-img').src = ev.target.result; 
+          $('com-factura-img').style.display = 'block'; 
+          $('com-factura-pdf').style.display = 'none'; 
+        };
+        reader.readAsDataURL(file);
+      } else {
+        $('com-factura-img').style.display = 'none';
+        $('com-factura-pdf').style.display = 'flex';
+      }
+    } else {
+      $('com-factura-name').textContent = 'Sin archivo seleccionado';
+      $('com-factura-preview').style.display = 'none';
+    }
   });
 
   $('btn-open-com').addEventListener('click',   function() { openModal(); });

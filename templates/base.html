@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/feather-icons"></script>
+{% block extra_css %}{% endblock %}
 </head>
 <body>
 
@@ -196,23 +197,21 @@
         <i data-feather="menu"></i>
       </button>
       
-      <!-- SELECTOR DE PROYECTOS (Solo para Administrador) -->
-      <!-- {% if session.rol == 'Administrador' %}
-      <div class="proyecto-selector">
+      <!-- SELECTOR DE PROYECTOS -->
+      <div class="proyecto-selector" id="proyectoSelectorContainer" style="display: none;">
         <button class="proyecto-btn" onclick="toggleProyectos()" id="proyectoBtn">
-          <span class="proyecto-icon">📁</span>
-          <span class="proyecto-nombre" id="proyectoNombre">Cargando...</span>
-          <span class="proyecto-arrow">▼</span>
+          <span class="proyecto-icon"><i data-feather="briefcase" style="width:16px"></i></span>
+          <span class="proyecto-nombre" id="proyectoNombre">{{ session.proyecto_nombre or 'Seleccionar Proyecto' }}</span>
+          <span class="proyecto-arrow"><i data-feather="chevron-down" style="width:14px"></i></span>
         </button>
         
         <div class="proyecto-dropdown" id="proyectoDropdown">
-          <div class="proyecto-dropdown-header">Cambiar Proyecto</div>
+          <div class="proyecto-dropdown-header">Tus proyectos y roles</div>
           <div class="proyecto-list" id="proyectoList">
-            <div class="proyecto-loading">Cargando proyectos...</div>
+            <div class="proyecto-loading">Cargando...</div>
           </div>
         </div>
       </div>
-      {% endif %} -->
       
       <div class="top-bar-title">
         <h1>{% block page_title %}{% endblock %}</h1>

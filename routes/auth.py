@@ -309,6 +309,74 @@ def logout():
     session.clear()
     return redirect(url_for('auth.login'))
 
+@auth_bp.route('/admin/v1/mis-proyectos')
+def api_mis_proyectos():
+    """Obtiene todos los proyectos/roles asignados al usuario actual."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'No autorizado'}), 401
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT 
+                ur.idusuariorol, 
+                p.nombre AS nombre_proyecto, 
+                r.nombrerol AS nombre_rol,
+                p.idproyecto
+            FROM tbl_usuariorol ur
+            JOIN tbl_proyecto p ON p.idproyecto = ur.idproyecto
+            JOIN tbl_roles r ON r.idroles = ur.idroles
+            WHERE ur.idusuario = %s
+        """, (session['user_id'],))
+        proyectos = cur.fetchall()
+        cur.close()
+        return jsonify({'proyectos': proyectos})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@auth_bp.route('/admin/v1/cambiar-contexto/<int:idusuariorol>', methods=['POST'])
+def api_cambiar_contexto(idusuariorol):
+    """Cambia el contexto actual (proyecto/rol) del usuario sin cerrar sesión."""
+    if 'user_id' not in session:
+        return jsonify({'error': 'No autorizado'}), 401
+    
+    try:
+        cur = mysql.connection.cursor()
+        # Verificar que la asignación pertenezca al usuario
+        cur.execute("""
+            SELECT 
+                ur.*, r.nombrerol, p.nombre AS nombreproyecto, a.nombre AS area_nombre
+            FROM tbl_usuariorol ur
+            JOIN tbl_roles r ON r.idroles = ur.idroles
+            JOIN tbl_proyecto p ON p.idproyecto = ur.idproyecto
+            LEFT JOIN tbl_area a ON a.idarea = ur.idarea
+            WHERE ur.idusuariorol = %s AND ur.idusuario = %s
+        """, (idusuariorol, session['user_id']))
+        user_data = cur.fetchone()
+        cur.close()
+        
+        if not user_data:
+            return jsonify({'success': False, 'error': 'Asignación no encontrada'}), 404
+        
+        # Actualizar sesión con el nuevo contexto (proyecto + rol)
+        # Reutilizamos la lógica de set_session pero pasando el objeto filtrado
+        set_session({
+            'idusuario': session['user_id'],
+            'nombrecompleto': session['nombre'],
+            'idusuariorol': user_data['idusuariorol'],
+            'idroles': user_data['idroles'],
+            'nombrerol': user_data['nombrerol'],
+            'idarea': user_data.get('idarea'),
+            'area_nombre': user_data.get('area_nombre'),
+            'cargo': user_data.get('cargo'),
+            'idproyecto': user_data.get('idproyecto'),
+            'nombreproyecto': user_data['nombreproyecto']
+        })
+        
+        return jsonify({'success': True, 'message': f"Cambiado a {user_data['nombreproyecto']}"})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================================
 # CÓDIGO ANTIGUO (COMENTADO - SISTEMA CON MÓDULOS PERSONALIZADOS)

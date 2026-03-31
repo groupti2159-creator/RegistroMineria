@@ -33,19 +33,21 @@ def configuracion_dashboard():
 def configuracion_usuarios():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("""
-            SELECT u.idusuario, u.nombrecompleto, u.correo,
-                   CAST(u.activo AS UNSIGNED) AS activo,
-                   GROUP_CONCAT(DISTINCT r.nombrerol ORDER BY r.nombrerol SEPARATOR ', ') AS roles,
-                   COUNT(DISTINCT ur.idusuariorol) AS cantidadasignaciones
-            FROM tbl_usuario u
-            LEFT JOIN tbl_usuariorol ur ON ur.idusuario = u.idusuario
-            LEFT JOIN tbl_roles r ON r.idroles = ur.idroles
-            GROUP BY u.idusuario, u.nombrecompleto, u.correo, u.activo
-            ORDER BY u.nombrecompleto
-        """)
-        usuarios = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("""
+                SELECT u.idusuario, u.nombrecompleto, u.correo,
+                       CAST(u.activo AS UNSIGNED) AS activo,
+                       GROUP_CONCAT(DISTINCT r.nombrerol ORDER BY r.nombrerol SEPARATOR ', ') AS roles,
+                       COUNT(DISTINCT ur.idusuariorol) AS cantidadasignaciones
+                FROM tbl_usuario u
+                LEFT JOIN tbl_usuariorol ur ON ur.idusuario = u.idusuario
+                LEFT JOIN tbl_roles r ON r.idroles = ur.idroles
+                GROUP BY u.idusuario, u.nombrecompleto, u.correo, u.activo
+                ORDER BY u.nombrecompleto
+            """)
+            usuarios = cur.fetchall()
+        finally:
+            cur.close()
         return render_template('configuracion/usuarios.html',
                                usuarios=usuarios,
                                notif_count=get_notif_count())
@@ -58,23 +60,24 @@ def configuracion_usuarios():
 
 @admin_bp.route('/usuarios/form-data')
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_form_data():
     try:
         cur = mysql.connection.cursor()
-        
-        # Proyectos
-        cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
-        proyectos = cur.fetchall()
-        
-        # Roles
-        cur.execute("SELECT idroles, nombrerol, descripcion FROM tbl_roles ORDER BY nombrerol")
-        roles = cur.fetchall()
-        
-        # Áreas
-        cur.execute("SELECT idarearesponsable, arearesponsable FROM tbl_arearesponsable ORDER BY arearesponsable")
-        areas = cur.fetchall()
-        
-        cur.close()
+        try:
+            # Proyectos
+            cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+            proyectos = cur.fetchall()
+            
+            # Roles
+            cur.execute("SELECT idroles, nombrerol, descripcion FROM tbl_roles ORDER BY nombrerol")
+            roles = cur.fetchall()
+            
+            # Áreas
+            cur.execute("SELECT idarearesponsable, arearesponsable FROM tbl_arearesponsable ORDER BY arearesponsable")
+            areas = cur.fetchall()
+        finally:
+            cur.close()
         
         return jsonify({
             'proyectos': proyectos,
@@ -87,12 +90,15 @@ def usuarios_form_data():
 
 @admin_bp.route('/usuarios/roles')
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_roles():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT idroles, nombrerol, descripcion FROM tbl_roles ORDER BY nombrerol")
-        roles = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("SELECT idroles, nombrerol, descripcion FROM tbl_roles ORDER BY nombrerol")
+            roles = cur.fetchall()
+        finally:
+            cur.close()
         return jsonify(roles)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -100,12 +106,15 @@ def usuarios_roles():
 
 @admin_bp.route('/usuarios/areas')
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_areas():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT idarea, nombre AS nombrearea FROM tbl_area WHERE activo = 1 ORDER BY nombre")
-        areas = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("SELECT idarea, nombre AS nombrearea FROM tbl_area WHERE activo = 1 ORDER BY nombre")
+            areas = cur.fetchall()
+        finally:
+            cur.close()
         return jsonify(areas)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -113,17 +122,20 @@ def usuarios_areas():
 
 @admin_bp.route('/usuarios/modulos/<int:proyecto_id>')
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_modulos(proyecto_id):
     try:
         cur = mysql.connection.cursor()
-        cur.execute("""
-            SELECT idmodulo, idmodulopadre, codigo, nombre, icono, url, orden
-            FROM tbl_modulo
-            WHERE idproyecto = %s AND activo = 1
-            ORDER BY orden
-        """, (proyecto_id,))
-        modulos = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("""
+                SELECT idmodulo, idmodulopadre, codigo, nombre, icono, url, orden
+                FROM tbl_modulo
+                WHERE idproyecto = %s AND activo = 1
+                ORDER BY orden
+            """, (proyecto_id,))
+            modulos = cur.fetchall()
+        finally:
+            cur.close()
         
         # Construir jerarquía
         padres = [m for m in modulos if m['idmodulopadre'] is None]
@@ -155,6 +167,7 @@ def usuarios_modulos(proyecto_id):
 
 @admin_bp.route('/usuarios/crear-nuevo', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_crear_nuevo():
     """
     Crea un nuevo usuario con sistema de roles puro.
@@ -218,18 +231,23 @@ def usuarios_crear_nuevo():
 
 @admin_bp.route('/usuarios/detalle/<dni>')
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_detalle(dni):
     try:
         cur = mysql.connection.cursor()
-        usuario = sp_one(cur, 'sp_detalleusuario', (dni,))
-        cur.close()
+        try:
+            usuario = sp_one(cur, 'sp_detalleusuario', (dni,))
+        finally:
+            cur.close()
 
         if not usuario:
             return jsonify({'success': False, 'error': 'Usuario no encontrado'}), 404
 
         cur = mysql.connection.cursor()
-        asignaciones = sp_exec(cur, 'sp_asignacionesusuario', (dni,))
-        cur.close()
+        try:
+            asignaciones = sp_exec(cur, 'sp_asignacionesusuario', (dni,))
+        finally:
+            cur.close()
 
         def serialize(row):
             if row is None:
@@ -250,6 +268,7 @@ def usuarios_detalle(dni):
 
 @admin_bp.route('/usuarios/editar/<dni>', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def usuarios_editar(dni):
     try:
         data = request.get_json() or {}
@@ -346,9 +365,10 @@ def usuarios_editar(dni):
 
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
-@admin_bp.route('/usuarios/eliminar/<dni>', methods=['POST'])
+@admin_bp.route('/usuarios/desactivar/<dni>', methods=['POST'])
 @admin_required
-def usuarios_eliminar(dni):
+@modulo_required('CONFIGURACION')
+def usuarios_desactivar(dni):
     try:
         cur = mysql.connection.cursor()
         cur.execute("UPDATE tbl_usuario SET activo = 0 WHERE idusuario = %s", (dni,))
@@ -358,24 +378,58 @@ def usuarios_eliminar(dni):
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@admin_bp.route('/usuarios/eliminar-fisico/<dni>', methods=['POST'])
+@admin_required
+@modulo_required('CONFIGURACION')
+def usuarios_eliminar_fisico(dni):
+    try:
+        cur = mysql.connection.cursor()
+        try:
+            # 1. Obtener IDs de roles para limpiar notificaciones manualmente (por seguridad extra)
+            cur.execute("SELECT idusuariorol FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+            ids_rol = [row['idusuariorol'] for row in cur.fetchall()]
+            
+            if ids_rol:
+                _borrar_notificaciones_por_usuariorol(cur, ids_rol)
+            
+            # 2. El CASCADE en la base de datos se encargará de Tbl_UsuarioRol
+            # Pero si no está activo, lo hacemos manual aquí:
+            cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+            
+            # 3. Borrado físico del usuario
+            cur.execute("DELETE FROM tbl_usuario WHERE idusuario = %s", (dni,))
+            
+            mysql.connection.commit()
+            return jsonify({'success': True, 'message': 'Usuario eliminado permanentemente del sistema'})
+        except Exception as e:
+            mysql.connection.rollback()
+            return jsonify({'success': False, 'error': f'Error en el borrado físico: {str(e)}'}), 500
+        finally:
+            cur.close()
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ── Gestión de Roles y Permisos ──────────────────────────────────────────────
 
 @admin_bp.route('/roles')
 @admin_required
-# @modulo_required('CONFIGURACION')  # Comentado temporalmente para pruebas
+@modulo_required('CONFIGURACION')
 def roles():
     return render_template('admin/roles.html', notif_count=get_notif_count())
 
 
 @admin_bp.route('/roles/proyectos')
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_proyectos():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
-        proyectos = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+            proyectos = cur.fetchall()
+        finally:
+            cur.close()
         return jsonify({'proyectos': proyectos})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -383,6 +437,7 @@ def roles_proyectos():
 
 @admin_bp.route('/roles/proyecto/<int:proyecto_id>/roles')
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_proyecto_roles(proyecto_id):
     try:
         cur = mysql.connection.cursor()
@@ -412,17 +467,20 @@ def roles_proyecto_roles(proyecto_id):
 
 @admin_bp.route('/roles/proyecto/<int:proyecto_id>/modulos')
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_proyecto_modulos(proyecto_id):
     try:
         cur = mysql.connection.cursor()
-        cur.execute("""
-            SELECT idmodulo, idmodulopadre, codigo, nombre, icono, url, orden
-            FROM tbl_modulo
-            WHERE idproyecto = %s AND activo = 1
-            ORDER BY orden
-        """, (proyecto_id,))
-        modulos = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("""
+                SELECT idmodulo, idmodulopadre, codigo, nombre, icono, url, orden
+                FROM tbl_modulo
+                WHERE idproyecto = %s AND activo = 1
+                ORDER BY orden
+            """, (proyecto_id,))
+            modulos = cur.fetchall()
+        finally:
+            cur.close()
         
         # Construir jerarquía
         padres = [m for m in modulos if m['idmodulopadre'] is None]
@@ -454,6 +512,7 @@ def roles_proyecto_modulos(proyecto_id):
 
 @admin_bp.route('/roles/proyecto/<int:proyecto_id>/rol/<int:rol_id>/permisos', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_guardar_permisos(proyecto_id, rol_id):
     try:
         data = request.get_json()
@@ -496,6 +555,7 @@ def roles_guardar_permisos(proyecto_id, rol_id):
 
 @admin_bp.route('/roles/crear', methods=['POST'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_crear():
     try:
         data = request.get_json()
@@ -527,6 +587,7 @@ def roles_crear():
 
 @admin_bp.route('/roles/<int:rol_id>/actualizar', methods=['PUT'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_actualizar(rol_id):
     try:
         data = request.get_json()
@@ -565,6 +626,7 @@ def roles_actualizar(rol_id):
 
 @admin_bp.route('/roles/<int:rol_id>/eliminar', methods=['DELETE'])
 @admin_required
+@modulo_required('CONFIGURACION')
 def roles_eliminar(rol_id):
     try:
         cur = mysql.connection.cursor()

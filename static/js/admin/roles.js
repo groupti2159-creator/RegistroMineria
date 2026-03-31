@@ -10,13 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listener para cambio de proyecto
     document.getElementById('proyectoSelect').addEventListener('change', function() {
         window.proyectoActual = this.value;
+        const container = document.getElementById('rolesListContainer');
         if (window.proyectoActual) {
             cargarRolesYModulos(window.proyectoActual);
-        } else {
-            document.getElementById('rolesContainer').innerHTML = `
+        } else if (container) {
+            container.innerHTML = `
                 <div class="text-center text-muted py-5">
-                    <i data-feather="folder" style="width: 48px; height: 48px;"></i>
-                    <p class="mt-3">Selecciona un proyecto para ver sus roles</p>
+                    <i data-feather="folder" style="width: 32px; height: 32px;"></i>
+                    <p class="mt-3">Selecciona un proyecto</p>
                 </div>
             `;
             feather.replace();
@@ -45,15 +46,18 @@ async function cargarProyectos() {
 // Cargar roles y módulos del proyecto
 window.cargarRolesYModulos = async function(proyectoId) {
     try {
-        // Mostrar loading
-        document.getElementById('rolesContainer').innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="sr-only">Cargando...</span>
+        // Mostrar loading en el sidebar
+        const listContainer = document.getElementById('rolesListContainer');
+        if (listContainer) {
+            listContainer.innerHTML = `
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 1.5rem; height: 1.5rem;">
+                        <span class="sr-only">Cargando...</span>
+                    </div>
+                    <p class="mt-2" style="font-size: 0.8rem;">Cargando roles...</p>
                 </div>
-                <p class="mt-3">Cargando roles y módulos...</p>
-            </div>
-        `;
+            `;
+        }
         
         // Cargar roles
         const rolesResponse = await fetch(`/admin/roles/proyecto/${proyectoId}/roles`);
@@ -70,13 +74,16 @@ window.cargarRolesYModulos = async function(proyectoId) {
         
     } catch (error) {
         console.error('Error cargando datos:', error);
-        document.getElementById('rolesContainer').innerHTML = `
-            <div class="alert alert-danger">
-                <i data-feather="alert-circle"></i>
-                Error al cargar los datos del proyecto
-            </div>
-        `;
-        feather.replace();
+        const listContainer = document.getElementById('rolesListContainer');
+        if (listContainer) {
+            listContainer.innerHTML = `
+                <div class="alert alert-danger p-2" style="font-size: 0.8rem;">
+                    <i data-feather="alert-circle" style="width: 14px;"></i>
+                    Error al cargar datos
+                </div>
+            `;
+            feather.replace();
+        }
     }
 };
 

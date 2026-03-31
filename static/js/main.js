@@ -1,3 +1,69 @@
+// ── PROYECTO SELECTOR ──────────────────────────────────────────────────────────
+async function initProyectoSelector() {
+    const container = document.getElementById('proyectoSelectorContainer');
+    const list = document.getElementById('proyectoList');
+    if (!container || !list) return;
+
+    try {
+        const res = await fetch('/admin/v1/mis-proyectos');
+        const data = await res.json();
+        
+        if (data.proyectos && data.proyectos.length > 1) {
+            container.style.display = 'block'; // Mostrar solo si hay más de 1
+            list.innerHTML = '';
+            
+            data.proyectos.forEach(p => {
+                const item = document.createElement('div');
+                item.className = 'proyecto-item';
+                item.innerHTML = `
+                    <div class="p-info">
+                        <strong>${p.nombre_proyecto}</strong>
+                        <small>${p.nombre_rol}</small>
+                    </div>
+                    <i data-feather="chevron-right"></i>
+                `;
+                item.onclick = () => cambiarProyecto(p.idusuariorol);
+                list.appendChild(item);
+            });
+            if (typeof feather !== 'undefined') feather.replace();
+        } else {
+            container.style.display = 'none';
+        }
+    } catch (e) {
+        console.error('Error al cargar proyectos:', e);
+    }
+}
+
+function toggleProyectos() {
+    const dropdown = document.getElementById('proyectoDropdown');
+    dropdown.classList.toggle('show');
+    
+    // Cerrar si se hace click fuera
+    if (dropdown.classList.contains('show')) {
+        const handler = (e) => {
+            if (!e.target.closest('.proyecto-selector')) {
+                dropdown.classList.remove('show');
+                window.removeEventListener('click', handler);
+            }
+        };
+        setTimeout(() => window.addEventListener('click', handler), 10);
+    }
+}
+
+async function cambiarProyecto(idusuariorol) {
+    try {
+        const res = await fetch(`/admin/v1/cambiar-contexto/${idusuariorol}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            window.location.reload(); // Recargar para reconstruir el sidebar
+        } else {
+            console.error(data.error);
+        }
+    } catch (e) {
+        console.error('Error al cambiar de proyecto:', e);
+    }
+}
+
 // ── DARK MODE ──
 function toggleDark() {
   const html = document.documentElement;

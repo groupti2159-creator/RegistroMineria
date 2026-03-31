@@ -4,410 +4,164 @@
 
 {% block extra_css %}
 <style>
-/* ========== ESTILOS PARA GESTIÓN DE USUARIOS ========== */
+/* ========== ESTILOS PARA GESTIÓN DE USUARIOS (Estandarizado) ========== */
 
-/* Modal específico para usuarios - mejor ancho */
-#modalCrearUsuario .modal-box {
-    max-width: 1000px;
-}
-
-/* Mejorar espaciado de form-section en modal de usuarios */
+#modalCrearUsuario .modal-box { max-width: 900px; }
 #modalCrearUsuario .form-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
     margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
 }
-
-#modalCrearUsuario .form-section:last-of-type {
-    margin-bottom: 1rem;
+#modalCrearUsuario .form-section-title {
+    margin: -1.5rem -1.5rem 1.5rem -1.5rem;
+    padding: 1rem 1.5rem;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--border);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    color: var(--text);
 }
+[data-theme="dark"] #modalCrearUsuario .form-section-title { background: var(--gray-800); }
 
-/* Mejorar padding de form-row en modal de usuarios */
-#modalCrearUsuario .form-row {
-    padding: 1.5rem 1.5rem 1.25rem 1.5rem;
-}
+#modalCrearUsuario .form-row { margin-bottom: 1.25rem; display: flex; gap: 1.25rem; }
+#modalCrearUsuario .form-row:last-child { margin-bottom: 0; }
+#modalCrearUsuario .form-group { flex: 1; display: flex; flex-direction: column; gap: .45rem; }
 
-/* Barra de búsqueda */
-.search-bar {
+.search-bar, .filter-bar {
     background: var(--bg-card);
     padding: 1rem 1.25rem;
     border-radius: var(--radius-lg);
     border: 1px solid var(--border);
-    margin-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
 }
 
-.search-input-wrapper {
-    position: relative;
-    flex: 1;
-    max-width: 400px;
-}
-
-.search-input-wrapper input {
-    width: 100%;
-    padding: .55rem .75rem .55rem 2.5rem;
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    font-size: .82rem;
-    background: var(--bg-card);
-    color: var(--text);
-    transition: all 0.2s;
-}
-
-.search-input-wrapper input:focus {
-    outline: none;
-    border-color: var(--black);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
-}
-
-.search-icon {
-    position: absolute;
-    left: .75rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-}
-
-/* Tabla */
 .users-table-container {
     background: var(--bg-card);
     border-radius: var(--radius-lg);
-    /* border: 1px solid var(--border); */
-    overflow: hidden;
- 
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+    overflow-x: auto;
 }
 
-.users-table {
-    width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
-    table-layout: fixed;
-}
-
-.data-table {
-    width: 100%;
-    table-layout: fixed;
-}
-
-.data-table th,
-.data-table td {
-    padding: .85rem 1rem;
-}
-
-.data-table td {
-    word-break: break-word;
-    white-space: normal;
-}
-
-.data-table tbody tr:hover {
-    background: var(--gray-100);
-    transform: none;
-    box-shadow: none;
-}
-
-.data-table tbody tr:hover td:first-child {
-    border-left: none;
-    padding-left: 1rem;
-}
-
-.data-table tbody td {
-    border-bottom: 1px solid var(--border);
-}
-
-.users-table thead th:nth-child(1) { width: 24%; }
-.users-table thead th:nth-child(2) { width: 21%; }
-.users-table thead th:nth-child(3) { width: 20%; }
-.users-table thead th:nth-child(4) { width: 13%; }
-.users-table thead th:nth-child(5) { width: 11%; }
-.users-table thead th:nth-child(6) { width: 11%; }
-
-.users-table thead {
-    background: var(--gray-100);
-    color: var(--text);
-}
-
-.users-table thead th {
-    padding: .75rem 1rem;
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+    padding: 1rem 1.25rem;
     text-align: left;
+    font-size: .75rem;
     font-weight: 700;
-    font-size: .72rem;
     text-transform: uppercase;
-    letter-spacing: .04em;
+    letter-spacing: .05em;
     color: var(--text-muted);
-    white-space: nowrap;
+    border-bottom: 2px solid var(--border);
+    background: var(--gray-50);
 }
+[data-theme="dark"] .data-table th { background: var(--gray-800); }
 
-.users-table thead th:nth-child(1) { width: 25%; } /* Usuario */
-.users-table thead th:nth-child(2) { width: 20%; } /* Correo */
-.users-table thead th:nth-child(3) { width: 20%; } /* Roles */
-.users-table thead th:nth-child(4) { width: 12%; } /* Proyectos */
-.users-table thead th:nth-child(5) { width: 10%; } /* Estado */
-.users-table thead th:nth-child(6) { width: 13%; } /* Acciones */
-
-.users-table tbody tr {
+.data-table td {
+    padding: 1rem 1.25rem;
     border-bottom: 1px solid var(--border);
-    transition: all 0.2s;
-}
-
-.users-table tbody tr:hover {
-    background: var(--gray-100);
-}
-
-.users-table tbody tr:last-child {
-    border-bottom: none;
-}
-
-.users-table tbody td {
-    padding: .85rem 1rem;
     vertical-align: middle;
     color: var(--text);
 }
 
-/* Avatar con iniciales */
+.data-table tbody tr { transition: background-color 0.2s; }
+.data-table tbody tr:hover { background: var(--gray-50); }
+[data-theme="dark"] .data-table tbody tr:hover { background: var(--gray-800); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
 .user-avatar {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: var(--gray-200);
-    color: var(--gray-700);
+    background: linear-gradient(135deg, var(--green-100), var(--green-50));
+    color: var(--green-600);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-weight: 700;
-    font-size: .85rem;
-    margin-right: .75rem;
+    font-weight: 800;
+    font-size: 1.05rem;
+    margin-right: 1.25rem;
     flex-shrink: 0;
-    border: 2px solid var(--border);
+    border: 2px solid var(--green-400);
+    box-shadow: 0 4px 8px rgba(34, 197, 94, 0.15);
+    text-shadow: 1px 1px 0px rgba(255,255,255,0.5);
+}
+[data-theme="dark"] .user-avatar { 
+    background: linear-gradient(135deg, var(--green-dark), var(--bg-card)); 
+    border-color: var(--green-600);
+    color: var(--green-400);
 }
 
-[data-theme="dark"] .user-avatar {
-    background: var(--gray-300);
-    color: var(--gray-800);
-}
+.user-info { display: flex; align-items: center; }
+.user-name { font-weight: 600; font-size: .9rem; color: var(--text); margin-bottom: .2rem; }
+.user-dni { font-size: .75rem; color: var(--text-muted); }
 
-.user-info {
-    display: flex;
-    align-items: center;
-}
-
-.user-details {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-}
-
-.user-name {
-    font-weight: 600;
-    color: var(--text);
-    font-size: .85rem;
-    margin-bottom: .1rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.user-dni {
-    font-size: .75rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-}
-
-/* Badges de roles */
 .role-badge {
-    display: inline-block;
-    padding: .25rem .65rem;
-    border-radius: var(--radius);
+    display: inline-flex;
+    align-items: center;
+    padding: .35rem .75rem;
+    border-radius: 20px;
     font-size: .75rem;
     font-weight: 600;
     margin: 2px 4px 2px 0;
     white-space: nowrap;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
-
-.role-admin {
-    background: var(--pastel-red);
-    color: var(--text-red);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-.role-supervisor {
-    background: var(--pastel-blue);
-    color: var(--text-blue);
-    border: 1px solid rgba(59, 130, 246, 0.2);
-}
-
-.role-trabajador {
-    background: var(--pastel-green);
-    color: var(--text-green);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-[data-theme="dark"] .role-admin {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.3);
-}
-
-[data-theme="dark"] .role-supervisor {
-    background: rgba(59, 130, 246, 0.15);
-    color: #93c5fd;
-    border-color: rgba(59, 130, 246, 0.3);
-}
-
-[data-theme="dark"] .role-trabajador {
-    background: rgba(34, 197, 94, 0.15);
-    color: #86efac;
-    border-color: rgba(34, 197, 94, 0.3);
-}
+.role-admin { border-left: 3px solid #ef4444; }
+.role-supervisor { border-left: 3px solid #3b82f6; }
+.role-trabajador { border-left: 3px solid #10b981; }
 
 .status-badge {
-    padding: .25rem .65rem;
-    border-radius: var(--radius);
+    padding: .4rem .85rem;
+    border-radius: 20px;
     font-size: .75rem;
     font-weight: 600;
     display: inline-flex;
     align-items: center;
-    gap: .35rem;
-    white-space: nowrap;
-}
-
-.status-active {
-    background: var(--pastel-green);
-    color: var(--text-green);
-    border: 1px solid rgba(34, 197, 94, 0.2);
-}
-
-.status-inactive {
-    background: var(--pastel-red);
-    color: var(--text-red);
-    border: 1px solid rgba(239, 68, 68, 0.2);
-}
-
-[data-theme="dark"] .status-active {
-    background: rgba(34, 197, 94, 0.15);
-    color: #86efac;
-    border-color: rgba(34, 197, 94, 0.3);
-}
-
-[data-theme="dark"] .status-inactive {
-    background: rgba(239, 68, 68, 0.15);
-    color: #fca5a5;
-    border-color: rgba(239, 68, 68, 0.3);
-}
-
-.status-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: currentColor;
-}
-
-/* Botones de acción */
-/*.action-buttons {
-    display: flex;
     gap: .5rem;
-}
-
-/* Proyecto items en modal */
-.proyecto-item {
-    border: 1px solid var(--border);
-    padding: 1.25rem;
-    margin-bottom: 1rem;
-    border-radius: var(--radius-lg);
     background: var(--bg-card);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
 }
+.status-active { color: #10b981; }
+.status-inactive { color: #ef4444; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 
+.proyecto-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    padding: 1.5rem;
+    margin-bottom: 1.25rem;
+    border-radius: var(--radius-lg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    position: relative;
+}
 .proyecto-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 1.25rem;
-    padding-bottom: .85rem;
-    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+    border-bottom: 1px dashed var(--border);
 }
+.proyecto-item-header strong { font-size: 1rem; font-weight: 700; color: var(--text); }
 
-.proyecto-item-header strong {
-    font-size: .95rem;
-    color: var(--text);
-    font-weight: 700;
-}
-
-/* Asegurar que form-row dentro de proyecto-item funcione bien */
-.proyecto-item .form-row {
-    margin-bottom: 1rem;
-}
-
-.proyecto-item .form-row:last-child {
-    margin-bottom: 0;
-}
-
-/* Mejorar el espaciado de form-group dentro de proyecto-item */
-.proyecto-item .form-group {
-    display: flex;
-    flex-direction: column;
-}
-
-.proyecto-item .form-label {
-    margin-bottom: .5rem;
-}
-
-.proyecto-item .form-select,
-.proyecto-item .form-input {
-    font-size: .85rem;
-    padding: .6rem .85rem;
-}
-
-/* Modal de Detalles de Usuario */
-.details-info {
-    flex: 1;
-}
-
-.details-info h3 {
-    color: var(--text);
-    font-size: 1rem;
-    font-weight: 700;
-    margin: 0 0 .25rem 0;
-}
-
-.details-info p {
-    color: var(--text-muted);
-    font-size: .85rem;
-    margin: 0;
-}
-
-/* Responsive */
 @media (max-width: 768px) {
-    .search-bar {
-        flex-direction: column;
-        gap: .75rem;
-    }
-    
-    .search-input-wrapper {
-        max-width: 100%;
-    }
-    
-    .users-table-container {
-        overflow-x: auto;
-    }
-    
-    .users-table {
-        min-width: 800px;
-    }
-    
-
-}
-
-@media (max-width: 480px) {
-    .page-header-section {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-    
-    .action-bar {
-        width: 100%;
-    }
-    
-    .action-bar .btn {
-        width: 100%;
-        justify-content: center;
-    }
+    .filter-bar { flex-direction: column; align-items: stretch; }
 }
 </style>
 {% endblock %}
@@ -519,8 +273,14 @@
                                     title="Editar">
                                 <i data-feather="edit-2" style="width: 18px; height: 18px;"></i>
                             </button>
-                            <button class="btn-icon btn-icon-danger" onclick="eliminarUsuario('{{ usuario.idusuario }}')" 
-                                    title="Desactivar">
+                            <!-- Botón Desactivar -->
+                            <button class="btn-icon" onclick="desactivarUsuario('{{ usuario.idusuario }}')" 
+                                    title="Desactivar" style="color: var(--yellow, #f59e0b);">
+                                <i data-feather="user-x" style="width: 18px; height: 18px;"></i>
+                            </button>
+                            <!-- Botón Eliminar Permanente -->
+                            <button class="btn-icon btn-icon-danger" onclick="eliminarUsuarioFisico('{{ usuario.idusuario }}')" 
+                                    title="Eliminar permanentemente">
                                 <i data-feather="trash-2" style="width: 18px; height: 18px;"></i>
                             </button>
                         </div>
@@ -561,7 +321,7 @@
                     <div class="form-row" style="gap: 1.25rem;">
                         <div class="form-group">
                             <label class="form-label">DNI *</label>
-                            <input type="text" id="dni" required placeholder="Ingrese el DNI" class="form-input">
+                            <input type="text" id="dni" required placeholder="8 dígitos" class="form-input" maxlength="8" oninput="this.value = this.value.replace(/[^0-9]/g, '')">
                         </div>
                         <div class="form-group">
                             <label class="form-label">NOMBRE COMPLETO *</label>
@@ -574,8 +334,8 @@
                             <input type="email" id="correo" placeholder="usuario@ejemplo.com" class="form-input">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">CONTRASEÑA</label>
-                            <input type="password" id="password" placeholder="Mínimo 6 caracteres (dejar vacío para no cambiar)" class="form-input">
+                            <label class="form-label">CONTRASEÑA *</label>
+                            <input type="password" id="password" placeholder="Mínimo 6 caracteres" class="form-input">
                         </div>
                     </div>
                     <div class="form-row" style="gap: 1.25rem;">
@@ -738,56 +498,85 @@ function editarUsuario(dni) {
     if (typeof abrirModalEditar === 'function') abrirModalEditar(dni);
 }
 
-async function eliminarUsuario(dni) {
-    // Modal de confirmación personalizado en lugar de confirm()
+async function desactivarUsuario(dni) {
     const confirmado = await mostrarConfirmacion(
         '¿Desactivar usuario?',
-        'El usuario podrá ser reactivado editando su estado.'
+        'El usuario no podrá entrar al sistema, pero sus datos se conservarán. Podrás reactivarlo editando su estado.',
+        'Desactivar',
+        'var(--yellow, #f59e0b)'
     );
     if (!confirmado) return;
 
     try {
-        const response = await fetch(`/admin/usuarios/eliminar/${dni}`, {
+        const response = await fetch(`/admin/usuarios/desactivar/${dni}`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({})
+            headers: { 'Content-Type': 'application/json' }
         });
         const result = await response.json();
-        if (!response.ok || !result.success) {
-            throw new Error(result.error || 'No se pudo desactivar el usuario');
-        }
-        mostrarNotificacion(result.message || 'Usuario desactivado correctamente', 'success');
-        setTimeout(() => location.reload(), 1500);
+        if (!response.ok || !result.success) throw new Error(result.error);
+        
+        mostrarNotificacion(result.message || 'Usuario desactivado', 'success');
+        setTimeout(() => location.reload(), 1200);
     } catch (error) {
-        console.error(error);
-        mostrarNotificacion('Error al desactivar usuario: ' + (error.message || error), 'error');
+        mostrarNotificacion('Error: ' + error.message, 'error');
+    }
+}
+
+async function eliminarUsuarioFisico(dni) {
+    const confirmado = await mostrarConfirmacion(
+        '¡ATENCIÓN! ¿Eliminar totalmente?',
+        'Esta acción borrará al usuario y TODAS sus asignaciones y notificaciones de forma permanente. No se puede deshacer.',
+        'ELIMINAR TODO',
+        '#ef4444'
+    );
+    if (!confirmado) return;
+
+    try {
+        const response = await fetch(`/admin/usuarios/eliminar-fisico/${dni}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        const result = await response.json();
+        if (!response.ok || !result.success) throw new Error(result.error);
+        
+        mostrarNotificacion(result.message || 'Usuario eliminado físicamente', 'success');
+        setTimeout(() => location.reload(), 1200);
+    } catch (error) {
+        mostrarNotificacion('Error: ' + error.message, 'error');
     }
 }
 
 // Confirmación personalizada (reemplaza confirm() nativo)
-function mostrarConfirmacion(titulo, mensaje) {
+function mostrarConfirmacion(titulo, mensaje, btnText = 'Aceptar', btnColor = 'var(--red, #ef4444)') {
     return new Promise(resolve => {
         const overlay = document.createElement('div');
         overlay.style.cssText = `
             position:fixed;inset:0;background:rgba(0,0,0,0.5);
             z-index:99999;display:flex;align-items:center;justify-content:center;
+            backdrop-filter: blur(4px);
         `;
         overlay.innerHTML = `
             <div style="background:var(--bg-card);border:1px solid var(--border);
                         border-radius:var(--radius-lg);padding:1.5rem;max-width:400px;
-                        width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-                <h4 style="margin:0 0 .5rem;color:var(--text);font-size:1rem;">${titulo}</h4>
-                <p style="margin:0 0 1.25rem;color:var(--text-muted);font-size:.875rem;">${mensaje}</p>
-                <div style="display:flex;gap:.75rem;justify-content:flex-end;">
-                    <button id="btnCancelarConfirm" class="btn btn-secondary">Cancelar</button>
+                        width:90%;box-shadow:0 20px 60px rgba(0,0,0,0.3); text-align:center;">
+                <div style="width: 50px; height: 50px; background: ${btnColor}20; color: ${btnColor}; 
+                            border-radius: 50%; display: flex; align-items: center; justify-content: center; 
+                            margin: 0 auto 1rem;">
+                    <i data-feather="alert-triangle"></i>
+                </div>
+                <h4 style="margin:0 0 .5rem;color:var(--text);font-size:1.15rem;">${titulo}</h4>
+                <p style="margin:0 0 1.5rem;color:var(--text-muted);font-size:.875rem;line-height:1.5;">${mensaje}</p>
+                <div style="display:flex;gap:.75rem;">
+                    <button id="btnCancelarConfirm" class="btn btn-secondary" style="flex:1">Cancelar</button>
                     <button id="btnAceptarConfirm" class="btn btn-primary" 
-                            style="background:var(--red,#ef4444);border-color:var(--red,#ef4444);">
-                        Desactivar
+                            style="flex:1; background:${btnColor}; border-color:${btnColor}; color:white;">
+                        ${btnText}
                     </button>
                 </div>
             </div>
         `;
         document.body.appendChild(overlay);
+        if (typeof feather !== 'undefined') feather.replace();
 
         overlay.querySelector('#btnAceptarConfirm').onclick = () => {
             document.body.removeChild(overlay);

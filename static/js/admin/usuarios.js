@@ -154,6 +154,12 @@ function agregarProyecto(asignacion) {
     
     if (typeof feather !== 'undefined') feather.replace();
     
+    // Listener para evitar proyectos duplicados
+    const selectProy = document.getElementById(`proyecto_${index}`);
+    selectProy.addEventListener('change', function() {
+        validarProyectosDuplicados();
+    });
+
     const hid = asignacion?.idusuariorol;
     if (hid != null && hid !== '') {
         const h = document.getElementById(`idusuariorol_${index}`);
@@ -168,6 +174,28 @@ function agregarProyecto(asignacion) {
         if (c) c.value = asignacion.cargo;
     }
     return Promise.all([p, r, a]);
+}
+
+function validarProyectosDuplicados() {
+    const selects = document.querySelectorAll('#proyectos-container select[id^="proyecto_"]');
+    const seleccionados = [];
+    let hayDuplicados = false;
+
+    selects.forEach(s => {
+        s.style.borderColor = ''; // Limpiar errores previos
+        if (s.value) {
+            if (seleccionados.includes(s.value)) {
+                s.style.borderColor = '#ef4444';
+                hayDuplicados = true;
+            }
+            seleccionados.push(s.value);
+        }
+    });
+
+    if (hayDuplicados) {
+        mostrarNotificacion('No puedes asignar el mismo proyecto más de una vez', 'error');
+    }
+    return hayDuplicados;
 }
 
 function eliminarProyecto(index) {
@@ -258,23 +286,45 @@ function guardarUsuario() {
 
     if (!nombre) {
         mostrarNotificacion('El nombre completo es obligatorio', 'error');
+        document.getElementById('nombre').focus();
         return;
     }
     if (!isEdit && !dni) {
         mostrarNotificacion('El DNI es obligatorio', 'error');
+        document.getElementById('dni').focus();
+        return;
+    }
+    if (dni && !/^\d{8}$/.test(dni)) {
+        mostrarNotificacion('El DNI debe tener 8 dígitos numéricos', 'error');
+        document.getElementById('dni').focus();
+        return;
+    }
+    if (correo && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+        mostrarNotificacion('El formato del correo electrónico no es válido', 'error');
+        document.getElementById('correo').focus();
         return;
     }
     if (!isEdit && password.length < 6) {
         mostrarNotificacion('La contraseña debe tener al menos 6 caracteres', 'error');
+        document.getElementById('password').focus();
         return;
     }
     if (isEdit && password.length > 0 && password.length < 6) {
         mostrarNotificacion('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+        document.getElementById('password').focus();
         return;
     }
 
+    if (validarProyectosDuplicados()) return;
+
     const asignaciones = [];
     const items = document.querySelectorAll('#proyectos-container .proyecto-item');
+    
+    if (items.length === 0) {
+        mostrarNotificacion('Debes agregar al menos un proyecto al usuario', 'error');
+        return;
+    }
+
     for (const item of items) {
         const selects = item.querySelectorAll('.form-select');
         const proyecto = selects[0]?.value ?? '';
@@ -285,19 +335,15 @@ function guardarUsuario() {
         const hid = item.querySelector('input[type="hidden"]');
         let idusuariorol = (hid?.value ?? '').trim() || null;
 
-        if (!proyecto && !rol && !area && !cargo) continue;
-
         if (!proyecto || !rol || !area || !cargo) {
-            mostrarNotificacion('Completa todos los campos del proyecto o elimina el bloque incompleto', 'error');
+            item.style.border = '2px solid #ef4444';
+            mostrarNotificacion('Completa todos los campos obligatorios en cada proyecto (*) ', 'error');
             return;
+        } else {
+            item.style.border = '';
         }
 
         asignaciones.push({ idusuariorol, proyecto_id: proyecto, rol_id: rol, area_id: area, cargo });
-    }
-
-    if (!isEdit && asignaciones.length === 0) {
-        mostrarNotificacion('Debes agregar al menos un proyecto', 'error');
-        return;
     }
 
     const payload = {
