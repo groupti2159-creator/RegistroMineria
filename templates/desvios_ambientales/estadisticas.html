@@ -8,7 +8,7 @@
 {% block content %}
 <div style="display:flex;flex-wrap:wrap;gap:1.5rem;justify-content:center;align-items:center;min-height:60vh;">
 
-  <div class="card" style="width:300px;cursor:pointer;text-align:center;padding:2rem 1.5rem;" onclick="abrirModal('areas')">
+  <div class="card" style="width:300px;cursor:pointer;text-align:center;padding:2rem 1.5rem;" onclick="abrirModalEstadistica('areas')">
     <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#1d4ed8);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
       <i data-feather="users" style="width:36px;height:36px;color:#fff"></i>
     </div>
@@ -17,7 +17,7 @@
     <button class="btn btn-primary" style="width:100%">Ver estadistica</button>
   </div>
 
-  <div class="card" style="width:300px;cursor:pointer;text-align:center;padding:2rem 1.5rem;" onclick="abrirModal('ccta')">
+  <div class="card" style="width:300px;cursor:pointer;text-align:center;padding:2rem 1.5rem;" onclick="abrirModalEstadistica('ccta')">
     <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#10b981,#065f46);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
       <i data-feather="user-check" style="width:36px;height:36px;color:#fff"></i>
     </div>
@@ -26,7 +26,7 @@
     <button class="btn btn-primary" style="width:100%">Ver estadistica</button>
   </div>
 
-  <div class="card" style="width:300px;cursor:pointer;text-align:center;padding:2rem 1.5rem;" onclick="abrirModal('tipos')">
+  <div class="card" style="width:300px;cursor:pointer;text-align:center;padding:2rem 1.5rem;" onclick="abrirModalEstadistica('tipos')">
     <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#f59e0b,#b45309);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;">
       <i data-feather="alert-triangle" style="width:36px;height:36px;color:#fff"></i>
     </div>
@@ -47,7 +47,7 @@
         <p id="modalSubtitulo" style="font-size:.8rem;color:var(--text-3);margin-top:2px"></p>
       </div>
       <div class="modal-header__controls">
-        <button class="btn-close" onclick="cerrarModal()" aria-label="Cerrar">
+        <button class="btn-close" onclick="cerrarModalEstadistica()" aria-label="Cerrar">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M1 1l11 11M12 1L1 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </button>
       </div>

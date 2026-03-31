@@ -12,16 +12,7 @@ function cambiarPeriodo() {
 
 
 // ── TOAST ────────────────────────────────────────────────
-function showToast(msg, type) {
-  const d = document.createElement('div');
-  d.className = 'alert alert-' + (type === 'error' ? 'error' : type === 'success' ? 'success' : 'info');
-  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px;';
-  d.innerHTML = `<span>${msg}</span>
-    <button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>`;
-  document.body.appendChild(d);
-  feather.replace();
-  setTimeout(() => d.remove(), 4000);
-}
+// Usando showToast global de main.js
 
 
 // ── POPOVER DE VERSIONES ─────────────────────────────────
@@ -178,12 +169,12 @@ function abrirEditarCompromiso(ds) {
   estado.className     = 'comp-estado-msg';
   estado.textContent   = '';
 
-  document.getElementById('modalEditarCompromiso').style.display = 'flex';
+  abrirModal('modalEditarCompromiso');
   feather.replace();
 }
 
 function cerrarEditarCompromiso() {
-  document.getElementById('modalEditarCompromiso').style.display = 'none';
+  cerrarModal('modalEditarCompromiso');
 }
 
 function limpiarArchivoEditar() {
