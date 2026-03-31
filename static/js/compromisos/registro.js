@@ -131,6 +131,7 @@ function _cerrarPopoverFuera(e) {
 let _editComp = {};
 
 function abrirEditarCompromiso(ds) {
+  console.log('abrirEditarCompromiso llamado con:', ds);
   cerrarPopover();
 
   _editComp = {
@@ -138,6 +139,8 @@ function abrirEditarCompromiso(ds) {
     mes:  ds.mes,
     anio: ds.anio,
   };
+
+  console.log('_editComp:', _editComp);
 
   // Campos read-only
   document.getElementById('editComp_nombre').value      = ds.nombre      || '';
@@ -178,8 +181,10 @@ function abrirEditarCompromiso(ds) {
   estado.className     = 'comp-estado-msg';
   estado.textContent   = '';
 
+  console.log('Abriendo modal...');
   document.getElementById('modalEditarCompromiso').style.display = 'flex';
   feather.replace();
+  console.log('Modal abierto');
 }
 
 function cerrarEditarCompromiso() {
