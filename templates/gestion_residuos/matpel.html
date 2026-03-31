@@ -29,12 +29,12 @@
       </div>
       <div style="display:flex;gap:.75rem;align-items:flex-end;flex-wrap:wrap">
         <div style="display:flex;flex-direction:column;gap:.25rem">
-          <label class="date-label" style="font-size:.75rem">Desde</label>
-          <input class="date-input" type="date" id="mat-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
+          <label class="form-label" style="font-size:.75rem">Desde</label>
+          <input class="form-input" type="date" id="mat-f-desde" style="padding:.35rem .6rem;font-size:.82rem">
         </div>
         <div style="display:flex;flex-direction:column;gap:.25rem">
-          <label class="date-label" style="font-size:.75rem">Hasta</label>
-          <input class="date-input" type="date" id="mat-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
+          <label class="form-label" style="font-size:.75rem">Hasta</label>
+          <input class="form-input" type="date" id="mat-f-hasta" style="padding:.35rem .6rem;font-size:.82rem">
         </div>
         <button class="btn btn-secondary" id="mat-f-aplicar" style="padding:.38rem .9rem;font-size:.82rem">Filtrar</button>
         <button class="btn" id="mat-f-limpiar" style="padding:.38rem .9rem;font-size:.82rem;background:var(--bg-card);border:1px solid var(--border)">Limpiar</button>
@@ -70,7 +70,19 @@
           <td style="text-align:right">{{ '%.2f'|format(r.costo_viaje or 0) }}</td>
           <td style="text-align:right">{{ '%.2f'|format(r.precio or 0) }}</td>
           <td>{{ r.nro_guia or '—' }}</td>
-          <td>{{ r.factura or '—' }}</td>
+          <td>
+            {% if r.factura %}
+              {% if 'uploads/' in r.factura %}
+                <a href="{{ '/static/' ~ r.factura.replace('static/', '') }}" target="_blank" style="color:var(--green);font-size:0.85rem;display:flex;align-items:center;gap:4px">
+                  <i data-feather="file" style="width:14px;height:14px"></i> Ver Archivo
+                </a>
+              {% else %}
+                {{ r.factura }}
+              {% endif %}
+            {% else %}
+              —
+            {% endif %}
+          </td>
           <td style="text-align:right">{{ '%.3f'|format(r.volumen or 0) }}</td>
           <td style="text-align:right;font-weight:600;color:var(--green)">{{ '%.2f'|format(r.peso or 0) }} Kg</td>
           <td style="max-width:160px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="{{ r.observacion }}">{{ r.observacion or '—' }}</td>
@@ -123,17 +135,18 @@
     </div>
     <div class="modal-body" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem 1.25rem;padding:1.5rem">
       <input type="hidden" id="mat-id">
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Fecha</label>
-        <input class="date-input" type="date" id="mat-fecha">
+      <input type="hidden" id="mat-factura-old">
+      <div class="form-group">
+        <label class="form-label">Fecha</label>
+        <input class="form-input" type="date" id="mat-fecha">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Supervisor que registra</label>
-        <input class="plant-input" type="text" id="mat-supervisor" placeholder="Nombre del supervisor">
+      <div class="form-group">
+        <label class="form-label">Supervisor que registra</label>
+        <input class="form-input" type="text" id="mat-supervisor" placeholder="Nombre del supervisor">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
-        <label class="date-label">Tipo de Residuo</label>
-        <select class="plant-input" id="mat-tipo">
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Tipo de Residuo</label>
+        <select class="form-select" id="mat-tipo">
           <option value="">— Seleccionar —</option>
           <option>Aceites usados</option><option>Baterías</option>
           <option>Borras</option><option>Copelas</option>
@@ -142,33 +155,47 @@
           <option>Trapos contaminados</option><option>Otros MATPEL</option>
         </select>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Costo de Viaje (S/)</label>
-        <input class="plant-input" type="number" min="0" step="0.01" id="mat-costo-viaje" placeholder="0.00">
+      <div class="form-group">
+        <label class="form-label">Costo de Viaje (S/)</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="mat-costo-viaje" placeholder="0.00">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Precio (S/)</label>
-        <input class="plant-input" type="number" min="0" step="0.01" id="mat-precio" placeholder="0.00">
+      <div class="form-group">
+        <label class="form-label">Precio (S/)</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="mat-precio" placeholder="0.00">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">N° Guía</label>
-        <input class="plant-input" type="text" id="mat-guia" placeholder="Ej: G-001-2025">
+      <div class="form-group">
+        <label class="form-label">N° Guía</label>
+        <input class="form-input" type="text" id="mat-guia" placeholder="Ej: G-001-2025">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Factura</label>
-        <input class="plant-input" type="text" id="mat-factura" placeholder="Ej: F001-00123">
+      <div class="form-group">
+        <label class="form-label">Factura (Imagen/PDF)</label>
+        <div class="file-upload-area" style="margin-top:.2rem">
+          <input type="file" id="mat-factura" accept="image/*,application/pdf" style="display:none">
+          <label for="mat-factura" style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.4rem .6rem;border:1px dashed var(--border);border-radius:6px;background:var(--bg-card);transition:border-color 0.2s">
+            <span class="btn" style="padding:.2rem .5rem;font-size:.75rem;background:var(--bg-hover);color:var(--text);border:1px solid var(--border);border-radius:4px"><i data-feather="upload" style="width:12px;height:12px"></i> Buscar</span>
+            <span id="mat-factura-name" style="font-size:.8rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px">Sin archivo seleccionado</span>
+          </label>
+        </div>
+        <div id="mat-factura-preview" style="display:none;margin-top:.4rem">
+           <img id="mat-factura-img" style="max-width:100%;max-height:140px;border-radius:4px;border:1px solid var(--border);object-fit:cover">
+           <div id="mat-factura-pdf" style="display:none;font-size:.8rem;color:var(--green);align-items:center;gap:4px">
+             <i data-feather="file-text" style="width:14px;height:14px"></i> Documento PDF seleccionado
+           </div>
+        </div>
+        <div id="mat-factura-old-link" style="display:none;margin-top:.3rem;font-size:.8rem">
+        </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Volumen (m³)</label>
-        <input class="plant-input" type="number" min="0" step="0.001" id="mat-volumen" placeholder="0.000">
+      <div class="form-group">
+        <label class="form-label">Volumen (m³)</label>
+        <input class="form-input" type="number" min="0" step="0.001" id="mat-volumen" placeholder="0.000">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem">
-        <label class="date-label">Peso (Kg)</label>
-        <input class="plant-input" type="number" min="0" step="0.01" id="mat-peso" placeholder="0.00">
+      <div class="form-group">
+        <label class="form-label">Peso (Kg)</label>
+        <input class="form-input" type="number" min="0" step="0.01" id="mat-peso" placeholder="0.00">
       </div>
-      <div style="display:flex;flex-direction:column;gap:.35rem;grid-column:1/-1">
-        <label class="date-label">Observación</label>
-        <textarea class="plant-input" id="mat-obs" rows="2" style="resize:vertical;font-family:inherit;font-size:.85rem" placeholder="Observaciones..."></textarea>
+      <div class="form-group" style="grid-column:1/-1">
+        <label class="form-label">Observación</label>
+        <textarea class="form-input" id="mat-obs" rows="2" style="resize:vertical;font-family:inherit;font-size:.85rem" placeholder="Observaciones..."></textarea>
       </div>
     </div>
     <div class="modal-footer">
@@ -243,12 +270,24 @@
     $('mat-costo-viaje').value = r ? r.costoViaje   : '';
     $('mat-precio').value      = r ? r.precio       : '';
     $('mat-guia').value        = r ? r.guia         : '';
-    $('mat-factura').value     = r ? r.factura      : '';
+    $('mat-factura').value = '';
+    $('mat-factura-name').textContent = 'Sin archivo seleccionado';
+    $('mat-factura-preview').style.display = 'none';
+    $('mat-factura-old').value = r ? r.factura : '';
+    
+    if (r && r.factura) {
+       $('mat-factura-old-link').style.display = 'block';
+       const href = r.factura.includes('uploads') ? '/static/' + r.factura.replace('static/', '') : '#';
+       $('mat-factura-old-link').innerHTML = '<span style="color:var(--text-muted)">Archivo actual: </span><a href="' + href + '" target="_blank" style="color:var(--green);text-decoration:none"><i data-feather="external-link" style="width:12px;height:12px;margin-right:2px"></i>Ver documento</a>';
+    } else {
+       $('mat-factura-old-link').style.display = 'none';
+    }
     $('mat-volumen').value     = r ? r.volumen      : '';
     $('mat-peso').value        = r ? r.peso         : '';
     $('mat-obs').value         = r ? r.obs          : '';
     updatePreview();
     $('modal-mat-overlay').classList.add('open');
+    if (window.feather) feather.replace();
   }
   function closeModal() { $('modal-mat-overlay').classList.remove('open'); }
   function updatePreview() {
@@ -260,15 +299,24 @@
     const id = $('mat-id').value;
     const fecha = $('mat-fecha').value;
     if (!fecha) { alert('La fecha es obligatoria.'); return; }
-    const payload = {
-      fecha, supervisor: $('mat-supervisor').value.trim(),
-      tipo: $('mat-tipo').value, costo_viaje: $('mat-costo-viaje').value,
-      precio: $('mat-precio').value, guia: $('mat-guia').value,
-      factura: $('mat-factura').value, volumen: $('mat-volumen').value,
-      peso: $('mat-peso').value, obs: $('mat-obs').value,
-    };
+    const formData = new FormData();
+    formData.append('fecha', fecha);
+    formData.append('supervisor', $('mat-supervisor').value.trim());
+    formData.append('tipo', $('mat-tipo').value);
+    formData.append('costo_viaje', $('mat-costo-viaje').value);
+    formData.append('precio', $('mat-precio').value);
+    formData.append('guia', $('mat-guia').value);
+    formData.append('volumen', $('mat-volumen').value);
+    formData.append('peso', $('mat-peso').value);
+    formData.append('obs', $('mat-obs').value);
+    formData.append('factura', $('mat-factura-old').value);
+    
+    if ($('mat-factura').files.length > 0) {
+      formData.append('factura_file', $('mat-factura').files[0]);
+    }
+
     const url = id ? '/admin/residuos/matpel/editar/' + id : '/admin/residuos/matpel/guardar';
-    const res  = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const res  = await fetch(url, { method:'POST', body: formData });
     const json = await res.json();
     if (json.success) { closeModal(); location.reload(); }
     else alert('Error: ' + json.error);
@@ -293,6 +341,29 @@
         obs: btn.dataset.obs,
       });
     });
+  });
+
+  $('mat-factura').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      $('mat-factura-name').textContent = file.name;
+      $('mat-factura-preview').style.display = 'block';
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => { 
+          $('mat-factura-img').src = ev.target.result; 
+          $('mat-factura-img').style.display = 'block'; 
+          $('mat-factura-pdf').style.display = 'none'; 
+        };
+        reader.readAsDataURL(file);
+      } else {
+        $('mat-factura-img').style.display = 'none';
+        $('mat-factura-pdf').style.display = 'flex';
+      }
+    } else {
+      $('mat-factura-name').textContent = 'Sin archivo seleccionado';
+      $('mat-factura-preview').style.display = 'none';
+    }
   });
 
   $('btn-open-mat').addEventListener('click',   function() { openModal(); });

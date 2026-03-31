@@ -3,7 +3,7 @@ from werkzeug.utils import secure_filename
 from contextlib import contextmanager
 from utils.case_insensitive_dict import make_case_insensitive, make_list_case_insensitive
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'jfif', 'gif', 'webp', 'heic', 'heif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'jfif', 'gif', 'webp', 'heic', 'heif', 'pdf'}
 
 def gen_id():
     return str(uuid.uuid4())[:18]
