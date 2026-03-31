@@ -1,6 +1,6 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/desvios_ambientales.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/desvios_ambientales/desvios_ambientales.css') }}">
 {% endblock %}
 {% block title %}Desvíos Ambientales — ecoSupervisor{% endblock %}
 {% block page_title %}Desvíos Ambientales{% endblock %}
@@ -137,17 +137,17 @@
               <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" class="form-select" required>
                 <option value="">Seleccionar tipo...</option>
-                <optgroup label="── Residuos ──">
+                <optgroup label="-- Residuos --">
                   {% for t in tipos if t.iddescripciontipo in [8,9,11,12,13,14] %}
                   <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                   {% endfor %}
                 </optgroup>
-                <optgroup label="── Riesgos ──">
+                <optgroup label="-- Riesgos --">
                   {% for t in tipos if t.iddescripciontipo in [2,3,4,5] %}
                   <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                   {% endfor %}
                 </optgroup>
-                <optgroup label="── Ambiental / Otros ──">
+                <optgroup label="-- Ambiental / Otros --">
                   {% for t in tipos if t.iddescripciontipo in [1,6,7] %}
                   <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                   {% endfor %}
@@ -326,17 +326,17 @@
             <div class="form-group">
               <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" id="edit_tipo" class="form-select" required>
-                <optgroup label="── Residuos ──">
+                <optgroup label="-- Residuos --">
                   {% for t in tipos if t.iddescripciontipo in [8,9,11,12,13,14] %}
                   <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                   {% endfor %}
                 </optgroup>
-                <optgroup label="── Riesgos ──">
+                <optgroup label="-- Riesgos --">
                   {% for t in tipos if t.iddescripciontipo in [2,3,4,5] %}
                   <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                   {% endfor %}
                 </optgroup>
-                <optgroup label="── Ambiental / Otros ──">
+                <optgroup label="-- Ambiental / Otros --">
                   {% for t in tipos if t.iddescripciontipo in [1,6,7] %}
                   <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
                   {% endfor %}

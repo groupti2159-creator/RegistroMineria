@@ -1,6 +1,6 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_residuos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_residuos/gestion_residuos.css') }}">
 {% endblock %}
 {% block title %}Generacion Diaria - ecoSupervisor{% endblock %}
 {% block page_title %}Generacion Diaria{% endblock %}
@@ -20,7 +20,7 @@
   </button>
 </div>
 
-<!-- ── TABLA RESUMEN ── -->
+<!-- -- TABLA RESUMEN -- -->
 <div class="table-card">
   <div class="table-header">
     <div style="display:flex;flex-direction:column;gap:.75rem;align-items:flex-start">
@@ -101,9 +101,9 @@
   {% endif %}
 </div>
 
-<!-- ══════════════════════════════════════
+<!-- --------------------------------------
      MODAL REGISTRO RRSS
-══════════════════════════════════════ -->
+-------------------------------------- -->
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-header">
@@ -168,9 +168,9 @@
   </div>
 </div>
 
-<!-- ══════════════════════════════════════
+<!-- --------------------------------------
      MODAL DETALLE (ver más)
-══════════════════════════════════════ -->
+-------------------------------------- -->
 <div class="modal-overlay" id="modal-detalle-overlay">
   <div class="modal modal-detalle">
     <div class="modal-header">

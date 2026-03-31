@@ -1,6 +1,6 @@
-﻿{% extends 'base.html' %}
+{% extends 'base.html' %}
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_residuos.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/gestion_residuos/gestion_residuos.css') }}">
 {% endblock %}
 {% block title %}Comercializable — ecoSupervisor{% endblock %}
 {% block page_title %}Comercializable{% endblock %}
@@ -234,7 +234,7 @@
     container.innerHTML = html;
   }
 
-  // ── Modal ──────────────────────────────────────────────
+  // -- Modal ----------------------------------------------
   function openModal(r) {
     r = r || null;
     $('com-modal-title').textContent = r ? 'Editar registro' : 'Nuevo registro comercializable';
