@@ -148,7 +148,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // ── MODALES GLOBALES ─────────────────────────────────────────────────────────────
 function abrirModal(id) {
-  const modal = document.getElementById(id);
+  const modal = typeof id === 'string' ? document.getElementById(id) : id;
   if (!modal) return;
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
@@ -168,6 +168,47 @@ function cerrarModal(id) {
   if (openModals.length === 0) {
     document.body.style.overflow = '';
   }
+}
+
+// ── TOAST / NOTIFICACIONES ──
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  if (!container) {
+    const newContainer = document.createElement('div');
+    newContainer.id = 'toast-container';
+    newContainer.style.cssText = 'position:fixed;top:1.5rem;right:1.5rem;z-index:10000;display:flex;flex-direction:column;gap:0.75rem;pointer-events:none;';
+    document.body.appendChild(newContainer);
+  }
+  
+  const toast = document.createElement('div');
+  toast.className = `alert alert-${type} toast-animate-in`;
+  toast.style.cssText = 'pointer-events:auto;min-width:300px;box-shadow:var(--shadow-lg);margin:0;';
+  
+  let icon = 'info';
+  if (type === 'success') icon = 'check-circle';
+  if (type === 'error' || type === 'danger') icon = 'x-circle';
+  if (type === 'warning') icon = 'alert-triangle';
+
+  toast.innerHTML = `
+    <div style="display:flex;align-items:center;gap:0.75rem;width:100%;">
+      <i data-feather="${icon}" style="width:18px;height:18px;flex-shrink:0;"></i>
+      <span style="flex:1;font-weight:500;">${message}</span>
+      <button onclick="this.parentElement.parentElement.remove()" style="background:none;border:none;cursor:pointer;padding:4px;color:currentColor;opacity:0.7;display:flex;">
+        <i data-feather="x" style="width:16px;height:16px;"></i>
+      </button>
+    </div>
+  `;
+  
+  document.getElementById('toast-container').appendChild(toast);
+  if (typeof feather !== 'undefined') feather.replace();
+  
+  // Auto-remove
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'all 0.4s ease';
+    setTimeout(() => toast.remove(), 400);
+  }, 5000);
 }
 
 document.addEventListener('DOMContentLoaded', () => {

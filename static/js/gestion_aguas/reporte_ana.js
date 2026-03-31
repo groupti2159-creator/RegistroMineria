@@ -24,7 +24,7 @@ function calcularANA() {
 
 
 // ── MODAL ────────────────────────────────────────────────
-function abrirModal() {
+function abrirModalANA() {
   _anaEditId = null;
   document.getElementById('modalANA-titulo').textContent = 'Nuevo Reporte ANA';
   document.getElementById('ana_fecha').value     = '';
@@ -34,12 +34,12 @@ function abrirModal() {
   document.getElementById('ana_volumen').value   = '';
   document.getElementById('ana_caudal').value    = '';
   _limpiarEstado();
-  document.getElementById('modalANA').style.display = 'flex';
+  abrirModal('modalANA');
   feather.replace();
 }
 
-function cerrarModal() {
-  document.getElementById('modalANA').style.display = 'none';
+function cerrarModalANA() {
+  cerrarModal('modalANA');
   _anaEditId = null;
 }
 
@@ -92,7 +92,7 @@ async function guardarANA() {
 
     if (json.success) {
       _setEstado('✅ Guardado correctamente', 'ok');
-      setTimeout(() => { cerrarModal(); location.reload(); }, 900);
+      setTimeout(() => { cerrarModalANA(); location.reload(); }, 900);
     } else {
       _setEstado('⚠️ Error: ' + (json.error || 'desconocido'), 'error');
     }
@@ -172,22 +172,14 @@ function limpiarFiltros() {
 
 
 // ── TOAST ────────────────────────────────────────────────
-function showToast(msg, type) {
-  const d = document.createElement('div');
-  d.className = 'alert alert-' + (type === 'error' ? 'error' : type === 'success' ? 'success' : 'info');
-  d.style.cssText = 'position:fixed;top:1rem;right:1rem;z-index:9999;min-width:280px;';
-  d.innerHTML = `<span>${msg}</span>
-    <button onclick="this.parentElement.remove()"><i data-feather="x"></i></button>`;
-  document.body.appendChild(d);
-  feather.replace();
-  setTimeout(() => d.remove(), 4000);
-}
+// showToast global de main.js
+function _cerrarModalLocal() { cerrarModalANA(); }
 
 
 // ── INIT ─────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   feather.replace();
   document.getElementById('modalANA').addEventListener('click', function (e) {
-    if (e.target === this) cerrarModal();
+    if (e.target === this) cerrarModalANA();
   });
 });

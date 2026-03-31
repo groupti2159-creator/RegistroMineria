@@ -4,20 +4,20 @@
 let tipoActual = null;
 let chartModal = null;
 
-function abrirModal(tipo) {
+function abrirModalEstadistica(tipo) {
   tipoActual = tipo;
   const cfg = CONFIG[tipo];
   document.getElementById('modalTitulo').textContent    = cfg.titulo;
   document.getElementById('modalSubtitulo').textContent = cfg.subtitulo;
   document.getElementById('filtroFechaIni').value = '';
   document.getElementById('filtroFechaFin').value = '';
-  document.getElementById('modalEstadisticas').classList.add('open');
+  abrirModal('modalEstadisticas');
   feather.replace();
   cargarModal();
 }
 
-function cerrarModal() {
-  document.getElementById('modalEstadisticas').classList.remove('open');
+function cerrarModalEstadistica() {
+  cerrarModal('modalEstadisticas');
   if (chartModal) { chartModal.destroy(); chartModal = null; }
   document.getElementById('modalContenido').innerHTML = '';
   tipoActual = null;
@@ -112,5 +112,5 @@ function renderModalContenido(cfg, data) {
 }
 
 document.getElementById('modalEstadisticas').addEventListener('click', function(e) {
-  if (e.target === this) cerrarModal();
+  if (e.target === this) cerrarModalEstadistica();
 });

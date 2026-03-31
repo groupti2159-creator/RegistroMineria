@@ -17,13 +17,13 @@
 </div>
 
 <div class="action-bar">
-  <button class="btn btn-primary" onclick="abrirModal('efluentes')">
+  <button class="btn btn-primary" onclick="abrirModalAgua('efluentes')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro Efluentes</strong>
   </button>
-  <button class="btn btn-primary" onclick="abrirModal('ptard')">
+  <button class="btn btn-primary" onclick="abrirModalAgua('ptard')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro PTARD</strong>
   </button>
-  <button class="btn btn-primary" onclick="abrirModal('ptap')">
+  <button class="btn btn-primary" onclick="abrirModalAgua('ptap')">
     <i data-feather="plus-circle"></i> <strong>Nuevo Registro PTAP</strong>
   </button>
   <a id="btnExportar" href="/admin/aguas/exportar?tipo=efluentes" class="btn btn-export">
@@ -285,7 +285,7 @@
 <!-- ═══════════════════════════════════════════════
      MODAL: EFLUENTES
 ════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-efluentes" style="display:none;">
+<div class="modal-overlay" id="modal-efluentes">
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
@@ -362,7 +362,7 @@
 <!-- ═══════════════════════════════════════════════
      MODAL: PTARD
 ════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-ptard" style="display:none;">
+<div class="modal-overlay" id="modal-ptard">
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
@@ -430,7 +430,7 @@
 <!-- ═══════════════════════════════════════════════
      MODAL: PTAP
 ════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="modal-ptap" style="display:none;">
+<div class="modal-overlay" id="modal-ptap">
   <div class="modal-box modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
@@ -493,5 +493,93 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="{{ url_for('static', filename='js/gestion_aguas/monitoreo.js') }}"></script>
+<style>
+.card {
+  overflow: hidden;
+  min-width: 0;
+}
+.agua-table th {
+  white-space: nowrap;
+  font-size: .75rem;
+  padding: .5rem .6rem;
+}
+.agua-table td {
+  font-size: .82rem;
+  padding: .5rem .6rem;
+}
+</style>
+
+<script>
+const TIPOS   = ['efluentes','ptard','ptap'];
+const TITULOS = {efluentes:'Efluentes', ptard:'PTARD', ptap:'PTAP'};
+let tipoActual = 'efluentes';
+
+function cambiarTipo(val) {
+  tipoActual = val;
+  TIPOS.forEach(t => {
+    document.getElementById('tabla-'+t).style.display = (t===val) ? '' : 'none';
+  });
+  document.getElementById('tituloTabla').textContent = TITULOS[val];
+  aplicarFiltros();
+  feather.replace();
+}
+
+function aplicarFiltros() {
+  const q  = document.getElementById('inputBuscar').value.toLowerCase();
+  const fi = document.getElementById('filtroFechaIni').value;
+  const ff = document.getElementById('filtroFechaFin').value;
+  const tbody = document.getElementById('tbody-'+tipoActual);
+  if (!tbody) return;
+  let v = 0;
+  tbody.querySelectorAll('tr[data-search]').forEach(tr => {
+    const ok = (!q  || tr.dataset.search.includes(q))
+            && (!fi || tr.dataset.fecha >= fi)
+            && (!ff || tr.dataset.fecha <= ff);
+    tr.style.display = ok ? '' : 'none';
+    if (ok) v++;
+  });
+  document.getElementById('contadorRegistros').textContent = v + ' registros';
+  document.getElementById('contadorTabla').textContent     = v + ' registros';
+}
+
+function limpiarFiltros() {
+  document.getElementById('inputBuscar').value = '';
+  document.getElementById('filtroFechaIni').value = '';
+  document.getElementById('filtroFechaFin').value = '';
+  aplicarFiltros();
+}
+
+function abrirModalAgua(tipo) {
+  const select = document.getElementById('selectTipo');
+  if (select) select.value = tipo;
+  cambiarTipo(tipo);
+  abrirModal('modal-' + tipo);
+}
+
+function editarRegistro(tipo, id) {
+  showToast('Editar '+tipo.toUpperCase()+' #'+id+' — pendiente de endpoint','info');
+}
+
+async function eliminarRegistro(tipo, id) {
+  if (!confirm('¿Eliminar este registro? Esta acción no se puede deshacer.')) return;
+  try {
+    const res  = await fetch('/admin/aguas/eliminar/'+tipo+'/'+id,
+      {method:'POST', headers:{'X-Requested-With':'XMLHttpRequest'}});
+    const json = await res.json();
+    if (json.success) {
+      showToast('Registro eliminado','success');
+      setTimeout(() => location.reload(), 800);
+    } else {
+      showToast(json.error || 'Error al eliminar','error');
+    }
+  } catch(e) { showToast('Error de conexión','error'); }
+}
+
+// showToast global de main.js será usado automáticamente
+
+document.addEventListener('DOMContentLoaded', () => {
+  aplicarFiltros();
+  feather.replace();
+});
+</script>
 {% endblock %}
