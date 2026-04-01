@@ -117,7 +117,7 @@ async function editarRegistro(id) {
     document.getElementById('ana_cont_fin').value = data.contometrofinal   ?? '';
     calcularANA();
     _limpiarEstado();
-    document.getElementById('modalANA').style.display = 'flex';
+    abrirModal('modalANA');
     feather.replace();
   } catch {
     showToast('Error al cargar reporte', 'error');

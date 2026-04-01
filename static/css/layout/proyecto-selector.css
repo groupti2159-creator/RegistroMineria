@@ -1,0 +1,216 @@
+/* ═══════════════════════════════════════════════════════
+   PROYECTO SELECTOR — Selector de proyectos
+═══════════════════════════════════════════════════════ */
+
+.proyecto-selector {
+  position: relative;
+  margin: .5rem .75rem .25rem;
+}
+
+.proyecto-btn {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  width: 100%;
+  background: var(--gray-100);
+  border: none;
+  padding: .45rem .75rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: .78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  font-family: inherit;
+  transition: background .15s, color .15s;
+  text-align: left;
+}
+
+.proyecto-btn:hover {
+  background: var(--gray-200);
+  color: var(--text);
+}
+
+.proyecto-btn.open {
+  background: var(--pastel-green);
+  color: var(--text-green);
+}
+
+.proyecto-icon {
+  font-size: .8rem;
+  flex-shrink: 0;
+}
+
+.proyecto-nombre {
+  flex: 1;
+  font-weight: 600;
+  font-size: .78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.proyecto-arrow {
+  font-size: .6rem;
+  color: var(--text-muted);
+  transition: transform .2s;
+  flex-shrink: 0;
+}
+
+.proyecto-btn.open .proyecto-arrow {
+  transform: rotate(180deg);
+}
+
+.proyecto-dropdown {
+  display: none;
+  position: fixed;
+  left: calc(var(--sidebar-w) + 8px);
+  top: auto;
+  min-width: 260px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+  z-index: 200;
+  overflow: hidden;
+}
+
+.proyecto-dropdown.open {
+  display: block;
+  animation: dropdownIn .15s ease;
+}
+
+.proyecto-dropdown-header {
+  padding: .6rem 1rem;
+  border-bottom: 1px solid var(--border);
+  font-weight: 700;
+  font-size: .7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+}
+
+.proyecto-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.proyecto-item {
+  display: flex;
+  align-items: center;
+  gap: .65rem;
+  padding: .65rem 1rem;
+  cursor: pointer;
+  transition: background .12s;
+  border-bottom: 1px solid var(--border);
+}
+
+.proyecto-item:last-child {
+  border-bottom: none;
+}
+
+.proyecto-item:hover {
+  background: var(--gray-100);
+}
+
+.proyecto-item.active {
+  background: var(--pastel-green);
+}
+
+.proyecto-item-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: var(--pastel-green);
+  color: var(--text-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.proyecto-item.active .proyecto-item-icon {
+  background: var(--text-green);
+  color: #fff;
+}
+
+.proyecto-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.proyecto-item-nombre {
+  font-size: .82rem;
+  font-weight: 600;
+  display: block;
+  color: var(--text);
+}
+
+.proyecto-item-desc {
+  font-size: .7rem;
+  color: var(--text-muted);
+  display: block;
+  margin-top: .1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.proyecto-item-check {
+  font-size: .85rem;
+  color: var(--text-green);
+  opacity: 0;
+  transition: opacity .15s;
+  flex-shrink: 0;
+}
+
+.proyecto-item.active .proyecto-item-check {
+  opacity: 1;
+}
+
+.proyecto-loading {
+  padding: 1.25rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: .78rem;
+}
+
+/* Animación de cambio de proyecto */
+.sidebar-nav.transitioning {
+  opacity: 0;
+  transform: translateX(-10px);
+  transition: all .3s ease;
+}
+
+.sidebar-nav.loaded {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ── DARK MODE ── */
+[data-theme="dark"] .proyecto-btn {
+  background: #2a3248;
+  color: #9aa3b8;
+}
+
+[data-theme="dark"] .proyecto-btn:hover {
+  background: #303850;
+  color: #dde3f0;
+}
+
+[data-theme="dark"] .proyecto-btn.open {
+  background: #1e3a2a;
+  color: #4ade80;
+}
+
+[data-theme="dark"] .proyecto-dropdown {
+  background: #252a3a;
+  border-color: #353d55;
+}
+
+[data-theme="dark"] .proyecto-item:hover {
+  background: #2a3248;
+}
+
+[data-theme="dark"] .proyecto-item.active {
+  background: #1e3a2a;
+}
