@@ -22,14 +22,21 @@ def _esperar_modal(driver, modal_id, timeout=10):
 
 
 class UsuariosPage:
-    TABLA           = (By.CSS_SELECTOR, ".data-table, table")
-    FILAS_USUARIOS  = (By.CSS_SELECTOR, "tbody tr")
-    BTN_NUEVO       = (By.CSS_SELECTOR, ".btn-primary")
-    MODAL_CREAR_ID  = "modalCrearUsuario"
+    TABLA            = (By.ID, "usersMainTable")
+    FILAS_USUARIOS   = (By.CSS_SELECTOR, "#usersMainTable tbody tr")
+    BTN_NUEVO        = (By.CSS_SELECTOR, ".btn-primary")
+    INPUT_BUSCAR     = (By.ID, "tableSearch")
+    VISIBLE_COUNT    = (By.ID, "visibleCount")
+    MODAL_CREAR_ID   = "modalCrearUsuario"
     MODAL_DETALLE_ID = "modalVerDetalle"
-    CAMPO_NOMBRE    = (By.ID, "nombre")
-    CAMPO_DNI       = (By.ID, "dni")
-    CAMPO_CORREO    = (By.ID, "correo")
+    MODAL_TITLE      = (By.ID, "modalTitle")
+    # Campos del modal
+    CAMPO_DNI        = (By.ID, "dni")
+    CAMPO_NOMBRE     = (By.ID, "nombre")
+    CAMPO_CORREO     = (By.ID, "correo")
+    CAMPO_PASSWORD   = (By.ID, "password")
+    BTN_GUARDAR      = (By.CSS_SELECTOR, "button[onclick*='guardarUsuario']")
+    BTN_CANCELAR     = (By.CSS_SELECTOR, "#modalCrearUsuario button[onclick*='cerrarModal']")
 
     def __init__(self, driver, base_url):
         self.driver = driver
@@ -41,7 +48,8 @@ class UsuariosPage:
         self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".section-title, h2")))
 
     def obtener_filas(self):
-        return self.driver.find_elements(*self.FILAS_USUARIOS)
+        return [tr for tr in self.driver.find_elements(*self.FILAS_USUARIOS)
+                if tr.is_displayed()]
 
     def tabla_visible(self):
         try:
@@ -49,6 +57,26 @@ class UsuariosPage:
         except Exception:
             return False
 
+    def buscar(self, texto):
+        campo = self.driver.find_element(*self.INPUT_BUSCAR)
+        campo.clear()
+        campo.send_keys(texto)
+        time.sleep(0.5)
+
+    def limpiar_busqueda(self):
+        campo = self.driver.find_element(*self.INPUT_BUSCAR)
+        self.driver.execute_script("arguments[0].value = '';", campo)
+        campo.send_keys(" ")
+        campo.send_keys("\b")
+        time.sleep(0.3)
+
+    def visible_count_texto(self):
+        try:
+            return self.driver.find_element(*self.VISIBLE_COUNT).text
+        except Exception:
+            return ""
+
+    # ── Modal crear ────────────────────────────────────
     def abrir_modal_crear(self):
         btn = self.wait.until(EC.element_to_be_clickable(self.BTN_NUEVO))
         self.driver.execute_script("arguments[0].click();", btn)
@@ -58,30 +86,72 @@ class UsuariosPage:
     def modal_crear_abierto(self):
         return _modal_abierto(self.driver, self.MODAL_CREAR_ID)
 
+    def modal_title_texto(self):
+        return self.driver.find_element(*self.MODAL_TITLE).text
+
     def cerrar_modal_crear(self):
         try:
-            btn = self.driver.find_element(
-                By.CSS_SELECTOR, f"#{self.MODAL_CREAR_ID} .btn-secondary, #{self.MODAL_CREAR_ID} .btn-close"
-            )
+            btn = self.driver.find_element(*self.BTN_CANCELAR)
             self.driver.execute_script("arguments[0].click();", btn)
         except Exception:
-            self.driver.execute_script(
-                f"var el = document.getElementById('{self.MODAL_CREAR_ID}');"
-                "if (el) el.style.display = 'none';"
-            )
+            self.driver.execute_script("cerrarModal();")
         time.sleep(0.4)
 
-    def ver_detalle_fila(self, indice=0):
+    def llenar_form_crear(self, dni, nombre, correo, password="Test1234!"):
+        for field_id, valor in [
+            ("dni", dni), ("nombre", nombre),
+            ("correo", correo), ("password", password)
+        ]:
+            campo = self.driver.find_element(By.ID, field_id)
+            self.driver.execute_script("arguments[0].value = '';", campo)
+            campo.send_keys(valor)
+
+    def guardar_usuario(self):
+        btn = self.driver.find_element(*self.BTN_GUARDAR)
+        self.driver.execute_script("arguments[0].click();", btn)
+        time.sleep(2)
+
+    # ── Modal editar ───────────────────────────────────
+    def abrir_modal_editar(self, indice=0):
         filas = self.obtener_filas()
-        try:
-            btn = filas[indice].find_element(By.CSS_SELECTOR, ".btn-blue, .btn-icon, button[onclick*='ver']")
-            self.driver.execute_script("arguments[0].click();", btn)
-            time.sleep(0.8)
-        except Exception:
-            pass
+        btn = filas[indice].find_element(By.CSS_SELECTOR, "button[onclick*='abrirModalEditar']")
+        self.driver.execute_script("arguments[0].click();", btn)
+        _esperar_modal(self.driver, self.MODAL_CREAR_ID)
+        time.sleep(0.5)
+
+    def modal_editar_titulo_correcto(self):
+        titulo = self.modal_title_texto()
+        return "editar" in titulo.lower() or "actualizar" in titulo.lower() or "modificar" in titulo.lower()
+
+    # ── Modal detalle ──────────────────────────────────
+    def abrir_modal_detalle(self, indice=0):
+        filas = self.obtener_filas()
+        btn = filas[indice].find_element(By.CSS_SELECTOR, "button[onclick*='verDetallesTabla']")
+        self.driver.execute_script("arguments[0].click();", btn)
+        _esperar_modal(self.driver, self.MODAL_DETALLE_ID)
+        time.sleep(0.5)
 
     def modal_detalle_abierto(self):
         return _modal_abierto(self.driver, self.MODAL_DETALLE_ID)
+
+    def cerrar_modal_detalle(self):
+        self.driver.execute_script(
+            "var el = document.getElementById('modalVerDetalle');"
+            "if (el) el.style.display = 'none';"
+        )
+        time.sleep(0.3)
+
+    # ── Eliminar ───────────────────────────────────────
+    def click_eliminar_fila(self, indice=0):
+        filas = self.obtener_filas()
+        btn = filas[indice].find_element(By.CSS_SELECTOR, "button[onclick*='eliminarUsuarioFisico']")
+        self.driver.execute_script("arguments[0].click();", btn)
+        time.sleep(0.5)
+        try:
+            self.driver.switch_to.alert.accept()
+        except Exception:
+            pass
+        time.sleep(1.5)
 
 
 class ConfigDashboardPage:
