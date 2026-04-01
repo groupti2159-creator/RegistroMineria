@@ -57,6 +57,14 @@
     .data-table tr:hover { background: var(--gray-50); }
     [data-theme="dark"] .data-table tr:hover { background: var(--gray-800); }
 
+    .user-row-inactive {
+        opacity: 0.55;
+        background: var(--gray-50) !important;
+        filter: grayscale(80%);
+    }
+    [data-theme="dark"] .user-row-inactive { background: var(--gray-800) !important; }
+    .user-row-inactive:hover { opacity: 0.8; }
+
     /* Componentes de Celda */
     .user-cell {
         display: flex;
@@ -215,7 +223,7 @@
                 </thead>
                 <tbody>
                     {% for u in usuarios %}
-                    <tr data-searchable="{{ u.nombrecompleto }} {{ u.idusuario }} {{ u.correo or '' }}">
+                    <tr class="{% if not u.activo %}user-row-inactive{% endif %}" data-searchable="{{ u.nombrecompleto }} {{ u.idusuario }} {{ u.correo or '' }}">
                         <td>
                             <div class="user-cell">
                                 <div class="user-avatar-small">{{ u.nombrecompleto[:2] }}</div>
@@ -256,9 +264,12 @@
                                 <button class="btn-icon btn-icon-edit" onclick="abrirModalEditar('{{ u.idusuario }}')" title="Editar">
                                     <i data-feather="edit-2"></i>
                                 </button>
-                                <button class="btn-icon btn-icon-danger" onclick="eliminarUsuarioFisico('{{ u.idusuario }}')" title="Eliminar">
-                                    <i data-feather="trash-2"></i>
+                                {% if u.activo %}
+                                <button class="btn-icon" style="color: #d97706; border-color: #fcd34d; background: rgba(245, 158, 11, 0.1);" onclick="desactivarUsuario('{{ u.idusuario }}')" title="Desactivar (Conserva historial)">
+                                    <i data-feather="user-x"></i>
                                 </button>
+                                {% endif %}
+                                <!-- El botón de eliminar permanentemente ha sido ocultado intencionalmente -->
                             </div>
                         </td>
                     </tr>
@@ -274,7 +285,7 @@
     <div class="modal-box" style="max-width: 800px;">
         <div class="modal-header">
             <h3 id="modalTitle"><i data-feather="user-plus"></i> Crear Nuevo Usuario</h3>
-            <button class="modal-close" onclick="cerrarModal()">
+            <button class="modal-close" onclick="cerrarModal('modalCrearUsuario')">
                 <i data-feather="x"></i>
             </button>
         </div>
@@ -326,7 +337,7 @@
             </form>
         </div>
         <div class="modal-footer">
-            <button class="btn btn-secondary" onclick="cerrarModal()">Cancelar</button>
+            <button class="btn btn-secondary" onclick="cerrarModal('modalCrearUsuario')">Cancelar</button>
             <button type="button" id="guardarUsuarioBtn" class="btn btn-primary" onclick="guardarUsuario()">Guardar Cambios</button>
         </div>
     </div>

@@ -78,12 +78,7 @@ window.abrirModalEditar = async function(dni) {
     }
 };
 
-/**
- * Cierra el modal de creación/edición
- */
-window.cerrarModal = function() {
-    document.getElementById('modalCrearUsuario').classList.remove('open');
-};
+
 
 /**
  * Agrega una fila de proyecto al formulario del modal
@@ -207,7 +202,7 @@ window.guardarUsuario = async function() {
         if (!result.success) throw new Error(result.error);
 
         mostrarNotificacion(usuarioEditando ? 'Usuario actualizado' : 'Usuario creado', 'success');
-        cerrarModal();
+        cerrarModal('modalCrearUsuario');
         location.reload();
     } catch (e) {
         mostrarNotificacion(e.message, 'error');
@@ -243,7 +238,23 @@ window.eliminarUsuarioFisico = async function(dni) {
         const data = await res.json();
         if (data.success) {
             mostrarNotificacion('Usuario eliminado correctamente', 'success');
-            location.reload();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            throw new Error(data.error);
+        }
+    } catch (e) {
+        mostrarNotificacion(e.message, 'error');
+    }
+};
+
+window.desactivarUsuario = async function(dni) {
+    if (!confirm('¿Desea desactivar este usuario? (Quedará inactivo pero su historial se conservará)')) return;
+    try {
+        const res = await fetch(`/admin/usuarios/eliminar/${dni}`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+            mostrarNotificacion('Usuario desactivado correctamente', 'success');
+            setTimeout(() => location.reload(), 1000);
         } else {
             throw new Error(data.error);
         }

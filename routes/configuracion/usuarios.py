@@ -269,3 +269,33 @@ def usuarios_eliminar(dni):
         return jsonify({'success': True, 'message': 'Usuario desactivado correctamente'})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/usuarios/eliminar-fisico/<dni>', methods=['POST'])
+@admin_required
+def usuarios_eliminar_fisico(dni):
+    try:
+        cur = mysql.connection.cursor()
+        
+        # 1. Eliminar notificaciones ligadas a los roles del usuario
+        cur.execute("SELECT idusuariorol FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+        roles = cur.fetchall()
+        ids_quitar = [r['idusuariorol'] for r in roles]
+        _borrar_notificaciones_por_usuariorol(cur, ids_quitar)
+        
+        # 2. Eliminar la asignación de roles
+        cur.execute("DELETE FROM tbl_usuariorol WHERE idusuario = %s", (dni,))
+        
+        # 3. Eliminar físicamente el usuario de la DB
+        cur.execute("DELETE FROM tbl_usuario WHERE idusuario = %s", (dni,))
+        
+        mysql.connection.commit()
+        cur.close()
+        return jsonify({'success': True, 'message': 'Usuario eliminado de manera permanente correctamente'})
+    except Exception as e:
+        mysql.connection.rollback()
+        error_msg = str(e)
+        if '1451' in error_msg:
+            mensaje = "No se puede eliminar permanentemente este usuario porque ya ha generado registros en el sistema (imágenes, inspecciones, etc.). Por favor, utilice la opción de 'Desactivar' para conservar el historial."
+            return jsonify({'success': False, 'error': mensaje}), 400
+        return jsonify({'success': False, 'error': error_msg}), 500
