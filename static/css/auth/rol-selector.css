@@ -1,0 +1,66 @@
+/* =====================================================
+   ROL SELECTOR (LOGIN) STYLES
+===================================================== */
+
+.rol-selector-card {
+  cursor: pointer;
+  display: block;
+}
+
+.rol-selector-card input[type="radio"] {
+  display: none;
+}
+
+.rol-selector-content {
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  padding: .85rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  transition: all .15s;
+}
+
+.rol-selector-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: var(--pastel-green);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--green);
+  flex-shrink: 0;
+}
+
+.rol-selector-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+.rol-selector-info {
+  flex: 1;
+}
+
+.rol-selector-check {
+  color: var(--border);
+}
+
+.rol-selector-check svg {
+  width: 20px;
+  height: 20px;
+}
+
+.rol-selector-card input:checked+.rol-selector-content {
+  border-color: var(--green);
+  background: var(--pastel-green);
+}
+
+.rol-selector-card input:checked+.rol-selector-content .rol-selector-check {
+  color: var(--green);
+}
+
+.rol-selector-card:hover .rol-selector-content {
+  border-color: var(--green);
+}

@@ -2,6 +2,10 @@
 
 {% block title %}Gestión de Usuarios{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/configuracion/usuarios.css') }}">
+{% endblock %}
+
 {% block content %}
 <style>
     /* ========== ESTILOS TABLA USUARIOS (PREMIUM) ========== */
