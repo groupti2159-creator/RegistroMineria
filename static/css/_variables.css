@@ -1,0 +1,128 @@
+/* =====================================================
+   CSS VARIABLES - Global Design Tokens
+===================================================== */
+
+:root {
+  /* Colores minimalistas - blanco, negro, plomo */
+  --black: #1a1a1a;
+  --gray-900: #2d2d2d;
+  --gray-800: #404040;
+  --gray-700: #525252;
+  --gray-600: #737373;
+  --gray-500: #8c8c8c;
+  --gray-400: #a3a3a3;
+  --gray-300: #d4d4d4;
+  --gray-200: #e5e5e5;
+  --gray-100: #f5f5f5;
+  --white: #ffffff;
+
+  /* Colores pastel para estadísticas */
+  --pastel-blue: #e0f2fe;
+  --pastel-green: #dcfce7;
+  --pastel-yellow: #fef3c7;
+  --pastel-red: #fee2e2;
+  --pastel-purple: #f3e8ff;
+  --pastel-pink: #fce7f3;
+
+  /* Colores de texto pastel */
+  --text-blue: #0369a1;
+  --text-green: #166534;
+  --text-yellow: #92400e;
+  --text-red: #991b1b;
+  --text-purple: #6b21a8;
+  --text-pink: #9f1239;
+
+  --bg: #fafafa;
+  --bg-card: #ffffff;
+  --bg-sidebar: #ffffff;
+  --text: #1a1a1a;
+  --text-muted: #737373;
+  --border: #e5e5e5;
+  --shadow: 0 1px 2px rgba(0, 0, 0, .04);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, .06);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, .08);
+
+  --sidebar-w: 240px;
+  --radius: 8px;
+  --radius-lg: 12px;
+
+  /* Aliases para compatibilidad con componentes legacy */
+  --r: 8px;
+  --r-lg: 12px;
+  --surface: #ffffff;
+  --text-primary: #1a1a1a;
+  --text-secondary: #737373;
+  --text-2: #525252;
+  --text-3: #8c8c8c;
+  --card-bg: #ffffff;
+  --primary: #1a7a3c;
+  --green: #1a7a3c;
+  --green-50: #f0fdf4;
+  --green-100: #dcfce7;
+  --green-400: #4ade80;
+  --green-500: #22c55e;
+  --green-600: #16a34a;
+  --green-dark: #14532d;
+  --bg-alt: #f5f5f5;
+  --mono: 'JetBrains Mono', 'Fira Mono', monospace;
+  --font: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --border-s: #e5e5e5;
+  
+  /* Additional variables for modal system */
+  --hover: #f4f4f0;
+  --border-s: #f0f0ec;
+}
+
+[data-theme="dark"] {
+  --bg: #0b0e14;
+  --bg-card: #151923;
+  --bg-sidebar: #0d1117;
+  --bg-alt: #1c212c;
+
+  --text: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-2: #cbd5e1;
+  --text-3: #64748b;
+
+  --border: #262d3d;
+  --border-s: #262d3d;
+
+  --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+
+  /* Colores pastel adaptados */
+  --pastel-blue: rgba(30, 64, 175, 0.2);
+  --pastel-green: rgba(21, 128, 61, 0.2);
+  --pastel-yellow: rgba(146, 64, 14, 0.2);
+  --pastel-red: rgba(153, 27, 27, 0.2);
+  --pastel-purple: rgba(107, 33, 168, 0.2);
+  --pastel-pink: rgba(159, 18, 57, 0.2);
+
+  /* Textos sobre fondo oscuro */
+  --text-blue: #93c5fd;
+  --text-green: #4ade80;
+  --text-yellow: #fcd34d;
+  --text-red: #fca5a5;
+  --text-purple: #d8b4fe;
+  --text-pink: #f472b6;
+
+  /* Grises y Neutros */
+  --black: #ffffff;
+  --white: #0b0e14;
+  --gray-100: #1a1f2e;
+  --gray-200: #262d3d;
+  --gray-800: #f1f5f9;
+
+  /* Verde eco optimizado para oscuridad */
+  --primary: #22c55e;
+  --green: #22c55e;
+  --green-600: #4ade80;
+  --green-dark: #86efac;
+  
+  --surface: #151923;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --card-bg: #151923;
+  --hover: #1c212c;
+}

@@ -1,0 +1,396 @@
+/* =====================================================
+   BADGES - Reusable badge components
+===================================================== */
+
+.badge {
+  display: inline-block;
+  padding: .25rem .65rem;
+  font-size: .75rem;
+  font-weight: 600;
+  border-radius: var(--radius);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.badge-yellow {
+  background: var(--pastel-yellow);
+  color: var(--text-yellow);
+  border: 1px solid rgba(234, 179, 8, 0.2);
+}
+
+.badge-blue {
+  background: var(--pastel-blue);
+  color: var(--text-blue);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.badge-green {
+  background: var(--pastel-green);
+  color: var(--text-green);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+.badge-red {
+  background: var(--pastel-red);
+  color: var(--text-red);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.badge-gray {
+  background: var(--gray-100);
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
+
+/* Dark mode */
+[data-theme="dark"] .badge-yellow {
+  background: rgba(234, 179, 8, 0.15);
+  color: #fde047;
+  border-color: rgba(234, 179, 8, 0.3);
+}
+
+[data-theme="dark"] .badge-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .badge-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+[data-theme="dark"] .badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+[data-theme="dark"] .badge-gray {
+  background: rgba(148, 163, 184, 0.15);
+  color: #cbd5e1;
+  border-color: rgba(148, 163, 184, 0.3);
+}
+
+/* Estado badges */
+.estado-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .7rem;
+  font-weight: 600;
+  padding: .3rem .75rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  transition: all .2s ease;
+}
+
+.estado-pendiente {
+  background: var(--pastel-yellow);
+  color: var(--text-yellow);
+}
+
+.estado-atrasado {
+  background: var(--pastel-red);
+  color: var(--text-red);
+  font-weight: 600;
+}
+
+.estado-en-proceso {
+  background: var(--pastel-blue);
+  color: var(--text-blue);
+}
+
+.estado-enviado {
+  background: var(--pastel-purple);
+  color: var(--text-purple);
+}
+
+.estado-en-revisión {
+  background: var(--pastel-purple);
+  color: var(--text-purple);
+}
+
+.estado-culminado {
+  background: var(--pastel-green);
+  color: var(--text-green);
+}
+
+.estado-rechazado {
+  background: var(--pastel-red);
+  color: var(--text-red);
+}
+
+.estado-asignado {
+  background: var(--pastel-blue);
+  color: var(--text-blue);
+}
+
+.estado-cerrado {
+  background: var(--gray-200);
+  color: var(--gray-700);
+}
+
+/* Hover effects */
+[data-theme="light"] .data-table tbody tr:hover .estado-pendiente {
+  background: #fde68a;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-atrasado {
+  background: #fecaca;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-en-proceso {
+  background: #bfdbfe;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-enviado {
+  background: #e9d5ff;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-en-revisión {
+  background: #e9d5ff;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-culminado {
+  background: #bbf7d0;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-rechazado {
+  background: #fecaca;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-asignado {
+  background: #bfdbfe;
+}
+
+[data-theme="light"] .data-table tbody tr:hover .estado-cerrado {
+  background: var(--gray-300);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-pendiente {
+  background: #4a3e1e;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-atrasado {
+  background: #3a1e1e;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-en-proceso {
+  background: #1e3a5f;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-enviado {
+  background: #2d1e3a;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-en-revisión {
+  background: #2d1e3a;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-culminado {
+  background: #1e3a2d;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-rechazado {
+  background: #3a1e1e;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-asignado {
+  background: #1e3a5f;
+  filter: brightness(1.2);
+}
+
+[data-theme="dark"] .data-table tbody tr:hover .estado-cerrado {
+  background: var(--gray-300);
+}
+
+/* Riesgo badges */
+.riesgo-badge {
+  display: inline-block;
+  font-size: .7rem;
+  font-weight: 600;
+  padding: .25rem .65rem;
+  border-radius: 4px;
+}
+
+.riesgo-bajo {
+  background: var(--pastel-green);
+  color: var(--text-green);
+}
+
+.riesgo-medio {
+  background: var(--pastel-yellow);
+  color: var(--text-yellow);
+}
+
+.riesgo-alto {
+  background: var(--pastel-red);
+  color: var(--text-red);
+}
+
+.riesgo-crítico {
+  background: var(--text-red);
+  color: white;
+}
+
+/* Cantidad badge */
+.cantidad-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 50px;
+  padding: .4rem .75rem;
+  font-size: .9rem;
+  font-weight: 700;
+  border-radius: var(--radius);
+  background: var(--pastel-blue);
+  color: var(--text-blue);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.cantidad-badge.total {
+  background: var(--pastel-red);
+  color: var(--text-red);
+  border-color: rgba(239, 68, 68, 0.3);
+  font-size: 1rem;
+  min-width: 60px;
+}
+
+[data-theme="dark"] .cantidad-badge {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+[data-theme="dark"] .cantidad-badge.total {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* Codigo badge */
+.codigo-badge {
+  font-family: 'Courier New', monospace;
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  padding: .2rem .6rem;
+  border-radius: 4px;
+  font-size: .8rem;
+  font-weight: 600;
+  color: var(--gray-700);
+  transition: all .2s ease;
+}
+
+.data-table tbody tr:hover .codigo-badge {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+  color: var(--black);
+}
+
+/* Image badge */
+.img-badge {
+  font-size: .72rem;
+  padding: .25rem .6rem;
+  background: var(--gray-100);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  transition: all .2s ease;
+  color: var(--gray-600);
+}
+
+.img-badge svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 1.2;
+  transition: all .2s ease;
+}
+
+.data-table tbody tr:hover .img-badge {
+  background: var(--gray-200);
+  border-color: var(--gray-400);
+  color: var(--black);
+}
+
+.data-table tbody tr:hover .img-badge svg {
+  stroke: var(--black);
+}
+
+.img-count-badges {
+  display: flex;
+  gap: .4rem;
+}
+
+/* Nav badge */
+.nav-badge {
+  margin-left: auto;
+  background: var(--text-red);
+  color: white;
+  font-size: .65rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
+  }
+}
+
+.nav-soon {
+  margin-left: auto;
+  background: var(--pastel-yellow);
+  color: var(--text-yellow);
+  font-size: .6rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all .25s ease;
+}
+
+.nav-item:hover .nav-soon {
+  transform: scale(1.05);
+}
+
+/* Rol badge */
+.rol-badge {
+  display: inline-block;
+  font-size: .65rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-top: .25rem;
+}
+
+.rol-badge.rol-administrador {
+  background: var(--pastel-blue);
+  color: var(--text-blue);
+}
+
+.rol-badge.rol-supervisor {
+  background: var(--pastel-yellow);
+  color: var(--text-yellow);
+}
+
+.rol-badge.rol-trabajador {
+  background: var(--pastel-purple);
+  color: var(--text-purple);
+}
