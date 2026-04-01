@@ -104,7 +104,9 @@ async function verEvidencia(btn, idcompromiso, mes, anio) {
   const rect = btn.getBoundingClientRect();
   const scrollY = window.scrollY;
   popover.style.top  = (rect.bottom + scrollY + 6) + 'px';
-  popover.style.left = Math.max(8, rect.left - popover.offsetWidth + rect.width) + 'px';
+  const sidebarWidth = document.querySelector('.sidebar')?.offsetWidth || 240;
+  const leftPos = Math.max(sidebarWidth + 8, rect.left - popover.offsetWidth + rect.width);
+  popover.style.left = leftPos + 'px';
 
   _popoverActivo = popover;
 
@@ -182,13 +184,21 @@ function abrirEditarCompromiso(ds) {
   estado.textContent   = '';
 
   console.log('Abriendo modal...');
-  document.getElementById('modalEditarCompromiso').style.display = 'flex';
+  const modal = document.getElementById('modalEditarCompromiso');
+  modal.style.display = 'flex';
+  modal.classList.add('open');
+  console.log('Modal display:', window.getComputedStyle(modal).display);
+  console.log('Modal visibility:', window.getComputedStyle(modal).visibility);
+  console.log('Modal opacity:', window.getComputedStyle(modal).opacity);
+  console.log('Modal z-index:', window.getComputedStyle(modal).zIndex);
   feather.replace();
   console.log('Modal abierto');
 }
 
 function cerrarEditarCompromiso() {
-  document.getElementById('modalEditarCompromiso').style.display = 'none';
+  const modal = document.getElementById('modalEditarCompromiso');
+  modal.style.display = 'none';
+  modal.classList.remove('open');
 }
 
 function limpiarArchivoEditar() {

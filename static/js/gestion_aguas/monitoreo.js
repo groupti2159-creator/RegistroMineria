@@ -41,12 +41,16 @@ function limpiarFiltros() {
 function abrirModal(tipo) {
   document.getElementById('selectTipo').value = tipo;
   cambiarTipo(tipo);
-  document.getElementById('modal-'+tipo).style.display = 'flex';
+  const modal = document.getElementById('modal-'+tipo);
+  modal.style.display = 'flex';
+  modal.classList.add('open');
   try { feather.replace(); } catch(e) {}
 }
 
 function cerrarModal(id) {
-  document.getElementById(id).style.display = 'none';
+  const modal = document.getElementById(id);
+  modal.style.display = 'none';
+  modal.classList.remove('open');
 }
 
 let editandoId   = null;
@@ -127,9 +131,11 @@ async function editarRegistro(tipo, id) {
       }
     };
 
-    document.getElementById(`modal-${tipo}`).style.display = 'flex';
+    // Abrir el modal usando la función global que maneja la clase .open
+    abrirModal(`modal-${tipo}`);
     feather.replace();
   } catch(e) {
+    console.error('Error en editarRegistro:', e);
     showToast('Error al cargar registro', 'error');
   }
 }

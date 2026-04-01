@@ -1,8 +1,3 @@
-# ════════════════════════════════════════════════════════
-#  ecoSupervisor — tests/pages/aguas_page.py
-#  Page Object: Gestión de Aguas — Monitoreo + Reporte ANA
-# ════════════════════════════════════════════════════════
-
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait, Select
 from selenium.webdriver.support import expected_conditions as EC
@@ -11,24 +6,23 @@ import time
 
 
 def _modal_abierto(driver, modal_id):
-    """Verifica si un modal está visible chequeando su style (display:flex)."""
     try:
-        modal = driver.find_element(By.ID, modal_id)
-        style = modal.get_attribute("style") or ""
-        return "none" not in style and modal.is_displayed()
+        return driver.execute_script(
+            "var el = document.getElementById(arguments[0]);"
+            "if (!el) return false;"
+            "var style = window.getComputedStyle(el);"
+            "return style.display !== 'none' && style.opacity !== '0';",
+            modal_id
+        )
     except Exception:
         return False
 
 
 def _esperar_modal(driver, modal_id, timeout=10):
-    """Espera hasta que el modal esté visible."""
-    WebDriverWait(driver, timeout).until(
-        lambda d: _modal_abierto(d, modal_id)
-    )
+    WebDriverWait(driver, timeout).until(lambda d: _modal_abierto(d, modal_id))
 
 
 def _cerrar_modal(driver, modal_id, btn_selector):
-    """Cierra un modal usando JS click."""
     btn = driver.find_element(By.CSS_SELECTOR, btn_selector)
     driver.execute_script("arguments[0].click();", btn)
     time.sleep(0.3)
@@ -46,9 +40,9 @@ class MonitoreoPage:
     BTN_NUEVO_PTAP  = (By.XPATH, "//button[contains(.,'Nuevo Registro PTAP')]")
 
     def __init__(self, driver, base_url):
-        self.driver   = driver
+        self.driver = driver
         self.base_url = base_url
-        self.wait     = WebDriverWait(driver, 10)
+        self.wait = WebDriverWait(driver, 10)
 
     def ir(self):
         self.driver.get(f"{self.base_url}/admin/aguas")
@@ -120,9 +114,9 @@ class ReporteANAPage:
     ESTADO       = (By.ID, "anaEstado")
 
     def __init__(self, driver, base_url):
-        self.driver   = driver
+        self.driver = driver
         self.base_url = base_url
-        self.wait     = WebDriverWait(driver, 10)
+        self.wait = WebDriverWait(driver, 10)
 
     def ir(self):
         self.driver.get(f"{self.base_url}/admin/ana")
@@ -138,9 +132,10 @@ class ReporteANAPage:
         return _modal_abierto(self.driver, "modalANA")
 
     def llenar_reporte(self, fecha, cont_ini, cont_fin, tiempo="24 horas"):
-        campo_fecha = self.driver.find_element(*self.CAMPO_FECHA)
-        self.driver.execute_script("arguments[0].value = '';", campo_fecha)
-        campo_fecha.send_keys(fecha)
+        if fecha is not None:
+            campo_fecha = self.driver.find_element(*self.CAMPO_FECHA)
+            self.driver.execute_script("arguments[0].value = '';", campo_fecha)
+            campo_fecha.send_keys(fecha)
 
         campo_tiempo = self.driver.find_element(*self.CAMPO_TIEMPO)
         campo_tiempo.send_keys(Keys.CONTROL + "a")
@@ -175,8 +170,10 @@ class ReporteANAPage:
         self.wait.until(EC.visibility_of_element_located(self.ESTADO))
 
     def cancelar(self):
-        btn = self.driver.find_element(*self.BTN_CANCELAR)
-        self.driver.execute_script("arguments[0].click();", btn)
+        self.driver.execute_script(
+            "arguments[0].click();",
+            self.driver.find_element(*self.BTN_CANCELAR)
+        )
         time.sleep(0.5)
 
     def estado_texto(self):
@@ -188,9 +185,7 @@ class ReporteANAPage:
                 if tr.get_attribute("data-fecha")]
 
     def obtener_headers(self):
-        headers = self.driver.find_elements(
-            By.CSS_SELECTOR, ".ana-table thead th"
-        )
+        headers = self.driver.find_elements(By.CSS_SELECTOR, ".ana-table thead th")
         textos = []
         for h in headers:
             texto = self.driver.execute_script(
