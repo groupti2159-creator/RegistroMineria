@@ -227,15 +227,17 @@ class SubpaginaResiduosPage:
             btn = self.driver.find_element(By.ID, self.cfg["btn_cancel"])
             self.driver.execute_script("arguments[0].click();", btn)
         except Exception:
+            modal_id = self.cfg["modal_id"]
             self.driver.execute_script(
-                f"var el = document.getElementById('{self.cfg[\"modal_id\"]}');"
+                f"var el = document.getElementById('{modal_id}');"
                 "if (el) el.style.display = 'none';"
             )
         time.sleep(0.4)
 
     def llenar_form(self, fecha="2026-01-15", peso="100", precio="50"):
+        campo_fecha_id = self.cfg["campo_fecha"]
         self.driver.execute_script(
-            f"document.getElementById('{self.cfg[\"campo_fecha\"]}').value = arguments[0];", fecha
+            f"document.getElementById('{campo_fecha_id}').value = arguments[0];", fecha
         )
         try:
             campo_peso = self.driver.find_element(By.ID, self.cfg["campo_peso"])
