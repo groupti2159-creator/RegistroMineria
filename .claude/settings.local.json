@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wc -l /c/Proyectos/mina/RegistroMineria/static/css/*.css)",
+      "Bash(find /c/Proyectos/mina/RegistroMineria/static/css/components -type f -name \"*.css\" -exec wc -l {} +)"
+    ]
+  }
+}
