@@ -73,12 +73,12 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA *</label>
-              <input type="date" name="fecha_inicio" id="fecha_inicio" class="form-input" required>
-              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se completa con la fecha de hoy, editable</small>
+              <input type="datetime-local" name="fecha_inicio" id="fecha_inicio" class="form-input" required>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha y hora del reporte</small>
             </div>
             <div class="form-group">
               <label class="form-label">ÁREA REPORTANTE *</label>
-              <select name="area_reportante" class="form-select" required>
+              <select name="area_reportante" id="area_reportante" class="form-select" required onchange="cargarPersonalPorArea(this.value)">
                 <option value="">Seleccionar área...</option>
                 {% for a in areas_rep %}
                 <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
@@ -88,9 +88,18 @@
           </div>
           <div class="form-row">
             <div class="form-group">
+              <label class="form-label">PERSONAL REPORTANTE *</label>
+              <select name="personal_reportante" id="personal_reportante" class="form-select" required disabled>
+                <option value="">Primero selecciona un área...</option>
+              </select>
+              <small class="form-hint"><i data-feather="user" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se carga según el área seleccionada</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
               <label class="form-label">FECHA EJECUCIÓN *</label>
-              <input type="date" name="fecha_ejecucion" class="form-input" required>
-              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se completa con la fecha de hoy, editable</small>
+              <input type="datetime-local" name="fecha_ejecucion" id="fecha_ejecucion" class="form-input" required>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha y hora de ejecución</small>
             </div>
           </div>
         </div>
@@ -100,12 +109,7 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">UBICACIÓN *</label>
-              <select name="ubicacion" class="form-select" required>
-                <option value="">Seleccionar ubicación...</option>
-                {% for u in ubicaciones %}
-                <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
-                {% endfor %}
-              </select>
+              <input type="text" name="ubicacion" class="form-input" placeholder="Ingrese la ubicación" required>
             </div>
           </div>
           <div class="form-row">
@@ -131,24 +135,19 @@
             </div>
             <div class="form-group">
               <label class="form-label">DESCRIPCIÓN TIPO *</label>
-              <select name="tipo" class="form-select" required>
+              <select name="tipo" id="tipo" class="form-select" required onchange="cargarRiesgosCriticos(this.value)">
                 <option value="">Seleccionar tipo...</option>
-                <optgroup label="── Residuos ──">
-                  {% for t in tipos if t.iddescripciontipo in [8,9,11,12,13,14] %}
-                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                  {% endfor %}
-                </optgroup>
-                <optgroup label="── Riesgos ──">
-                  {% for t in tipos if t.iddescripciontipo in [2,3,4,5] %}
-                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                  {% endfor %}
-                </optgroup>
-                <optgroup label="── Ambiental / Otros ──">
-                  {% for t in tipos if t.iddescripciontipo in [1,6,7] %}
-                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                  {% endfor %}
-                </optgroup>
+                {% for t in tipos %}
+                <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                {% endfor %}
               </select>
+            </div>
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">RIESGOS CRÍTICOS ASOCIADOS *</label>
+              <select name="riesgo_critico" id="riesgo_critico" class="form-select" required disabled style="width: 100%;">
+                <option value="">Primero selecciona un tipo...</option>
+              </select>
+              <small class="form-hint"><i data-feather="alert-triangle" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se carga según el tipo seleccionado</small>
             </div>
           </div>
           <div class="form-row">
@@ -165,13 +164,22 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">ÁREA RESPONSABLE *</label>
-              <select name="area_responsable" class="form-select" required>
+              <select name="area_responsable" id="area_responsable" class="form-select" required onchange="cargarPersonalResponsable(this.value)">
                 <option value="">Seleccionar área...</option>
-                {% for a in areas_res %}
-                <option value="{{ a.idarearesponsable }}">{{ a.arearesponsable }}</option>
+                {% for a in areas_rep %}
+                <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
                 {% endfor %}
               </select>
             </div>
+            <div class="form-group">
+              <label class="form-label">PERSONAL RESPONSABLE *</label>
+              <select name="personal_responsable_id" id="personal_responsable_id" class="form-select" required disabled>
+                <option value="">Primero selecciona un área...</option>
+              </select>
+              <small class="form-hint"><i data-feather="user" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se carga según el área seleccionada</small>
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group">
               <label class="form-label">CCTA RESPONSABLE</label>
               <select name="ccta_responsable" class="form-select">
@@ -268,8 +276,8 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA *</label>
-              <input type="date" name="fecha_inicio" id="edit_fecha" class="form-input" required>
-              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Editable</small>
+              <input type="datetime-local" name="fecha_inicio" id="edit_fecha" class="form-input" required>
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha y hora del reporte</small>
             </div>
             <div class="form-group">
               <label class="form-label">ÁREA REPORTANTE *</label>
@@ -283,8 +291,8 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">FECHA EJECUCIÓN</label>
-              <input type="date" name="fecha_ejecucion" id="edit_fecha_ejec" class="form-input">
-              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Editable</small>
+              <input type="datetime-local" name="fecha_ejecucion" id="edit_fecha_ejec" class="form-input">
+              <small class="form-hint"><i data-feather="calendar" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Fecha y hora de ejecución</small>
             </div>
           </div>
         </div>
@@ -293,11 +301,7 @@
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">UBICACIÓN *</label>
-              <select name="ubicacion" id="edit_ubicacion" class="form-select" required>
-                {% for u in ubicaciones %}
-                <option value="{{ u.idubicacion }}">{{ u.ubicacion }}</option>
-                {% endfor %}
-              </select>
+              <input type="text" name="ubicacion" id="edit_ubicacion" class="form-input" placeholder="Ingrese la ubicación" required>
             </div>
           </div>
           <div class="form-row">
@@ -321,21 +325,9 @@
             <div class="form-group">
               <label class="form-label">DESCRIPCIÓN TIPO *</label>
               <select name="tipo" id="edit_tipo" class="form-select" required>
-                <optgroup label="── Residuos ──">
-                  {% for t in tipos if t.iddescripciontipo in [8,9,11,12,13,14] %}
-                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                  {% endfor %}
-                </optgroup>
-                <optgroup label="── Riesgos ──">
-                  {% for t in tipos if t.iddescripciontipo in [2,3,4,5] %}
-                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                  {% endfor %}
-                </optgroup>
-                <optgroup label="── Ambiental / Otros ──">
-                  {% for t in tipos if t.iddescripciontipo in [1,6,7] %}
-                  <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
-                  {% endfor %}
-                </optgroup>
+                {% for t in tipos %}
+                <option value="{{ t.iddescripciontipo }}">{{ t.descripciontipo }}</option>
+                {% endfor %}
               </select>
             </div>
           </div>

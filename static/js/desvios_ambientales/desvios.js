@@ -575,16 +575,23 @@ document.addEventListener('DOMContentLoaded', function() {
   const observer = new MutationObserver(function(mutations) {
     mutations.forEach(function(mutation) {
       if (mutation.target === modalCrear && modalCrear.classList.contains('open')) {
-        // Poner fecha de hoy del navegador si el campo está vacío
+        // Poner fecha y hora actual si el campo está vacío
         const today = new Date();
         const yyyy = today.getFullYear();
         const mm   = String(today.getMonth() + 1).padStart(2, '0');
         const dd   = String(today.getDate()).padStart(2, '0');
+        const hh   = String(today.getHours()).padStart(2, '0');
+        const min  = String(today.getMinutes()).padStart(2, '0');
+        
         const fechaHoy = yyyy + '-' + mm + '-' + dd;
+        const fechaHoraHoy = yyyy + '-' + mm + '-' + dd + 'T' + hh + ':' + min;
+        
         const fInicio = formCrear.querySelector('[name="fecha_inicio"]');
         const fEjec   = formCrear.querySelector('[name="fecha_ejecucion"]');
-        if (fInicio && !fInicio.value) fInicio.value = fechaHoy;
-        if (fEjec   && !fEjec.value)   fEjec.value   = fechaHoy;
+        
+        if (fInicio && !fInicio.value) fInicio.value = fechaHoraHoy;
+        if (fEjec   && !fEjec.value)   fEjec.value   = fechaHoraHoy;
+        
         validarFormulario();
       }
     });
@@ -794,3 +801,117 @@ document.addEventListener('DOMContentLoaded', function () {
     initializePreview();
   }
 })();
+
+
+// ── CARGAR PERSONAL POR ÁREA ──
+async function cargarPersonalPorArea(idArea) {
+  const selectPersonal = document.getElementById('personal_reportante');
+  
+  if (!idArea) {
+    selectPersonal.innerHTML = '<option value="">Primero selecciona un área...</option>';
+    selectPersonal.disabled = true;
+    return;
+  }
+  
+  try {
+    selectPersonal.innerHTML = '<option value="">Cargando personal...</option>';
+    selectPersonal.disabled = true;
+    
+    const res = await fetch(`/admin/api/personal-por-area/${idArea}`);
+    const data = await res.json();
+    
+    if (data.success && data.personal && data.personal.length > 0) {
+      selectPersonal.innerHTML = '<option value="">Seleccionar personal...</option>';
+      data.personal.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = p.NombresCompletos;
+        selectPersonal.appendChild(option);
+      });
+      selectPersonal.disabled = false;
+    } else {
+      selectPersonal.innerHTML = '<option value="">No hay personal disponible</option>';
+      selectPersonal.disabled = true;
+    }
+  } catch (error) {
+    console.error('Error cargando personal:', error);
+    selectPersonal.innerHTML = '<option value="">Error al cargar personal</option>';
+    selectPersonal.disabled = true;
+  }
+}
+
+
+// ── CARGAR RIESGOS CRÍTICOS POR TIPO ──
+async function cargarRiesgosCriticos(idTipo) {
+  const selectRiesgo = document.getElementById('riesgo_critico');
+  
+  if (!idTipo) {
+    selectRiesgo.innerHTML = '<option value="">Primero selecciona un tipo...</option>';
+    selectRiesgo.disabled = true;
+    return;
+  }
+  
+  try {
+    selectRiesgo.innerHTML = '<option value="">Cargando riesgos...</option>';
+    selectRiesgo.disabled = true;
+    
+    const res = await fetch(`/admin/api/riesgos-criticos-por-tipo/${idTipo}`);
+    const data = await res.json();
+    
+    if (data.success && data.riesgos && data.riesgos.length > 0) {
+      selectRiesgo.innerHTML = '<option value="">Seleccionar riesgo crítico...</option>';
+      data.riesgos.forEach(r => {
+        const option = document.createElement('option');
+        option.value = r.id;
+        option.textContent = `${r.codigo}. ${r.descripcion}`;
+        selectRiesgo.appendChild(option);
+      });
+      selectRiesgo.disabled = false;
+    } else {
+      selectRiesgo.innerHTML = '<option value="">No hay riesgos disponibles</option>';
+      selectRiesgo.disabled = true;
+    }
+  } catch (error) {
+    console.error('Error cargando riesgos críticos:', error);
+    selectRiesgo.innerHTML = '<option value="">Error al cargar riesgos</option>';
+    selectRiesgo.disabled = true;
+  }
+}
+
+
+// ── CARGAR PERSONAL RESPONSABLE POR ÁREA ──
+async function cargarPersonalResponsable(idArea) {
+  const selectPersonal = document.getElementById('personal_responsable_id');
+  
+  if (!idArea) {
+    selectPersonal.innerHTML = '<option value="">Primero selecciona un área...</option>';
+    selectPersonal.disabled = true;
+    return;
+  }
+  
+  try {
+    selectPersonal.innerHTML = '<option value="">Cargando personal...</option>';
+    selectPersonal.disabled = true;
+    
+    const res = await fetch(`/admin/api/personal-por-area/${idArea}`);
+    const data = await res.json();
+    
+    if (data.success && data.personal && data.personal.length > 0) {
+      selectPersonal.innerHTML = '<option value="">Seleccionar personal...</option>';
+      data.personal.forEach(p => {
+        const option = document.createElement('option');
+        option.value = p.id;
+        option.textContent = p.NombresCompletos;
+        selectPersonal.appendChild(option);
+      });
+      selectPersonal.disabled = false;
+    } else {
+      selectPersonal.innerHTML = '<option value="">No hay personal disponible</option>';
+      selectPersonal.disabled = true;
+    }
+  } catch (error) {
+    console.error('Error cargando personal responsable:', error);
+    selectPersonal.innerHTML = '<option value="">Error al cargar personal</option>';
+    selectPersonal.disabled = true;
+  }
+}

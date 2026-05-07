@@ -86,8 +86,11 @@ def crear_registro():
             request.form.get('fecha_inicio') or datetime.now().strftime('%Y-%m-%d'),
             request.form.get('fecha_ejecucion') or None,
             request.form['descripcion'], request.form.get('accion', ''),
-            int(request.form['area_reportante']), int(request.form['area_responsable']),
-            int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
+            int(request.form['area_reportante']),
+            int(request.form.get('personal_reportante', 0)) or None,
+            int(request.form['area_responsable']),
+            request.form['ubicacion'],  # Ahora es texto
+            int(request.form['riesgo']), int(request.form['tipo']),
             1, session['usuario_rol'],
             request.form.get('personal_responsable', ''),
             int(request.form['ccta_responsable']) if request.form.get('ccta_responsable') else 0,
