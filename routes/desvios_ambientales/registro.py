@@ -83,16 +83,19 @@ def crear_registro():
         cur = mysql.connection.cursor()
         result = sp_one(cur, 'sp_crearregistro', (
             codigo,
-            request.form.get('fecha_inicio') or datetime.now().strftime('%Y-%m-%d'),
+            request.form.get('fecha_inicio') or datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             request.form.get('fecha_ejecucion') or None,
             request.form['descripcion'], request.form.get('accion', ''),
             int(request.form['area_reportante']),
             int(request.form.get('personal_reportante', 0)) or None,
             int(request.form['area_responsable']),
             request.form['ubicacion'],  # Ahora es texto
-            int(request.form['riesgo']), int(request.form['tipo']),
-            1, session['usuario_rol'],
-            request.form.get('personal_responsable', ''),
+            int(request.form['riesgo']), 
+            int(request.form['tipo']),
+            int(request.form.get('riesgo_critico', 0)) or None,
+            1,  # estado inicial
+            session['usuario_rol'],
+            int(request.form.get('personal_responsable_id', 0)) or None,
             int(request.form['ccta_responsable']) if request.form.get('ccta_responsable') else 0,
             request.form.get('dni_responsable', '').strip()
         ))
