@@ -93,7 +93,7 @@ def set_session(user):
         accesos = [m['codigo'] for m in modulos]
         accesos += [h['codigo'] for m in modulos for h in m.get('hijos', [])]
         session['accesos'] = accesos
-        print(f"[set_session] {user.get('nombrerol')} → {len(accesos)} accesos")
+        print(f"[set_session] {user.get('nombrerol')} -> {len(accesos)} accesos")
     else:
         session['modulos'] = []
         session['accesos'] = []
