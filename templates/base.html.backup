@@ -60,7 +60,8 @@
         {# ── Macro para grupo con submenú ── #}
         {% macro nav_group(icono, nombre, hijos) %}
         {% set ns = namespace(activo=false) %}
-        {% for h in hijos %}{% if h[1] and (request.path == h[1] or request.path.startswith(h[1])) %}{% set ns.activo = true %}{% endif %}{% endfor %}
+        {% for h in hijos %}{% if request.path == h[1] or request.path.startswith(h[1]) %}{% set ns.activo = true %}{%
+        endif %}{% endfor %}
         <div class="nav-group">
           <button class="nav-item nav-toggle {% if ns.activo %}active{% endif %}" onclick="toggleSubmenu(this)">
             <span class="nav-icon"><i data-feather="{{ icono }}"></i></span>
@@ -78,7 +79,7 @@
         </div>
         {% endmacro %}
 
-        {# ══════════════════════════════════════════════════════════════════════ #}
+         {# ══════════════════════════════════════════════════════════════════════ #}
         {# MENÚ 100% DINÁMICO DESDE BASE DE DATOS                              #}
         {# Los nombres, iconos y URLs se cargan automáticamente desde tbl_modulo #}
         {# ══════════════════════════════════════════════════════════════════════ #}
@@ -93,10 +94,10 @@
               
               {# Filtrar solo los hijos a los que el usuario tiene acceso #}
               {% for hijo in modulo.get('hijos', []) %}
-                {% if hijo.get('codigo') in accesos and hijo.get('url') %}
+                {% if hijo.get('codigo') in accesos %}
                   {% set _ = hijos_accesibles.append((
                     hijo.get('nombre', 'Sin nombre'),
-                    hijo.get('url'),
+                    hijo.get('url', '#'),
                     hijo.get('icono', 'circle')
                   )) %}
                 {% endif %}
@@ -121,6 +122,11 @@
             
           {% endif %}
         {% endfor %}
+">
+          <span class="nav-icon"><i data-feather="clipboard"></i></span>
+          <span>Mis Reportes</span>
+        </a>
+        {% endif %}
 
       </nav>
 

@@ -88,3 +88,5 @@ if __name__ == '__main__':
     debug = os.getenv('FLASK_ENV', 'development') == 'development'
     print(f"Starting server on port {port}")  # Debug log
     app.run(debug=debug, host='0.0.0.0', port=port)
+
+    
