@@ -9,26 +9,71 @@ da_bp = Blueprint('da', __name__)
 
 
 def get_maestros():
+    areas_rep = []
+    areas_res = []
+    ubicaciones = []
+    riesgos = []
+    tipos = []
+    estados = []
+    origenes = []
+    
     try:
         cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM tbl_areareportante ORDER BY areareportante")
         areas_rep = cur.fetchall()
-        cur.execute(
-            "SELECT * FROM tbl_arearesponsable ORDER BY arearesponsable")
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching areas_rep: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_arearesponsable ORDER BY arearesponsable")
         areas_res = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching areas_res: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM tbl_ubicacion ORDER BY ubicacion")
         ubicaciones = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching ubicaciones: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM tbl_riesgo")
         riesgos = cur.fetchall()
-        cur.execute(
-            "SELECT * FROM tbl_descripciontipo ORDER BY descripciontipo")
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching riesgos: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_descripciontipo ORDER BY descripciontipo")
         tipos = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching tipos: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
         cur.execute("SELECT * FROM tbl_estado ORDER BY orden")
         estados = cur.fetchall()
-    finally:
-        if 'cur' in locals() and cur:
-            cur.close()
-    return areas_rep, areas_res, ubicaciones, riesgos, tipos, estados
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching estados: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_origen WHERE activo = 1 ORDER BY nombre")
+        origenes = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching origenes: {e}")
+    
+    return areas_rep, areas_res, ubicaciones, riesgos, tipos, estados, origenes
 
 # ── Dashboard ────────────────────────────────────────────────────────────────
 
@@ -111,11 +156,11 @@ def registrar():
     start = (page - 1) * per_page
     registros_pagina = registros_ordenados[start:start + per_page]
 
-    areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
+    areas_rep, areas_res, ubicaciones, riesgos, tipos, estados, origenes = get_maestros()
     return render_template('desvios_ambientales/desvios.html',
                            registros=registros_pagina,
                            areas_rep=areas_rep, areas_res=areas_res,
-                           ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
+                           ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados, origenes=origenes,
                            estado_filter=estado_filter, personal_filter=personal_filter,
                            notif_count=get_notif_count(),
                            page=page, total_pages=total_pages, total=total, per_page=per_page,
@@ -220,7 +265,8 @@ def crear_registro():
                 request.form.get('personal_responsable', ''),
                 int(request.form['ccta_responsable']) if request.form.get(
                     'ccta_responsable') else 0,
-                request.form.get('dni_responsable', '').strip()
+                request.form.get('dni_responsable', '').strip(),
+                int(request.form['origen']) if request.form.get('origen') else 1
             ))
             mysql.connection.commit()
         finally:

@@ -43,7 +43,7 @@ def configuracion_usuarios():
 def usuarios_form_data():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+        cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
         proyectos = cur.fetchall()
         cur.execute("SELECT idroles, nombrerol, descripcion FROM tbl_roles ORDER BY nombrerol")
         roles = cur.fetchall()

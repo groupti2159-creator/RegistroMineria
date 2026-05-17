@@ -46,26 +46,30 @@ def sp_exec(cur, sp_name, params=()):
     Retorna lista de filas del primer result set con datos.
     Los diccionarios son case-insensitive para compatibilidad Windows/Linux.
     """
-    # Limpiar cualquier result set pendiente antes de ejecutar
-    consume_results(cur)
+    # Construir la llamada al SP con placeholders
+    placeholders = ', '.join(['%s'] * len(params))
+    query = f"CALL {sp_name}({placeholders})" if params else f"CALL {sp_name}()"
     
-    cur.callproc(sp_name, params)
+    # Ejecutar el SP
+    cur.execute(query, params)
     results = []
-    first = True
     
-    # Consumir todos los result sets
-    while True:
-        try:
-            rows = cur.fetchall()
-            if first and rows:
-                results = make_list_case_insensitive(list(rows))
-                first = False
-        except Exception:
-            pass
-        
-        # Intentar avanzar al siguiente result set
-        if not cur.nextset():
-            break
+    try:
+        rows = cur.fetchall()
+        if rows:
+            results = make_list_case_insensitive(list(rows))
+    except Exception:
+        pass
+    
+    # Consumir todos los result sets pendientes
+    try:
+        while cur.nextset():
+            try:
+                cur.fetchall()
+            except:
+                pass
+    except:
+        pass
     
     return results
 

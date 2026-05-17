@@ -15,7 +15,7 @@ def roles():
 def roles_proyectos():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+        cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
         proyectos = cur.fetchall()
         cur.close()
         return jsonify({'proyectos': proyectos})
@@ -169,6 +169,48 @@ def roles_eliminar(rol_id):
         except Exception as e:
             mysql.connection.rollback()
             return jsonify({'success': False, 'error': f'Error al eliminar rol: {str(e)}'}), 500
+        finally:
+            cur.close()
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@admin_bp.route('/proyectos/crear', methods=['POST'])
+@admin_required
+def proyectos_crear():
+    try:
+        data        = request.get_json()
+        nombre      = data.get('nombre', '').strip()
+        descripcion = data.get('descripcion', '').strip()
+        
+        if not nombre:
+            return jsonify({'success': False, 'error': 'El nombre del proyecto es requerido'}), 400
+        
+        cur = mysql.connection.cursor()
+        try:
+            # Insertar el proyecto directamente
+            cur.execute("""
+                INSERT INTO tbl_proyecto (nombre, descripcion, activo)
+                VALUES (%s, %s, 1)
+            """, (nombre, descripcion))
+            
+            # Obtener el ID del proyecto creado
+            proyecto_id = cur.lastrowid
+            
+            mysql.connection.commit()
+            
+            return jsonify({
+                'success': True,
+                'message': 'Proyecto creado correctamente',
+                'proyecto': {
+                    'idproyecto': proyecto_id,
+                    'nombre': nombre,
+                    'descripcion': descripcion
+                }
+            })
+        except Exception as e:
+            mysql.connection.rollback()
+            return jsonify({'success': False, 'error': f'Error al crear proyecto: {str(e)}'}), 500
         finally:
             cur.close()
     except Exception as e:

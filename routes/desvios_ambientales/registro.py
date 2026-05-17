@@ -6,21 +6,71 @@ from routes.desvios_ambientales import da_bp
 
 
 def get_maestros():
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM tbl_areareportante ORDER BY areareportante")
-    areas_rep = cur.fetchall()
-    cur.execute("SELECT * FROM tbl_arearesponsable ORDER BY arearesponsable")
-    areas_res = cur.fetchall()
-    cur.execute("SELECT * FROM tbl_ubicacion ORDER BY ubicacion")
-    ubicaciones = cur.fetchall()
-    cur.execute("SELECT * FROM tbl_riesgo")
-    riesgos = cur.fetchall()
-    cur.execute("SELECT * FROM tbl_descripciontipo ORDER BY descripciontipo")
-    tipos = cur.fetchall()
-    cur.execute("SELECT * FROM tbl_estado ORDER BY orden")
-    estados = cur.fetchall()
-    cur.close()
-    return areas_rep, areas_res, ubicaciones, riesgos, tipos, estados
+    areas_rep = []
+    areas_res = []
+    ubicaciones = []
+    riesgos = []
+    tipos = []
+    estados = []
+    origenes = []
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_areareportante ORDER BY areareportante")
+        areas_rep = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching areas_rep: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_arearesponsable ORDER BY arearesponsable")
+        areas_res = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching areas_res: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_ubicacion ORDER BY ubicacion")
+        ubicaciones = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching ubicaciones: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_riesgo")
+        riesgos = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching riesgos: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_descripciontipo ORDER BY descripciontipo")
+        tipos = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching tipos: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_estado ORDER BY orden")
+        estados = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching estados: {e}")
+    
+    try:
+        cur = mysql.connection.cursor()
+        cur.execute("SELECT * FROM tbl_origen WHERE activo = 1 ORDER BY nombre")
+        origenes = cur.fetchall()
+        cur.close()
+    except Exception as e:
+        print(f"Error fetching origenes: {e}")
+    
+    return areas_rep, areas_res, ubicaciones, riesgos, tipos, estados, origenes
 
 
 @da_bp.route('/desvios')
@@ -59,11 +109,11 @@ def registrar():
     page        = max(1, min(page, total_pages))
     start       = (page - 1) * per_page
 
-    areas_rep, areas_res, ubicaciones, riesgos, tipos, estados = get_maestros()
+    areas_rep, areas_res, ubicaciones, riesgos, tipos, estados, origenes = get_maestros()
     return render_template('desvios_ambientales/desvios.html',
         registros=registros_ordenados[start:start + per_page],
         areas_rep=areas_rep, areas_res=areas_res,
-        ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados,
+        ubicaciones=ubicaciones, riesgos=riesgos, tipos=tipos, estados=estados, origenes=origenes,
         estado_filter=estado_filter, personal_filter=personal_filter,
         notif_count=get_notif_count(),
         page=page, total_pages=total_pages, total=total, per_page=per_page,
@@ -87,21 +137,26 @@ def crear_registro():
             request.form.get('fecha_ejecucion') or None,
             request.form['descripcion'], request.form.get('accion', ''),
             int(request.form['area_reportante']),
-            int(request.form.get('personal_reportante', 0)) or None,
+            int(request.form.get('personal_reportante') or 0) or None,
             int(request.form['area_responsable']),
             request.form['ubicacion'],  # Ahora es texto
             int(request.form['riesgo']), 
             int(request.form['tipo']),
-            int(request.form.get('riesgo_critico', 0)) or None,
+            int(request.form.get('riesgo_critico') or 0) or None,
             1,  # estado inicial
             session['usuario_rol'],
-            int(request.form.get('personal_responsable_id', 0)) or None,
-            int(request.form['ccta_responsable']) if request.form.get('ccta_responsable') else 0,
-            request.form.get('dni_responsable', '').strip()
+            int(request.form.get('personal_responsable_id') or 0) or None,
+            int(request.form.get('ccta_responsable') or 0),
+            request.form.get('dni_responsable', '').strip(),
+            int(request.form.get('origen') or 1)
         ))
         mysql.connection.commit()
         cur.close()
         rid = result['idregistro'] if result else None
+        print(f"[CREAR] result={result}, rid={rid}")
+
+        if not rid:
+            raise Exception('El SP no devolvio el ID del registro creado')
 
         for f in request.files.getlist('evidencias')[:5]:
             if f and f.filename:
@@ -155,11 +210,13 @@ def editar_registro(rid):
             request.form.get('fecha_ejecucion') or None,
             request.form['descripcion'], request.form.get('accion', ''),
             int(request.form['area_reportante']), int(request.form['area_responsable']),
-            int(request.form['ubicacion']), int(request.form['riesgo']), int(request.form['tipo']),
+            request.form['ubicacion'],  # Ahora es texto
+            int(request.form['riesgo']), int(request.form['tipo']),
             int(request.form['estado']),
             request.form.get('personal_responsable', ''),
             int(request.form['ccta_responsable']) if request.form.get('ccta_responsable', '').strip() not in ('', '0', 'None') else 0,
-            request.form.get('dni_responsable', '').strip()
+            request.form.get('dni_responsable', '').strip(),
+            int(request.form['origen']) if request.form.get('origen') else 1  # Agregar origen
         ))
         mysql.connection.commit()
         cur.close()

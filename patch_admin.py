@@ -44,7 +44,7 @@ for func in routes_to_protect:
 v_usuarios_form_data_old = """        cur = mysql.connection.cursor()
         
         # Proyectos
-        cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+        cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
         proyectos = cur.fetchall()
         
         # Roles
@@ -60,7 +60,7 @@ v_usuarios_form_data_old = """        cur = mysql.connection.cursor()
 v_usuarios_form_data_new = """        cur = mysql.connection.cursor()
         try:
             # Proyectos
-            cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+            cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
             proyectos = cur.fetchall()
             
             # Roles
@@ -176,15 +176,17 @@ content = content.replace(v_detalle_old, v_detalle_new)
 # roles_proyectos
 v_rproy_old = """    try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
-        proyectos = cur.fetchall()
-        cur.close()
+        try:
+            cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+            proyectos = cur.fetchall()
+        finally:
+            cur.close()
         return jsonify({'proyectos': proyectos})"""
         
 v_rproy_new = """    try:
         cur = mysql.connection.cursor()
         try:
-            cur.execute("SELECT idproyecto, codigo, nombre FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+            cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
             proyectos = cur.fetchall()
         finally:
             cur.close()

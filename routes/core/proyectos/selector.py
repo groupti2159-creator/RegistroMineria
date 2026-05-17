@@ -14,19 +14,19 @@ def login_required(f):
     return decorated_function
 
 
-@proyectos_bp.route('/dashboard/<codigo>')
+@proyectos_bp.route('/dashboard/<int:proyecto_id>')
 @login_required
-def dashboard_proyecto(codigo):
+def dashboard_proyecto(proyecto_id):
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM tbl_proyecto WHERE codigo = %s AND activo = 1", (codigo,))
+        cur.execute("SELECT * FROM tbl_proyecto WHERE idproyecto = %s AND activo = 1", (proyecto_id,))
         row = cur.fetchone()
         cur.close()
         if not row:
             return redirect(url_for('da.dashboard'))
-        session['proyecto_actual'] = codigo
+        session['proyecto_actual'] = proyecto_id
         return render_template('proyectos/dashboard.html', proyecto={
-            'codigo_proyecto': row['codigo'],
+            'id_proyecto': row['idproyecto'],
             'nombre_proyecto': row['nombre'],
             'descripcion':     row.get('descripcion', ''),
             'activo':          row['activo'],
@@ -41,17 +41,17 @@ def dashboard_proyecto(codigo):
 def cambiar_proyecto():
     try:
         data = request.get_json()
-        codigo_proyecto = data.get('codigo_proyecto')
-        if not codigo_proyecto:
-            return jsonify({'success': False, 'error': 'Código de proyecto requerido'}), 400
+        proyecto_id = data.get('proyecto_id')
+        if not proyecto_id:
+            return jsonify({'success': False, 'error': 'ID de proyecto requerido'}), 400
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM tbl_proyecto WHERE codigo = %s AND activo = 1", (codigo_proyecto,))
+        cur.execute("SELECT * FROM tbl_proyecto WHERE idproyecto = %s AND activo = 1", (proyecto_id,))
         row = cur.fetchone()
         cur.close()
         if not row:
             return jsonify({'success': False, 'error': 'Proyecto no encontrado o inactivo'}), 404
-        session['proyecto_actual'] = codigo_proyecto
-        return jsonify({'success': True, 'proyecto': {'codigo': row['codigo'], 'nombre': row['nombre']}})
+        session['proyecto_actual'] = proyecto_id
+        return jsonify({'success': True, 'proyecto': {'id': row['idproyecto'], 'nombre': row['nombre']}})
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)}), 500
 
@@ -78,27 +78,26 @@ def get_sidebar_proyecto():
 def get_proyectos_disponibles():
     try:
         cur = mysql.connection.cursor()
-        cur.execute("SELECT * FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
+        cur.execute("SELECT idproyecto, nombre, descripcion FROM tbl_proyecto WHERE activo = 1 ORDER BY nombre")
         rows = cur.fetchall() or []
         cur.close()
-        proyecto_actual = session.get('proyecto_actual', PROYECTO_DEFAULT)
+        proyecto_actual = session.get('proyecto_actual', 1)
         return jsonify({
             'success': True,
             'proyectos': [{
                 'id':          p['idproyecto'],
-                'codigo':      p['codigo'],
                 'nombre':      p['nombre'],
                 'descripcion': p.get('descripcion', ''),
-                'activo':      p['codigo'] == proyecto_actual,
+                'activo':      p['idproyecto'] == proyecto_actual,
                 'icono':       '📁',
             } for p in rows],
             'proyecto_actual': proyecto_actual
         })
     except Exception:
-        proyecto_actual = session.get('proyecto_actual', PROYECTO_DEFAULT)
+        proyecto_actual = session.get('proyecto_actual', 1)
         return jsonify({
             'success': True,
-            'proyectos': [{'id': 1, 'codigo': proyecto_actual, 'nombre': 'Desvíos Ambientales',
+            'proyectos': [{'id': 1, 'nombre': 'Desvíos Ambientales',
                            'descripcion': '', 'activo': True, 'icono': '📁'}],
             'proyecto_actual': proyecto_actual
         })

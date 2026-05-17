@@ -8,18 +8,24 @@ from routes.core.auth import auth_bp
 
 
 def sp_fetchone(cur):
+    """Obtiene la primera fila del primer result set y consume todos los result sets."""
     result = None
-    first = True
-    while True:
-        try:
-            rows = cur.fetchall()
-            if first and rows:
-                result = rows[0]
-                first = False
-        except Exception:
-            pass
-        if not cur.nextset():
-            break
+    try:
+        rows = cur.fetchall()
+        result = rows[0] if rows else None
+    except Exception:
+        pass
+    
+    # Consumir todos los result sets pendientes
+    try:
+        while cur.nextset():
+            try:
+                cur.fetchall()
+            except:
+                pass
+    except:
+        pass
+    
     return result
 
 
@@ -97,6 +103,10 @@ def set_session(user):
     else:
         session['modulos'] = []
         session['accesos'] = []
+    
+    # Marcar la sesión como modificada y permanente para asegurar que se guarde
+    session.permanent = True
+    session.modified = True
 
 
 def redirect_by_rol(rol):
@@ -122,8 +132,8 @@ def login():
             cur = None
             try:
                 cur = mysql.connection.cursor()
-                consume_results(cur)
-                cur.callproc('sp_login', (dni, pwd))
+                # Usar execute("CALL ...") en lugar de callproc() para mejor compatibilidad
+                cur.execute('CALL sp_login(%s, %s)', (dni, pwd))
                 user = sp_fetchone(cur)
                 cur.close()
 

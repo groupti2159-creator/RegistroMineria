@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Desvíos Ambientales — ecoSupervisor{% endblock %}
-{% block page_title %}Desvíos Ambientales{% endblock %}
+{% block title %}Desvios Ssoma — ecoSupervisor{% endblock %}
+{% block page_title %}Desvios Ssoma{% endblock %}
 
 {% block content %}
 <div class="page-header-section">
@@ -8,8 +8,8 @@
     <i data-feather="alert-triangle"></i>
   </div>
   <div>
-    <h2 class="section-title">Desvíos <span class="text-green">Ambientales</span></h2>
-    <p class="section-sub">Gestión y seguimiento de reportes ambientales</p>
+    <h2 class="section-title">Desvios <span class="text-green">Ssoma</span></h2>
+    <p class="section-sub">Gestión y seguimiento de reportes Ssoma</p>
   </div>
 </div>
 
@@ -55,7 +55,7 @@
   <div class="modal modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <p class="modal-eyebrow">Desvios Ssoma</p>
         <h2 class="modal-title">Registrar Nuevo Reporte</h2>
       </div>
       <div class="modal-header__controls">
@@ -113,6 +113,22 @@
             </div>
           </div>
           <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ORIGEN *</label>
+              <select name="origen" class="form-select" required>
+                <option value="">Seleccionar origen...</option>
+                {% if origenes %}
+                  {% for o in origenes %}
+                  <option value="{{ o.idorigen }}">{{ o.nombre }}</option>
+                  {% endfor %}
+                {% else %}
+                  <option value="" disabled>No hay orígenes disponibles</option>
+                {% endif %}
+              </select>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Selecciona el origen del reporte</small>
+            </div>
+          </div>
+          <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
               <label class="form-label">DESCRIPCIÓN *</label>
               <textarea name="descripcion" class="form-textarea" placeholder="Describe el problema o situación encontrada" minlength="10" required></textarea>
@@ -143,18 +159,11 @@
               </select>
             </div>
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">RIESGOS CRÍTICOS ASOCIADOS *</label>
-              <select name="riesgo_critico" id="riesgo_critico" class="form-select" required disabled style="width: 100%;">
+              <label class="form-label">RIESGOS CRÍTICOS ASOCIADOS</label>
+              <select name="riesgo_critico" id="riesgo_critico" class="form-select" disabled style="width: 100%;">
                 <option value="">Primero selecciona un tipo...</option>
               </select>
-              <small class="form-hint"><i data-feather="alert-triangle" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Se carga según el tipo seleccionado</small>
-            </div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">ACCIÓN REALIZADA *</label>
-              <textarea name="accion" class="form-textarea" placeholder=" Recomendacion" minlength="10"></textarea>
-              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
+              <small class="form-hint"><i data-feather="alert-triangle" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Opcional — Se carga según el tipo seleccionado</small>
             </div>
           </div>
         </div>
@@ -166,8 +175,8 @@
               <label class="form-label">ÁREA RESPONSABLE *</label>
               <select name="area_responsable" id="area_responsable" class="form-select" required onchange="cargarPersonalResponsable(this.value)">
                 <option value="">Seleccionar área...</option>
-                {% for a in areas_rep %}
-                <option value="{{ a.idareareportante }}">{{ a.areareportante }}</option>
+                {% for a in areas_res %}
+                <option value="{{ a.idarearesponsable }}">{{ a.arearesponsable }}</option>
                 {% endfor %}
               </select>
             </div>
@@ -239,6 +248,13 @@
               <div id="previewLevantamientos" class="image-preview-container" style="display:none"></div>
             </div>
           </div>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">ACCIÓN REALIZADA *</label>
+              <textarea name="accion" class="form-textarea" placeholder=" Recomendacion" minlength="10"></textarea>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
+            </div>
+          </div>
         </div>
       </div>
       <div class="modal-footer">
@@ -260,7 +276,7 @@
   <div class="modal modal-large">
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <p class="modal-eyebrow">Desvios Ssoma</p>
         <h2 class="modal-title">Editar Reporte</h2>
       </div>
       <div class="modal-header__controls">
@@ -302,6 +318,22 @@
             <div class="form-group">
               <label class="form-label">UBICACIÓN *</label>
               <input type="text" name="ubicacion" id="edit_ubicacion" class="form-input" placeholder="Ingrese la ubicación" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">ORIGEN *</label>
+              <select name="origen" id="edit_origen" class="form-select" required>
+                <option value="">Seleccionar origen...</option>
+                {% if origenes %}
+                  {% for o in origenes %}
+                  <option value="{{ o.idorigen }}">{{ o.nombre }}</option>
+                  {% endfor %}
+                {% else %}
+                  <option value="" disabled>No hay orígenes disponibles</option>
+                {% endif %}
+              </select>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Selecciona el origen del reporte</small>
             </div>
           </div>
           <div class="form-row">
@@ -404,7 +436,7 @@
 <div class="modal-overlay" id="modalDetalle">
   <div class="modal modal-large">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <p class="modal-eyebrow">Desvios Ssoma</p>
         <h2 class="modal-title">Detalle del Reporte</h2>
       </div>
       <div class="modal-header__controls">
@@ -424,7 +456,7 @@
   <div class="modal" style="max-width:800px">
     <div class="modal-header">
       <div class="modal-header__info">
-        <p class="modal-eyebrow">Desvíos Ambientales</p>
+        <p class="modal-eyebrow">Desvios Ssoma</p>
         <h2 class="modal-title">Validar Imágenes de Levantamiento</h2>
       </div>
       <div class="modal-header__controls">

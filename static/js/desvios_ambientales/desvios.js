@@ -197,10 +197,11 @@ function editarRegistro(rid) {
     setVal('edit_ccta',        r.cctaresponsable);
     setVal('edit_area_rep',    r.idareareportante);
     setVal('edit_area_res',    r.idarearesponsable);
-    setVal('edit_ubicacion',   r.idubicacion);
+    setVal('edit_ubicacion',   r.ubicacion);
     setVal('edit_riesgo',      r.idriesgo);
     setVal('edit_tipo',        r.iddescripciontipo);
     setVal('edit_estado',      r.idestado);
+    setVal('edit_origen',      r.idorigen);
 
     // Cargar imágenes existentes
     renderEditImagenes(data.evidencias || [], data.levantamientos || []);
@@ -879,21 +880,19 @@ async function cargarRiesgosCriticos(idTipo) {
 }
 
 
-// ── CARGAR PERSONAL RESPONSABLE POR ÁREA ──
+// ── CARGAR PERSONAL RESPONSABLE (todo el personal activo) ──
+// Se usa /api/todo-personal porque tbl_persona solo tiene idareareportante
+// pero el área responsable es una tabla distinta (tbl_arearesponsable)
 async function cargarPersonalResponsable(idArea) {
+  // idArea se ignora — cargamos todo el personal disponible
   const selectPersonal = document.getElementById('personal_responsable_id');
-  
-  if (!idArea) {
-    selectPersonal.innerHTML = '<option value="">Primero selecciona un área...</option>';
-    selectPersonal.disabled = true;
-    return;
-  }
+  if (!selectPersonal) return;
   
   try {
     selectPersonal.innerHTML = '<option value="">Cargando personal...</option>';
     selectPersonal.disabled = true;
     
-    const res = await fetch(`/admin/api/personal-por-area/${idArea}`);
+    const res = await fetch('/admin/api/todo-personal');
     const data = await res.json();
     
     if (data.success && data.personal && data.personal.length > 0) {
@@ -915,3 +914,17 @@ async function cargarPersonalResponsable(idArea) {
     selectPersonal.disabled = true;
   }
 }
+
+// Cargar personal responsable automáticamente al abrir el modal crear
+document.addEventListener('DOMContentLoaded', function() {
+  const modalCrear = document.getElementById('modalCrear');
+  if (!modalCrear) return;
+  const obs = new MutationObserver(function(mutations) {
+    mutations.forEach(function(m) {
+      if (modalCrear.classList.contains('open')) {
+        cargarPersonalResponsable(null);
+      }
+    });
+  });
+  obs.observe(modalCrear, { attributes: true, attributeFilter: ['class'] });
+});

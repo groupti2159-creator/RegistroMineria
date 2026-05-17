@@ -332,6 +332,11 @@
                 </select>
             </div>
 
+            <button class="btn btn-secondary" onclick="abrirModalNuevoProyecto()" title="Crear nuevo proyecto">
+                <i data-feather="folder-plus"></i>
+                Nuevo Proyecto
+            </button>
+
             <button class="btn btn-primary" onclick="abrirModalNuevoRol()">
                 <i data-feather="plus"></i>
                 Nuevo Rol
@@ -425,6 +430,69 @@
             <button type="button" class="btn btn-primary btn-lg" onclick="crearNuevoRol()">
                 <i data-feather="check" style="width: 16px; height: 16px; margin-right: 6px;"></i>
                 Crear Rol
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Crear Nuevo Proyecto -->
+<div class="modal-overlay" id="modalNuevoProyecto">
+    <div class="modal-box" style="max-width: 480px;">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-icon-btn">
+                    <i data-feather="folder"></i>
+                </span>
+                <div>
+                    <h3>
+                        <i data-feather="folder-plus"></i>
+                        Crear Nuevo Proyecto
+                    </h3>
+                    <p>Define un nuevo proyecto para gestionar roles y permisos</p>
+                </div>
+            </div>
+            <button class="modal-close" onclick="cerrarModalNuevoProyecto()">
+                <i data-feather="x"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="formNuevoProyecto" onsubmit="event.preventDefault(); crearNuevoProyecto();">
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-feather="file-text"
+                            style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                        Nombre del Proyecto *
+                    </label>
+                    <input type="text" class="form-input" id="nuevoProyectoNombre" required
+                        placeholder="Ej: Proyecto Argos" autocomplete="off">
+                    <span class="form-hint">
+                        <i data-feather="info" style="width: 12px; height: 12px;"></i>
+                        Nombre descriptivo del proyecto
+                    </span>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">
+                        <i data-feather="file-text"
+                            style="width: 14px; height: 14px; vertical-align: middle; margin-right: 4px;"></i>
+                        Descripción
+                    </label>
+                    <textarea class="form-textarea" id="nuevoProyectoDescripcion" rows="3"
+                        placeholder="Describe el propósito y alcance del proyecto"></textarea>
+                    <span class="form-hint">
+                        <i data-feather="info" style="width: 12px; height: 12px;"></i>
+                        Información adicional sobre el proyecto
+                    </span>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="cerrarModalNuevoProyecto()">
+                <i data-feather="x" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                Cancelar
+            </button>
+            <button type="button" class="btn btn-primary btn-lg" onclick="crearNuevoProyecto()">
+                <i data-feather="check" style="width: 16px; height: 16px; margin-right: 6px;"></i>
+                Crear Proyecto
             </button>
         </div>
     </div>
@@ -923,6 +991,87 @@
         } catch (error) {
             console.error('Error creando rol:', error);
             mostrarToast('Error al crear rol: ' + error.message, 'error');
+            btnCrear.disabled = false;
+            btnCrear.innerHTML = textoOriginal;
+            feather.replace();
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FUNCIONES PARA CREAR NUEVO PROYECTO
+    // ═══════════════════════════════════════════════════════════════════════════
+
+    function abrirModalNuevoProyecto() {
+        // Limpiar formulario
+        document.getElementById('nuevoProyectoNombre').value = '';
+        document.getElementById('nuevoProyectoDescripcion').value = '';
+
+        // Mostrar modal
+        const modal = document.getElementById('modalNuevoProyecto');
+        modal.classList.add('open');
+
+        // Focus en el primer campo
+        setTimeout(() => {
+            document.getElementById('nuevoProyectoNombre').focus();
+        }, 100);
+    }
+
+    function cerrarModalNuevoProyecto() {
+        const modal = document.getElementById('modalNuevoProyecto');
+        modal.classList.remove('open');
+    }
+
+    async function crearNuevoProyecto() {
+        const nombre      = document.getElementById('nuevoProyectoNombre').value.trim();
+        const descripcion = document.getElementById('nuevoProyectoDescripcion').value.trim();
+
+        // Validaciones
+        if (!nombre) {
+            mostrarToast('El nombre del proyecto es requerido', 'error');
+            document.getElementById('nuevoProyectoNombre').focus();
+            return;
+        }
+
+        const btnCrear = document.querySelector('#modalNuevoProyecto .modal-footer .btn-primary');
+        const textoOriginal = btnCrear.innerHTML;
+        btnCrear.disabled = true;
+        btnCrear.innerHTML = '<i data-feather="loader" style="width: 16px; height: 16px; margin-right: 6px; animation: spin 1s linear infinite;"></i> Creando...';
+        feather.replace();
+
+        try {
+            const response = await fetch('/admin/proyectos/crear', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    nombre: nombre,
+                    descripcion: descripcion
+                })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                cerrarModalNuevoProyecto();
+                mostrarToast('Proyecto creado exitosamente', 'success');
+
+                // Recargar lista de proyectos
+                cargarProyectos();
+
+                // Seleccionar el nuevo proyecto automáticamente
+                setTimeout(() => {
+                    document.getElementById('proyectoSelect').value = result.proyecto.idproyecto;
+                    document.getElementById('proyectoSelect').dispatchEvent(new Event('change'));
+                }, 500);
+            } else {
+                mostrarToast('Error: ' + result.error, 'error');
+                btnCrear.disabled = false;
+                btnCrear.innerHTML = textoOriginal;
+                feather.replace();
+            }
+
+        } catch (error) {
+            console.error('Error creando proyecto:', error);
+            mostrarToast('Error al crear proyecto: ' + error.message, 'error');
             btnCrear.disabled = false;
             btnCrear.innerHTML = textoOriginal;
             feather.replace();

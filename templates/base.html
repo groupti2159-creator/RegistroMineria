@@ -142,23 +142,6 @@
           <i data-feather="menu"></i>
         </button>
 
-        <!-- SELECTOR DE PROYECTOS -->
-        <div class="proyecto-selector" id="proyectoSelectorContainer" style="display: none;">
-          <button class="proyecto-btn" onclick="toggleProyectos()" id="proyectoBtn">
-            <span class="proyecto-icon"><i data-feather="briefcase" style="width:16px"></i></span>
-            <span class="proyecto-nombre" id="proyectoNombre">{{ session.proyecto_nombre or 'Seleccionar Proyecto'
-              }}</span>
-            <span class="proyecto-arrow"><i data-feather="chevron-down" style="width:14px"></i></span>
-          </button>
-
-          <div class="proyecto-dropdown" id="proyectoDropdown">
-            <div class="proyecto-dropdown-header">Tus proyectos y roles</div>
-            <div class="proyecto-list" id="proyectoList">
-              <div class="proyecto-loading">Cargando...</div>
-            </div>
-          </div>
-        </div>
-
         <div class="top-bar-title">
           <h1>{% block page_title %}{% endblock %}</h1>
           <p>Bienvenido, {{ session.dni }}</p>

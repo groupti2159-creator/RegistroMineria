@@ -8,8 +8,9 @@ from routes.core.supervisor import supervisor_bp
 def sup_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if 'user_id' not in session or session.get('rol') not in ('Supervisor', 'Trabajador'):
+        if 'user_id' not in session:
             return redirect(url_for('auth.login'))
+        # Permitir cualquier usuario logueado (la restricción real la hace @modulo_required)
         return f(*args, **kwargs)
     return decorated
 
