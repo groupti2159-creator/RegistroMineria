@@ -7,10 +7,29 @@ from utils.helpers import sp_exec
 
 @da_bp.route('/api/personal-por-area/<int:id_area>', methods=['GET'])
 def obtener_personal_por_area(id_area):
-    """Obtiene el personal de un área reportante específica."""
+    """Obtiene el personal responsable de un área específica."""
     try:
         cur = mysql.connection.cursor()
-        personal = sp_exec(cur, 'sp_obtener_personal_por_area', (id_area,))
+        personal = sp_exec(cur, 'SP_ObtenerPersonalPorArea', (id_area,))
+        cur.close()
+        return jsonify({'success': True, 'personal': personal})
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@da_bp.route('/api/personal-reportante-por-area/<int:id_area>', methods=['GET'])
+def obtener_personal_reportante_por_area(id_area):
+    """Obtiene el personal reportante de un área específica."""
+    try:
+        cur = mysql.connection.cursor()
+        # Obtener personal de tbl_persona por idareareportante
+        cur.execute("""
+            SELECT id, NombresCompletos, idareareportante
+            FROM tbl_persona
+            WHERE idareareportante = %s AND activo = 1
+            ORDER BY NombresCompletos
+        """, (id_area,))
+        personal = cur.fetchall()
         cur.close()
         return jsonify({'success': True, 'personal': personal})
     except Exception as e:
@@ -22,7 +41,7 @@ def obtener_todo_personal():
     """Obtiene todo el personal activo (para selector de personal responsable)."""
     try:
         cur = mysql.connection.cursor()
-        personal = sp_exec(cur, 'sp_obtener_todo_personal')
+        personal = sp_exec(cur, 'SP_ObtenerTodoPersonal')
         cur.close()
         return jsonify({'success': True, 'personal': personal})
     except Exception as e:

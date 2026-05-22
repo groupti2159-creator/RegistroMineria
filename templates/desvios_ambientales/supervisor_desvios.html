@@ -75,10 +75,47 @@
           <small class="form-hint">Formatos permitidos: JPG, PNG, GIF, WebP. Tamaño máximo: 5MB por imagen. Máx 5 imágenes.</small>
           <div id="previewSubirImagenes" class="image-preview-container" style="display:none"></div>
         </div>
+        <div class="form-group">
+          <label class="form-label">DETALLES DE LA ACCIÓN</label>
+          <textarea name="detalles_accion" id="detallesAccion" class="form-input" rows="4" placeholder="Describe la acción realizada para levantar la observación..."></textarea>
+          <small class="form-hint">Información adicional sobre la acción de levantamiento (opcional)</small>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="submit" class="btn btn-lg" style="background:#7c3aed;color:white">?? Subir Imágenes</button>
         <button type="button" class="btn btn-secondary btn-lg" onclick="document.getElementById('modalSubir').classList.remove('open')">Cancelar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MODAL VALIDAR ===== -->
+<div class="modal-overlay" id="modalValidar">
+  <div class="modal-box" style="max-width:800px">
+    <div class="modal-header">
+      <div>
+        <h3>?? Validar Imágenes de Levantamiento</h3>
+      </div>
+      <button class="modal-close" onclick="cerrarModalValidar()">?</button>
+    </div>
+    <form method="POST" id="formValidar" onsubmit="return validarFormulario()">
+      <input type="hidden" name="imagenes_ids" id="validarImagenesIds">
+      <input type="hidden" name="imagenes_ids_rechazar" id="validarImagenesIdsRechazar">
+      <div class="modal-body">
+        <div class="alert alert-info" style="margin-bottom:1rem;font-size:.85rem">
+          <i data-feather="info" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Puedes eliminar las imágenes que no cumplen con los requisitos. Debe quedar al menos 1 imagen.<br>
+          <strong>APROBAR:</strong> Solo se aprueban las imágenes que quedan.<br>
+          <strong>RECHAZAR:</strong> Se rechazan TODAS las imágenes originales.
+        </div>
+        <div id="validarGallery" class="validar-gallery"></div>
+        <div class="form-group" style="margin-top:1rem">
+          <label class="form-label">COMENTARIO (opcional para rechazo)</label>
+          <textarea name="comentario" id="validarComentario" class="form-textarea" placeholder="Motivo de rechazo o comentarios..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="submit" name="decision" value="APROBADA" class="btn btn-primary btn-lg"><i data-feather="check" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Aprobar Conjunto</button>
+        <button type="submit" name="decision" value="RECHAZADA" class="btn btn-danger btn-lg"><i data-feather="x" style="width:16px;height:16px;vertical-align:middle;margin-right:4px"></i> Rechazar Conjunto</button>
       </div>
     </form>
   </div>
@@ -89,7 +126,9 @@
 <script>
 const DETALLE_URL_BASE = "{{ url_for('supervisor.detalle_registro', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const SUBIR_URL_BASE   = "{{ url_for('supervisor.subir_levantamiento', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
+const VALIDAR_URL_BASE = "{{ url_for('supervisor.validar_levantamiento', rid='PLACEHOLDER') }}".replace('PLACEHOLDER','');
 const IS_ADMIN = false;
+const USUARIO_ROL = "{{ usuario_rol }}";
 </script>
 <script src="{{ url_for('static', filename='js/desvios_ambientales/ajax_handler.js') }}"></script>
 <script src="{{ url_for('static', filename='js/desvios_ambientales/desvios.js') }}"></script>

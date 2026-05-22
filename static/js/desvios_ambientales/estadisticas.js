@@ -9,8 +9,13 @@ function abrirModalEstadistica(tipo) {
   const cfg = CONFIG[tipo];
   document.getElementById('modalTitulo').textContent    = cfg.titulo;
   document.getElementById('modalSubtitulo').textContent = cfg.subtitulo;
-  document.getElementById('filtroFechaIni').value = '';
-  document.getElementById('filtroFechaFin').value = '';
+  
+  // Establecer la fecha de hoy como valor por defecto
+  const hoy = new Date();
+  const fechaHoy = hoy.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  document.getElementById('filtroFechaIni').value = fechaHoy;
+  document.getElementById('filtroFechaFin').value = fechaHoy;
+  
   abrirModal('modalEstadisticas');
   feather.replace();
   cargarModal();

@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 --  DESVÃOS AMBIENTALES â€” MySQL Schema COMPLETO
 --  Con Stored Procedures y tabla de historial
 -- ============================================================
@@ -41,6 +41,15 @@ CREATE TABLE IF NOT EXISTS Tbl_AreaReportante (
 CREATE TABLE IF NOT EXISTS Tbl_AreaResponsable (
     idAreaResponsable INT AUTO_INCREMENT PRIMARY KEY,
     AreaResponsable   VARCHAR(100) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS Tbl_Personal (
+    idPersonal INT AUTO_INCREMENT PRIMARY KEY,
+    NombresCompletos VARCHAR(150) NOT NULL,
+    idAreaResponsable INT NOT NULL,
+    Activo TINYINT(1) DEFAULT 1,
+    FechaCreacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (idAreaResponsable) REFERENCES Tbl_AreaResponsable(idAreaResponsable)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS Tbl_Ubicacion (
@@ -127,6 +136,7 @@ CREATE TABLE IF NOT EXISTS Tbl_ImagenRegistro (
     IdUsuarioRolRevisor INT,
     FechaRevision       DATETIME,
     FechaSubida         DATETIME DEFAULT CURRENT_TIMESTAMP,
+    DetallesAccion      VARCHAR(500),
     FOREIGN KEY (IdRegistro)     REFERENCES Tbl_Registro(IdRegistro) ON DELETE CASCADE,
     FOREIGN KEY (IdUsuarioRol)   REFERENCES Tbl_UsuarioRol(IdUsuarioRol),
     FOREIGN KEY (idTipoImagen)   REFERENCES Tbl_TipoImagen(idTipoImagen),
@@ -206,6 +216,20 @@ INSERT IGNORE INTO Tbl_AreaResponsable (arearesponsable) VALUES
 ('Proyectos'),('Mantenimiento General'),
 ('Ingeniería'),('Seguridad Industrial'),
 ('Geología'),('Medio Ambiente');
+
+INSERT IGNORE INTO Tbl_Personal (NombresCompletos, idAreaResponsable, Activo) VALUES
+('Juan Pérez García', 1, 1),
+('María López Rodríguez', 1, 1),
+('Carlos Martínez Sánchez', 2, 1),
+('Ana Fernández Díaz', 2, 1),
+('Roberto Gómez Ruiz', 3, 1),
+('Patricia Jiménez Moreno', 3, 1),
+('Luis Ramírez Flores', 4, 1),
+('Sandra Ortiz Vega', 4, 1),
+('Miguel Herrera Castillo', 5, 1),
+('Elena Vargas Mendoza', 5, 1),
+('Fernando Rojas Navarro', 6, 1),
+('Gabriela Soto Campos', 6, 1);
 
 INSERT IGNORE INTO Tbl_Ubicacion (ubicacion) VALUES
 ('Zona I - NORTE - Sector A'),
@@ -287,9 +311,9 @@ BEGIN
     WHERE r.Archivado = 0;
 END$
 
--- SP: Listar registros admin
+-- SP: Listar registros admin (filtrado por proyecto)
 DROP PROCEDURE IF EXISTS SP_ListarRegistros$
-CREATE PROCEDURE SP_ListarRegistros(IN p_estado VARCHAR(50))
+CREATE PROCEDURE SP_ListarRegistros(IN p_estado VARCHAR(50), IN p_proyecto_id INT)
 BEGIN
     SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
            r.Descripcion, r.Accion, r.PersonalResponsable, r.DniResponsable,
@@ -312,13 +336,14 @@ BEGIN
     JOIN tbl_usuario u ON u.idUsuario = ur.idUsuario
     LEFT JOIN tbl_areareportante ccta ON ccta.idAreaReportante = r.CctaResponsable
     WHERE r.Archivado = 0
+      AND r.IdProyecto = p_proyecto_id
       AND (p_estado IS NULL OR p_estado = '' OR e.Estado = p_estado)
     ORDER BY r.FechaCreacion DESC;
 END$
 
--- SP: Listar registros supervisor
+-- SP: Listar registros supervisor (filtrado por proyecto)
 DROP PROCEDURE IF EXISTS SP_ListarRegistrosSupervisor$
-CREATE PROCEDURE SP_ListarRegistrosSupervisor(IN p_estado VARCHAR(50))
+CREATE PROCEDURE SP_ListarRegistrosSupervisor(IN p_estado VARCHAR(50), IN p_proyecto_id INT)
 BEGIN
     SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
            r.Descripcion, r.Accion, r.PersonalResponsable, r.DniResponsable,
@@ -341,6 +366,7 @@ BEGIN
     JOIN tbl_usuario u ON u.idUsuario = ur.idUsuario
     LEFT JOIN tbl_areareportante ccta ON ccta.idAreaReportante = r.CctaResponsable
     WHERE r.Archivado = 0
+      AND r.IdProyecto = p_proyecto_id
       AND (p_estado IS NULL OR p_estado = '' OR e.Estado = p_estado)
     ORDER BY r.FechaCreacion DESC;
 END$
@@ -349,29 +375,29 @@ END$
 DROP PROCEDURE IF EXISTS SP_DetalleRegistro$
 CREATE PROCEDURE SP_DetalleRegistro(IN p_id INT)
 BEGIN
-    SELECT r.IdRegistro, r.Codigo, r.FechaInicio, r.FechaEjecucion,
-           r.Descripcion, r.Accion, r.NotasLevantamiento, r.PersonalResponsable, r.DniResponsable,
-           r.CctaResponsable,
-           ccta.AreaReportante AS NombreCctaResponsable,
-           e.Estado, e.idEstado,
-           ar.AreaReportante, ar.idAreaReportante,
-           ars.AreaResponsable, ars.idAreaResponsable,
-           ub.Ubicacion, ub.idUbicacion,
-           ri.Riesgo, ri.IdRiesgo,
-           dt.DescripcionTipo, dt.IdDescripcionTipo,
-           u.NombreCompleto AS Creador,
-           r.FechaCreacion, r.Archivado
+    SELECT r.idregistro AS IdRegistro, r.codigo AS Codigo, r.fechainicio AS FechaInicio, r.fechaejecucion AS FechaEjecucion,
+           r.descripcion AS Descripcion, r.accion AS Accion, r.notaslevantamiento AS NotasLevantamiento, 
+           r.personalresponsable AS PersonalResponsable, r.DniResponsable,
+           r.cctaresponsable AS CctaResponsable, r.IdProyecto,
+           ccta.areareportante AS NombreCctaResponsable,
+           e.estado AS Estado, e.idestado,
+           ar.areareportante AS AreaReportante, ar.idareareportante,
+           ars.arearesponsable AS AreaResponsable, ars.idarearesponsable,
+           r.ubicacion AS Ubicacion,
+           ri.riesgo AS Riesgo, ri.idriesgo AS IdRiesgo,
+           dt.descripciontipo AS DescripcionTipo, dt.iddescripciontipo AS IdDescripcionTipo,
+           u.nombrecompleto AS Creador,
+           r.fechacreacion AS FechaCreacion, r.archivado AS Archivado
     FROM tbl_registro r
-    JOIN tbl_estado e ON e.idEstado = r.idEstado
-    JOIN tbl_areareportante ar ON ar.idAreaReportante = r.idAreaReportante
-    JOIN tbl_arearesponsable ars ON ars.idAreaResponsable = r.idAreaResponsable
-    JOIN tbl_ubicacion ub ON ub.idUbicacion = r.idUbicacion
-    JOIN tbl_riesgo ri ON ri.IdRiesgo = r.IdRiesgo
-    JOIN tbl_descripciontipo dt ON dt.IdDescripcionTipo = r.IdDescripcionTipo
-    JOIN tbl_usuariorol ur ON ur.IdUsuarioRol = r.IdUsuarioRolCreador
-    JOIN tbl_usuario u ON u.idUsuario = ur.idUsuario
-    LEFT JOIN tbl_areareportante ccta ON ccta.idAreaReportante = r.CctaResponsable
-    WHERE r.IdRegistro = p_id;
+    JOIN tbl_estado e ON e.idestado = r.idestado
+    JOIN tbl_areareportante ar ON ar.idareareportante = r.idareareportante
+    JOIN tbl_arearesponsable ars ON ars.idarearesponsable = r.idarearesponsable
+    JOIN tbl_riesgo ri ON ri.idriesgo = r.idriesgo
+    JOIN tbl_descripciontipo dt ON dt.iddescripciontipo = r.iddescripciontipo
+    JOIN tbl_usuariorol ur ON ur.idusuariorol = r.idusuariorolcreador
+    JOIN tbl_usuario u ON u.idusuario = ur.idusuario
+    LEFT JOIN tbl_areareportante ccta ON ccta.idareareportante = r.cctaresponsable
+    WHERE r.idregistro = p_id;
 END$
 
 -- SP: Imágenes de registro
@@ -398,23 +424,27 @@ CREATE PROCEDURE SP_CrearRegistro(
     IN p_codigo VARCHAR(20),
     IN p_fecha DATETIME, IN p_fecha_ejec DATETIME,
     IN p_desc VARCHAR(500), IN p_accion VARCHAR(300),
-    IN p_area_rep INT, IN p_area_res INT,
-    IN p_ubic INT, IN p_riesgo INT,
-    IN p_tipo INT, IN p_estado INT,
+    IN p_area_rep INT, IN p_personal_rep INT,
+    IN p_area_res INT, IN p_ubic VARCHAR(200),
+    IN p_riesgo INT, IN p_tipo INT,
+    IN p_riesgo_critico INT, IN p_estado INT,
     IN p_creador INT, IN p_personal VARCHAR(100),
-    IN p_ccta INT, IN p_dni VARCHAR(20)
+    IN p_ccta INT, IN p_dni VARCHAR(20),
+    IN p_origen INT, IN p_proyecto INT
 )
 BEGIN
     INSERT INTO tbl_registro (
-        Codigo, FechaInicio, FechaEjecucion, Descripcion, Accion,
-        idAreaReportante, idAreaResponsable, idUbicacion, IdRiesgo,
-        IdDescripcionTipo, idEstado, IdUsuarioRolCreador,
-        PersonalResponsable, DniResponsable, CctaResponsable
+        codigo, fechainicio, fechaejecucion, descripcion, accion,
+        idareareportante, personalreportante, idarearesponsable, ubicacion,
+        idriesgo, iddescripciontipo, idestado, idusuariorolcreador,
+        personalresponsable, DniResponsable, cctaresponsable, idorigen, IdProyecto,
+        riesgo_critico_id
     ) VALUES (
         p_codigo, p_fecha, p_fecha_ejec, p_desc, p_accion,
-        p_area_rep, p_area_res, p_ubic, p_riesgo,
-        p_tipo, p_estado, p_creador, p_personal,
-        NULLIF(p_dni, ''), NULLIF(p_ccta, 0)
+        p_area_rep, p_personal_rep, p_area_res, p_ubic,
+        p_riesgo, p_tipo, p_estado, p_creador,
+        p_personal, NULLIF(p_dni, ''), NULLIF(p_ccta, 0), p_origen, p_proyecto,
+        NULLIF(p_riesgo_critico, 0)
     );
     SELECT LAST_INSERT_ID() AS idregistro;
 END$
@@ -500,7 +530,8 @@ DROP PROCEDURE IF EXISTS SP_GuardarImagen$
 CREATE PROCEDURE SP_GuardarImagen(
     IN p_registro INT, IN p_usuario_rol INT,
     IN p_tipo INT, IN p_estado INT,
-    IN p_ruta VARCHAR(300), IN p_nombre VARCHAR(100), IN p_tamano INT
+    IN p_ruta VARCHAR(300), IN p_nombre VARCHAR(100), IN p_tamano INT,
+    IN p_detalles_accion VARCHAR(500)
 )
 BEGIN
     DECLARE cnt INT;
@@ -508,8 +539,8 @@ BEGIN
     WHERE IdRegistro=p_registro AND idTipoImagen=p_tipo AND idEstadoImagen != 3;
     IF cnt < 5 THEN
         INSERT INTO tbl_imagenregistro
-            (IdRegistro,IdUsuarioRol,idTipoImagen,idEstadoImagen,RutaImagen,NombreArchivo,TamanoKB)
-        VALUES (p_registro,p_usuario_rol,p_tipo,p_estado,p_ruta,p_nombre,p_tamano);
+            (IdRegistro,IdUsuarioRol,idTipoImagen,idEstadoImagen,RutaImagen,NombreArchivo,TamanoKB,DetallesAccion)
+        VALUES (p_registro,p_usuario_rol,p_tipo,p_estado,p_ruta,p_nombre,p_tamano,p_detalles_accion);
 
         -- Solo cambiar a "En Proceso" (3) cuando el supervisor sube levantamientos (tipo 2)
         IF p_tipo = 2 THEN

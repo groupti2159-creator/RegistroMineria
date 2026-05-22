@@ -55,7 +55,7 @@ function buildDetalleHTML(data) {
     }).join('')}</div>`;
   };
 
-  const canValidate = typeof IS_ADMIN !== 'undefined' && IS_ADMIN;
+  const canValidate = (typeof IS_ADMIN !== 'undefined' && IS_ADMIN) || (typeof USUARIO_ROL !== 'undefined' && USUARIO_ROL === 'Auditor');
 
   return `
   <div class="detalle-grid">
@@ -818,7 +818,7 @@ async function cargarPersonalPorArea(idArea) {
     selectPersonal.innerHTML = '<option value="">Cargando personal...</option>';
     selectPersonal.disabled = true;
     
-    const res = await fetch(`/admin/api/personal-por-area/${idArea}`);
+    const res = await fetch(`/admin/api/personal-reportante-por-area/${idArea}`);
     const data = await res.json();
     
     if (data.success && data.personal && data.personal.length > 0) {
@@ -880,19 +880,21 @@ async function cargarRiesgosCriticos(idTipo) {
 }
 
 
-// ── CARGAR PERSONAL RESPONSABLE (todo el personal activo) ──
-// Se usa /api/todo-personal porque tbl_persona solo tiene idareareportante
-// pero el área responsable es una tabla distinta (tbl_arearesponsable)
+// ── CARGAR PERSONAL RESPONSABLE POR ÁREA ──
 async function cargarPersonalResponsable(idArea) {
-  // idArea se ignora — cargamos todo el personal disponible
   const selectPersonal = document.getElementById('personal_responsable_id');
-  if (!selectPersonal) return;
+  
+  if (!idArea) {
+    selectPersonal.innerHTML = '<option value="">Primero selecciona un área...</option>';
+    selectPersonal.disabled = true;
+    return;
+  }
   
   try {
     selectPersonal.innerHTML = '<option value="">Cargando personal...</option>';
     selectPersonal.disabled = true;
     
-    const res = await fetch('/admin/api/todo-personal');
+    const res = await fetch(`/admin/api/personal-por-area/${idArea}`);
     const data = await res.json();
     
     if (data.success && data.personal && data.personal.length > 0) {
@@ -915,16 +917,32 @@ async function cargarPersonalResponsable(idArea) {
   }
 }
 
-// Cargar personal responsable automáticamente al abrir el modal crear
-document.addEventListener('DOMContentLoaded', function() {
-  const modalCrear = document.getElementById('modalCrear');
-  if (!modalCrear) return;
-  const obs = new MutationObserver(function(mutations) {
-    mutations.forEach(function(m) {
-      if (modalCrear.classList.contains('open')) {
-        cargarPersonalResponsable(null);
-      }
-    });
-  });
-  obs.observe(modalCrear, { attributes: true, attributeFilter: ['class'] });
-});
+
+// ── ABRIR MODAL DE VALIDACIÓN DESDE TABLA (para Auditor) ──
+async function abrirValidarModal(registroId) {
+  try {
+    // Cargar el detalle del registro
+    const res = await fetch(DETALLE_URL_BASE + registroId);
+    const data = await res.json();
+    
+    if (!data.levantamientos || data.levantamientos.length === 0) {
+      alert('No hay imágenes de levantamiento para validar');
+      return;
+    }
+    
+    // Filtrar solo imágenes pendientes
+    const levantamientos = data.levantamientos.map(img => ({
+      idimagen: img.idimagen,
+      nombrearchivo: img.nombrearchivo,
+      rutaimagen: img.rutaimagen,
+      estadoimagen: img.estadoimagen,
+      motivorechazo: img.motivorechazo
+    }));
+    
+    // Usar la función existente para abrir el modal
+    abrirValidarConjunto(registroId, levantamientos);
+  } catch(e) {
+    console.error('Error al cargar detalle:', e);
+    alert('Error al cargar el detalle del registro');
+  }
+}

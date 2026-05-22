@@ -1,7 +1,6 @@
 from flask import session, jsonify, request, redirect, url_for, render_template
 from functools import wraps
 from extensions import mysql
-from config_proyectos import get_menu_proyecto_html, PROYECTO_DEFAULT
 from routes.core.proyectos import proyectos_bp
 
 
@@ -60,13 +59,9 @@ def cambiar_proyecto():
 @login_required
 def get_sidebar_proyecto():
     try:
-        html = get_menu_proyecto_html(
-            session.get('proyecto_actual', PROYECTO_DEFAULT),
-            session.get('rol', 'Supervisor'),
-            session.get('notif_count', 0),
-            request.args.get('endpoint', '')
-        )
-        return html
+        # Return a simple HTML response since the original config_proyectos.py was deleted
+        # This endpoint is not actively used in the current system
+        return '<div class="sidebar-proyecto">Proyecto</div>'
     except Exception as e:
         import traceback
         print(f"ERROR en get_sidebar_proyecto: {traceback.format_exc()}")

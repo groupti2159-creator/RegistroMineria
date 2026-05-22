@@ -108,13 +108,27 @@ def login_required(f):
     return decorated
 
 def modulo_required(codigo):
-    """Verifica que el usuario tenga acceso al modulo indicado."""
+    """Verifica que el usuario tenga acceso al modulo indicado.
+    
+    Args:
+        codigo: Puede ser un string (ej: 'DESVIOS') o una tupla/lista de strings (ej: ('DESVIOS', 'MIS_REPORTES'))
+    """
     def decorator(f):
         @wraps(f)
         def decorated(*args, **kwargs):
             if 'user_id' not in session:
                 return redirect(url_for('auth.login'))
-            if codigo not in session.get('accesos', []):
+            
+            accesos = session.get('accesos', [])
+            
+            # Si codigo es una tupla o lista, verificar si el usuario tiene acceso a cualquiera de ellos
+            if isinstance(codigo, (tuple, list)):
+                tiene_acceso = any(c in accesos for c in codigo)
+            else:
+                # Si es un string, verificar acceso normal
+                tiene_acceso = codigo in accesos
+            
+            if not tiene_acceso:
                 return render_template('auth/sin_acceso.html'), 403
             return f(*args, **kwargs)
         return decorated

@@ -93,24 +93,16 @@ function renderizarRoles() {
     const modulosPorCategoria = {};
     
     window.modulosProyecto.forEach(grupo => {
-        const categoria = 'Módulos'; // Categoría por defecto
+        const categoria = grupo.nombre; // Usar el nombre del menú como categoría
         if (!modulosPorCategoria[categoria]) {
             modulosPorCategoria[categoria] = [];
         }
         
-        // Agregar el grupo padre
-        modulosPorCategoria[categoria].push({
-            id: grupo.idmodulo,
-            nombre: grupo.nombre,
-            icono: grupo.icono,
-            categoria: categoria
-        });
-        
-        // Agregar los hijos
+        // Agregar los hijos con formato "Menú - Módulo"
         grupo.hijos.forEach(hijo => {
             modulosPorCategoria[categoria].push({
                 id: hijo.idmodulo,
-                nombre: hijo.nombre,
+                nombre: `${grupo.nombre} - ${hijo.nombre}`, // Formato: Menú - Módulo
                 icono: hijo.icono,
                 categoria: categoria
             });

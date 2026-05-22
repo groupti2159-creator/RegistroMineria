@@ -118,11 +118,11 @@ def usuarios_crear_nuevo():
         dni         = data.get('dni', '').strip()
         nombre      = data.get('nombre', '').strip()
         correo      = data.get('correo', '').strip() or None
-        password    = data.get('password', '').strip()
+        password    = data.get('password', '').strip() or '123456@'
         asignaciones = data.get('asignaciones', [])
 
-        if not dni or not nombre or not password:
-            return jsonify({'success': False, 'error': 'DNI, nombre y contraseña son requeridos'}), 400
+        if not dni or not nombre:
+            return jsonify({'success': False, 'error': 'DNI y nombre son requeridos'}), 400
         if not asignaciones:
             return jsonify({'success': False, 'error': 'Debe agregar al menos una asignación de proyecto'}), 400
 

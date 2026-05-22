@@ -48,19 +48,34 @@
                 <i data-feather="eye"></i>
               </button>
               {% if is_admin %}
-              <button class="btn-icon btn-yellow" onclick="editarRegistro('{{ r.idregistro }}')" title="Editar">
-                <i data-feather="edit-2"></i>
-              </button>
-              <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('{{ r.idregistro }}', '{{ r.codigo }}')" title="Eliminar">
-                <i data-feather="trash-2"></i>
-              </button>
+                {# Super Administrador o Supervisor: pueden editar y eliminar #}
+                {% if usuario_rol in ['Super Administrador', 'Supervisor'] %}
+                <button class="btn-icon btn-yellow" onclick="editarRegistro('{{ r.idregistro }}')" title="Editar">
+                  <i data-feather="edit-2"></i>
+                </button>
+                <button class="btn-icon btn-icon-danger" onclick="eliminarRegistro('{{ r.idregistro }}', '{{ r.codigo }}')" title="Eliminar">
+                  <i data-feather="trash-2"></i>
+                </button>
+                {% endif %}
+                {# Auditor: puede validar levantamientos #}
+                {% if usuario_rol == 'Auditor' and r.cnt_levantamientos > 0 %}
+                <button class="btn-icon btn-green" onclick="abrirValidarModal('{{ r.idregistro }}')" title="Validar levantamiento">
+                  <i data-feather="check-circle"></i>
+                </button>
+                {% endif %}
               {% else %}
-              {# Solo mostrar botón de subir si está en PENDIENTE #}
-              {% if r.estado == 'Pendiente' or r.estado == 'Atrasado' %}
-              <button class="btn-icon btn-purple" onclick="abrirSubirModal('{{ r.idregistro }}')" title="Subir levantamiento">
-                <i data-feather="upload-cloud"></i>
-              </button>
-              {% endif %}
+                {# Supervisor: puede subir levantamientos si está en PENDIENTE o ATRASADO #}
+                {% if usuario_rol == 'Supervisor' and (r.estado == 'Pendiente' or r.estado == 'Atrasado') %}
+                <button class="btn-icon btn-purple" onclick="abrirSubirModal('{{ r.idregistro }}')" title="Subir levantamiento">
+                  <i data-feather="upload-cloud"></i>
+                </button>
+                {% endif %}
+                {# Auditor: puede validar levantamientos #}
+                {% if usuario_rol == 'Auditor' and r.cnt_levantamientos > 0 %}
+                <button class="btn-icon btn-green" onclick="abrirValidarModal('{{ r.idregistro }}')" title="Validar levantamiento">
+                  <i data-feather="check-circle"></i>
+                </button>
+                {% endif %}
               {% endif %}
             </div>
           </td>

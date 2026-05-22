@@ -41,15 +41,39 @@ def cargar_modulos_por_rol(proyecto_id, rol_id):
             WHERE prm.idproyecto = %s AND prm.idroles = %s AND m.activo = 1
             ORDER BY m.orden
         """, (proyecto_id, rol_id))
-        modulos = cur.fetchall()
+        modulos_asignados = cur.fetchall()
         cur.close()
 
-        if not modulos:
+        if not modulos_asignados:
             print(f"[cargar_modulos_por_rol] ⚠️ Rol {rol_id} sin módulos en proyecto {proyecto_id}")
             return []
 
-        padres = [m for m in modulos if m.get('idmodulopadre') is None]
-        hijos  = [m for m in modulos if m.get('idmodulopadre') is not None]
+        # Obtener todos los módulos (padres e hijos) del proyecto 1 (Argos)
+        cur = mysql.connection.cursor()
+        cur.execute("""
+            SELECT idmodulo, idmodulopadre, codigo, nombre, icono, url, orden
+            FROM tbl_modulo
+            WHERE idproyecto = 1 AND activo = 1
+            ORDER BY orden
+        """)
+        todos_modulos = cur.fetchall()
+        cur.close()
+
+        # Crear un diccionario de módulos asignados por ID
+        modulos_asignados_ids = {m['idmodulo'] for m in modulos_asignados}
+
+        # Agregar los padres de los módulos asignados
+        modulos_con_padres = set(modulos_asignados_ids)
+        for modulo in modulos_asignados:
+            if modulo.get('idmodulopadre'):
+                modulos_con_padres.add(modulo['idmodulopadre'])
+
+        # Filtrar solo los módulos asignados y sus padres
+        modulos_filtrados = [m for m in todos_modulos if m['idmodulo'] in modulos_con_padres]
+
+        # Separar padres e hijos
+        padres = [m for m in modulos_filtrados if m.get('idmodulopadre') is None]
+        hijos  = [m for m in modulos_filtrados if m.get('idmodulopadre') is not None]
 
         resultado = []
         for padre in padres:

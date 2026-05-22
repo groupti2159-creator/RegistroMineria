@@ -14,8 +14,9 @@ def dashboard():
     cur = mysql.connection.cursor()
     notifs = sp_exec(cur, 'sp_notificaciones', (session['usuario_rol'],))
     cur.close()
+    proyecto_id = session.get('proyecto_id', 1)
     cur = mysql.connection.cursor()
-    todos = sp_exec(cur, 'sp_listarregistros', (None,))
+    todos = sp_exec(cur, 'sp_listarregistros', (None, proyecto_id))
     cur.close()
 
     registros_pendientes = [r for r in todos if r.get('estado') in ['Pendiente', 'Atrasado']]

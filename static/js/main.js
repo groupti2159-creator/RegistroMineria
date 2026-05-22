@@ -1,6 +1,13 @@
 // ── CONSTANTES GLOBALES ──────────────────────────────────────────────────────────
 const _previewInstances = {};
 
+// ── INICIALIZAR FEATHER ICONS AL CARGAR LA PÁGINA ──
+document.addEventListener('DOMContentLoaded', function() {
+  if (typeof feather !== 'undefined') {
+    feather.replace({ 'stroke-width': 1.2 });
+  }
+});
+
 
 
 // ── DARK MODE ──
@@ -488,3 +495,72 @@ document.addEventListener('DOMContentLoaded', function() {
   // SPA deshabilitado — navegación normal para todos los módulos
   // Cada clic recarga la página completa con el layout base
 })();
+
+
+// ── CAMBIAR CONTRASEÑA ──
+function abrirModalCambiarContrasena() {
+  const modal = document.getElementById('modalCambiarContrasena');
+  if (modal) {
+    abrirModal(modal);
+    // Limpiar el formulario
+    document.getElementById('formCambiarContrasena').reset();
+  }
+}
+
+function cerrarModalCambiarContrasena() {
+  const modal = document.getElementById('modalCambiarContrasena');
+  if (modal) {
+    cerrarModal(modal);
+    document.getElementById('formCambiarContrasena').reset();
+  }
+}
+
+async function cambiarContrasena(event) {
+  event.preventDefault();
+  
+  const contrasenaActual = document.getElementById('contrasenaActual').value.trim();
+  const contrasenaNueva = document.getElementById('contrasenaNueva').value.trim();
+  const contrasenaNuevaConfirm = document.getElementById('contrasenaNuevaConfirm').value.trim();
+  
+  // Validaciones
+  if (!contrasenaActual || !contrasenaNueva || !contrasenaNuevaConfirm) {
+    showToast('Todos los campos son requeridos', 'error');
+    return;
+  }
+  
+  if (contrasenaNueva !== contrasenaNuevaConfirm) {
+    showToast('Las nuevas contraseñas no coinciden', 'error');
+    return;
+  }
+  
+  if (contrasenaNueva.length < 6) {
+    showToast('La nueva contraseña debe tener al menos 6 caracteres', 'error');
+    return;
+  }
+  
+  try {
+    const response = await fetch('/api/cambiar-contrasena', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        contrasena_actual: contrasenaActual,
+        contrasena_nueva: contrasenaNueva
+      })
+    });
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      showToast('Contraseña cambiada exitosamente', 'success');
+      cerrarModalCambiarContrasena();
+    } else {
+      showToast(data.error || 'Error al cambiar la contraseña', 'error');
+    }
+  } catch (error) {
+    showToast('Error de conexión: ' + error.message, 'error');
+  }
+}
+

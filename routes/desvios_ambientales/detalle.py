@@ -1,6 +1,7 @@
 from flask import request, redirect, url_for, session, flash, jsonify
 from extensions import mysql
 from utils.helpers import sp_exec, sp_one, admin_required, modulo_required, delete_image_file
+from utils.workflow import EstadoWorkflow, EventosWorkflow
 from routes.desvios_ambientales import da_bp
 
 
@@ -32,6 +33,24 @@ def detalle_registro(rid):
 @admin_required
 @modulo_required('DESVIOS')
 def validar_levantamiento(rid):
+    # Verificar que el usuario es Auditor
+    cur = mysql.connection.cursor()
+    cur.execute("""
+        SELECT r.nombrerol 
+        FROM tbl_usuariorol ur
+        JOIN tbl_roles r ON ur.idroles = r.idroles
+        WHERE ur.idusuario = %s
+        LIMIT 1
+    """, (session['user_id'],))
+    
+    resultado = cur.fetchone()
+    cur.close()
+    
+    rol_usuario = resultado['nombrerol'] if resultado else None
+    
+    if rol_usuario != 'Auditor':
+        flash('Solo los Auditores pueden validar levantamientos de observaciones', 'error')
+        return redirect(url_for('da.registrar'))
     try:
         decision   = request.form.get('decision')
         comentario = request.form.get('comentario', '')
@@ -54,14 +73,19 @@ def validar_levantamiento(rid):
                     sp_exec(cur, 'sp_eliminarimagen', (imagen_id,))
                     mysql.connection.commit()
                     cur.close()
-                    if img_row: delete_image_file(img_row.get('rutaimagen', ''))
+                    if img_row: 
+                        delete_image_file(img_row.get('rutaimagen', ''))
 
             for imagen_id in ids_list:
                 cur = mysql.connection.cursor()
                 sp_exec(cur, 'sp_validarimagen', (imagen_id, rid, session['usuario_rol'], 'APROBADA', comentario))
                 mysql.connection.commit()
                 cur.close()
-            flash(f'{len(ids_list)} imagen(es) aprobada(s) correctamente', 'success')
+            
+            # Cambiar estado automáticamente a CULMINADO
+            evento_resultado = EventosWorkflow.admin_aprueba_imagenes(rid, session['usuario_rol'])
+            
+            flash(f'{len(ids_list)} imagen(es) aprobada(s) correctamente. {evento_resultado["mensaje"]}', 'success')
 
         else:
             imagenes_ids_rechazar = request.form.get('imagenes_ids_rechazar', '')
@@ -84,7 +108,11 @@ def validar_levantamiento(rid):
                 mysql.connection.commit()
                 cur.close()
                 delete_image_file(rutas.get(imagen_id, ''))
-            flash(f'{len(ids_list)} imagen(es) rechazada(s). El supervisor debe volver a subir imagenes', 'warning')
+            
+            # Cambiar estado automáticamente a RECHAZADO
+            evento_resultado = EventosWorkflow.admin_rechaza_imagenes(rid, session['usuario_rol'])
+            
+            flash(f'{len(ids_list)} imagen(es) rechazada(s). El supervisor debe volver a subir imagenes. {evento_resultado["mensaje"]}', 'warning')
 
         # Notificar al supervisor
         imagenes_ids_rechazar = request.form.get('imagenes_ids_rechazar', '')
@@ -96,7 +124,8 @@ def validar_levantamiento(rid):
             cur.close()
             for usuario in usuarios:
                 msg = f'Tu conjunto de imagenes fue {"APROBADO" if decision == "APROBADA" else "RECHAZADO"}'
-                if comentario: msg += f': {comentario}'
+                if comentario: 
+                    msg += f': {comentario}'
                 cur = mysql.connection.cursor()
                 sp_exec(cur, 'sp_crearnotificacion', (usuario['idusuariorol'], msg,
                     'success' if decision == 'APROBADA' else 'warning', rid))

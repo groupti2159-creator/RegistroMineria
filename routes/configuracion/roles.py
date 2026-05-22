@@ -1,17 +1,19 @@
 from flask import render_template, request, jsonify
 from extensions import mysql
-from utils.helpers import admin_required, get_notif_count
+from utils.helpers import admin_required, get_notif_count, modulo_required
 from routes.configuracion import admin_bp
 
 
 @admin_bp.route('/roles')
 @admin_required
+@modulo_required('ROLES')
 def roles():
     return render_template('configuracion/roles.html', notif_count=get_notif_count())
 
 
 @admin_bp.route('/roles/proyectos')
 @admin_required
+@modulo_required('ROLES')
 def roles_proyectos():
     try:
         cur = mysql.connection.cursor()
@@ -25,6 +27,7 @@ def roles_proyectos():
 
 @admin_bp.route('/roles/proyecto/<int:proyecto_id>/roles')
 @admin_required
+@modulo_required('ROLES')
 def roles_proyecto_roles(proyecto_id):
     try:
         cur = mysql.connection.cursor()
@@ -47,15 +50,18 @@ def roles_proyecto_roles(proyecto_id):
 
 @admin_bp.route('/roles/proyecto/<int:proyecto_id>/modulos')
 @admin_required
+@modulo_required('ROLES')
 def roles_proyecto_modulos(proyecto_id):
     try:
         cur = mysql.connection.cursor()
+        # Los módulos son globales y están en el proyecto "Argos" (ID: 1)
+        # Siempre retornamos los módulos del proyecto base
         cur.execute("""
             SELECT idmodulo, idmodulopadre, codigo, nombre, icono, url, orden
             FROM tbl_modulo
-            WHERE idproyecto = %s AND activo = 1
+            WHERE idproyecto = 1 AND activo = 1
             ORDER BY orden
-        """, (proyecto_id,))
+        """)
         modulos = cur.fetchall()
         cur.close()
         padres = [m for m in modulos if m['idmodulopadre'] is None]
@@ -76,17 +82,23 @@ def roles_proyecto_modulos(proyecto_id):
 
 @admin_bp.route('/roles/proyecto/<int:proyecto_id>/rol/<int:rol_id>/permisos', methods=['POST'])
 @admin_required
+@modulo_required('ROLES')
 def roles_guardar_permisos(proyecto_id, rol_id):
     try:
+        import json
         data    = request.get_json()
         modulos = data.get('modulos', [])
+        
         cur = mysql.connection.cursor()
         try:
-            cur.execute("DELETE FROM tbl_proyecto_rol_modulo WHERE idroles = %s AND idproyecto = %s", (rol_id, proyecto_id))
-            for modulo_id in modulos:
-                cur.execute("SELECT idmodulo FROM tbl_modulo WHERE idmodulo = %s AND idproyecto = %s AND activo = 1", (modulo_id, proyecto_id))
-                if cur.fetchone():
-                    cur.execute("INSERT INTO tbl_proyecto_rol_modulo (idproyecto, idroles, idmodulo) VALUES (%s, %s, %s)", (proyecto_id, rol_id, modulo_id))
+            # Llamar al SP con los módulos como JSON
+            modulos_json = json.dumps(modulos)
+            cur.execute("CALL sp_guardar_permisos_rol(%s, %s, %s)", (proyecto_id, rol_id, modulos_json))
+            
+            # Consumir todos los result sets
+            while cur.nextset():
+                cur.fetchall()
+            
             mysql.connection.commit()
             return jsonify({'success': True, 'message': 'Permisos actualizados correctamente'})
         except Exception as e:
@@ -100,6 +112,7 @@ def roles_guardar_permisos(proyecto_id, rol_id):
 
 @admin_bp.route('/roles/crear', methods=['POST'])
 @admin_required
+@modulo_required('ROLES')
 def roles_crear():
     try:
         data        = request.get_json()
@@ -123,6 +136,7 @@ def roles_crear():
 
 @admin_bp.route('/roles/<int:rol_id>/actualizar', methods=['PUT'])
 @admin_required
+@modulo_required('ROLES')
 def roles_actualizar(rol_id):
     try:
         data        = request.get_json()
@@ -149,6 +163,7 @@ def roles_actualizar(rol_id):
 
 @admin_bp.route('/roles/<int:rol_id>/eliminar', methods=['DELETE'])
 @admin_required
+@modulo_required('ROLES')
 def roles_eliminar(rol_id):
     try:
         cur = mysql.connection.cursor()
@@ -177,6 +192,7 @@ def roles_eliminar(rol_id):
 
 @admin_bp.route('/proyectos/crear', methods=['POST'])
 @admin_required
+@modulo_required('ROLES')
 def proyectos_crear():
     try:
         data        = request.get_json()

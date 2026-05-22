@@ -88,32 +88,33 @@ window.agregarProyecto = function(asignacion = null) {
     const index = proyectosAgregados.length;
     
     const div = document.createElement('div');
-    div.className = 'proyecto-item';
+    div.className = 'form-section';
     div.dataset.index = index;
+    div.style.marginBottom = '1.25rem';
     div.innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <span style="font-weight: 700; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Asignación ${index + 1}</span>
-            <button type="button" class="btn-icon btn-icon-danger" onclick="eliminarFilaProyecto(${index})">
-                <i data-feather="trash-2"></i>
+        <div class="form-section-title" style="display: flex; justify-content: space-between; align-items: center;">
+            <span><i data-feather="briefcase" style="width:16px;height:16px;"></i> Asignación ${index + 1}</span>
+            <button type="button" class="btn-icon btn-icon-danger" onclick="eliminarFilaProyecto(${index})" style="padding:0.4rem;">
+                <i data-feather="trash-2" style="width:16px;height:16px;"></i>
             </button>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Proyecto</label>
+                <label class="form-label">Proyecto *</label>
                 <select id="proyecto_${index}" class="form-select" required></select>
             </div>
             <div class="form-group">
-                <label class="form-label">Rol</label>
+                <label class="form-label">Rol *</label>
                 <select id="rol_${index}" class="form-select" required></select>
             </div>
         </div>
         <div class="form-row">
             <div class="form-group">
-                <label class="form-label">Área</label>
+                <label class="form-label">Área *</label>
                 <select id="area_${index}" class="form-select" required></select>
             </div>
             <div class="form-group">
-                <label class="form-label">Cargo</label>
+                <label class="form-label">Cargo *</label>
                 <input type="text" id="cargo_${index}" class="form-input" placeholder="Ej: Jefe de SSHO" required>
             </div>
         </div>

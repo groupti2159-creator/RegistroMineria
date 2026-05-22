@@ -250,9 +250,26 @@
           </div>
           <div class="form-row">
             <div class="form-group" style="grid-column: 1 / -1;">
-              <label class="form-label">ACCIÓN REALIZADA *</label>
-              <textarea name="accion" class="form-textarea" placeholder=" Recomendacion" minlength="10"></textarea>
-              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Mínimo 10 caracteres</small>
+              <label class="form-label">ACCIÓN A REALIZAR *</label>
+              <select name="accion" class="form-select" required>
+                <option value="">Seleccionar acción...</option>
+                <option value="Levantar Observación">Levantar Observación</option>
+                <option value="Corrección Inmediata">Corrección Inmediata</option>
+                <option value="Plan de Acción">Plan de Acción</option>
+                <option value="Capacitación">Capacitación</option>
+                <option value="Mejora de Proceso">Mejora de Proceso</option>
+                <option value="Cambio de Procedimiento">Cambio de Procedimiento</option>
+                <option value="Adquisición de Equipos">Adquisición de Equipos</option>
+                <option value="Otra">Otra</option>
+              </select>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Selecciona la acción a realizar para levantar la observación</small>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group" style="grid-column: 1 / -1;">
+              <label class="form-label">DETALLES DE LA ACCIÓN</label>
+              <textarea name="detalles_accion" class="form-textarea" placeholder="Describe los detalles de la acción a realizar..."></textarea>
+              <small class="form-hint"><i data-feather="info" style="width:12px;height:12px;vertical-align:middle;margin-right:4px"></i> Opcional - Proporciona más información sobre la acción</small>
             </div>
           </div>
         </div>

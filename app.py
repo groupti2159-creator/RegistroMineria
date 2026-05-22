@@ -28,6 +28,7 @@ from routes.gestion_aguas       import gestion_aguas_bp
 from routes.core.supervisor import supervisor_bp
 from routes.core.shared     import shared_bp
 from routes.core.proyectos  import proyectos_bp
+from routes.api             import api_bp
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp,        url_prefix='/admin')
@@ -38,6 +39,7 @@ app.register_blueprint(meteorologia_bp, url_prefix='/admin')
 app.register_blueprint(gestion_aguas_bp, url_prefix='/admin')
 app.register_blueprint(supervisor_bp,   url_prefix='/supervisor')
 app.register_blueprint(shared_bp,       url_prefix='/api')
+app.register_blueprint(api_bp,          url_prefix='/api')
 app.register_blueprint(proyectos_bp,    url_prefix='/proyectos')
 
 from flask import session, request
